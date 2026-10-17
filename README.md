@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 1 — Repository Foundation & Architecture**
+> **Current Status: Stage 2 — Secure Reverse-Proxy Gateway**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning and diverts adversaries into isolated, high-interaction honeypots in real time.
 
@@ -10,16 +10,20 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 
 ```
 .
-├── backend/               # Node.js, Express & TypeScript core service
+├── gateway/               # [Stage 2 — Active] Secure HTTP reverse-proxy gateway
+│   ├── src/               # Application code (app.ts, proxy.ts, config.ts, logger.ts, index.test.ts)
+│   ├── test-origin/       # Authorized internal test origin (unexposed to host)
+│   ├── Dockerfile         # Multi-stage container build
+│   └── package.json       # Dependencies & test scripts
+├── backend/               # [Stage 1 — Active] Node.js, Express & TypeScript core service
 │   ├── src/               # Application code (app.ts, index.ts, index.test.ts)
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts
-├── frontend/              # React with JavaScript and Vite
+├── frontend/              # [Stage 1 — Active] React with JavaScript and Vite
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
-├── gateway/               # [Reserved — Stage 2] Reverse-proxy traffic interception
 ├── detection/             # [Reserved — Stage 3] Python ML anomaly detection service
 ├── deception/             # [Reserved — Stage 4] Isolated honeypots & decoy runtime
 ├── infra/                 # Docker Compose & local infrastructure configuration
@@ -49,7 +53,7 @@ cp .env.example .env
 ```
 
 ### 3.2 Build and Start Services
-Start all services in detached mode:
+Start all 5 services in detached mode:
 ```bash
 docker compose up -d --build
 ```
@@ -62,9 +66,11 @@ docker compose ps
 ```
 
 You should see:
-- `deception-postgres`: `healthy` (port 5432)
+- `deception-gateway`: `healthy` (port 8080)
+- `deception-test-origin`: `healthy` (internal port 5000, no published host port)
 - `deception-backend`: `healthy` (port 4000)
 - `deception-frontend`: `healthy` (port 3000)
+- `deception-postgres`: `healthy` (port 5432)
 
 ### 3.4 View Logs
 ```bash
@@ -72,6 +78,8 @@ You should see:
 docker compose logs -f
 
 # Follow specific service logs
+docker compose logs -f gateway
+docker compose logs -f test-origin
 docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f postgres
@@ -95,36 +103,45 @@ docker compose down -v
 
 You can run individual services directly on the host machine.
 
-### Backend (Node.js + Express + TypeScript)
+### Gateway (Reverse Proxy)
 ```bash
-cd backend
+cd gateway
 
 # 1. Install dependencies
 npm install
 
-# 2. Run unit & health tests
+# 2. Run unit & negative security tests
 npm test
 
 # 3. Build TypeScript
 npm run build
 
-# 4. Start in development mode (with hot reload)
-npm run dev
+# 4. Start in development mode (pointing to test-origin)
+ORIGIN_URL=http://localhost:5000 npm run dev
+```
 
-# Or start compiled production server
+### Test Origin Service
+```bash
+cd gateway/test-origin
+npm install
 npm start
 ```
+- Test Origin starts on `http://localhost:5000`
+
+### Backend (Node.js + Express + TypeScript)
+```bash
+cd backend
+npm install
+npm test
+npm run build
+npm run dev
+```
 - Health Check: `http://localhost:4000/health`
-- Root Info: `http://localhost:4000/`
 
 ### Frontend (React + Vite)
 ```bash
 cd frontend
-
-# 1. Install dependencies
 npm install
-
-# 2. Start Vite development server
 npm run dev
 ```
 - Web UI: `http://localhost:3000`
@@ -133,33 +150,67 @@ npm run dev
 
 ## 5. Verification & Testing
 
-### 5.1 Backend Health Endpoint
+### 5.1 Gateway Health Endpoint
 ```bash
-curl -i http://localhost:4000/health
+curl -i http://localhost:8080/health
 ```
 Expected JSON Response (`HTTP 200 OK`):
 ```json
 {
   "status": "healthy",
-  "service": "backend",
-  "stage": "Stage 1",
+  "service": "gateway",
+  "stage": "Stage 2 — Secure Reverse-Proxy Gateway",
+  "upstream": "http://test-origin:5000",
   "timestamp": "...",
-  "uptime": 12.34
+  "uptime": 24.69
 }
 ```
 
-### 5.2 Frontend Landing Page
-Open your browser to:
-```
-http://localhost:3000
-```
-Verify that:
-1. The landing page renders the Stage 1 title and module status.
-2. The Backend Health Status card queries `http://localhost:4000/health` and shows a green `HEALTHY` indicator.
-
-### 5.3 Automated Backend Tests
+### 5.2 Upstream Request Forwarding
 ```bash
+# Root proxy request to test origin
+curl -i http://localhost:8080/
+
+# Query parameters forwarding
+curl -i "http://localhost:8080/api/echo?filter=security&page=1"
+
+# POST JSON forwarding (preserves cookies and custom headers)
+curl -i -X POST http://localhost:8080/api/echo \
+  -H "Content-Type: application/json" \
+  -d '{"probe": false, "scenario": "verification"}'
+
+# Origin non-200 status code forwarding
+curl -i http://localhost:8080/api/status/403
+curl -i http://localhost:8080/api/status/500
+```
+
+### 5.3 Negative Security & Error Handling Checks
+```bash
+# 1. Path traversal attempt (rejected with 400 Bad Request)
+curl -i --path-as-is http://localhost:8080/../../etc/passwd
+
+# 2. Request body exceeding 1MB limit (rejected with 413 Payload Too Large)
+curl -i -X POST http://localhost:8080/api/echo -H "Content-Length: 2000000" --data "test"
+
+# 3. Host header spoofing / SSRF attempt (safely routed only to authorized test origin)
+curl -i http://localhost:8080/api/echo \
+  -H "Host: 169.254.169.254" \
+  -H "X-Forwarded-Host: evil-attacker.com"
+
+# 4. Origin isolation check (test-origin has no published host port)
+curl -i http://localhost:5000
+```
+
+### 5.4 Automated Test Suites
+```bash
+# Gateway unit, integration, and security tests
+cd gateway && npm test
+
+# Backend unit & health tests
 cd backend && npm test
+
+# Frontend production build verification
+cd frontend && npm run build
 ```
 
 ---
@@ -168,12 +219,18 @@ cd backend && npm test
 
 | Variable | Description | Default | Service |
 |---|---|---|---|
+| `GATEWAY_PORT` | Gateway HTTP listening port | `8080` | Gateway |
+| `ORIGIN_URL` | Upstream target origin URL | `http://test-origin:5000` | Gateway |
+| `ALLOWED_ORIGINS` | Comma-separated whitelist of approved origins | `http://test-origin:5000,http://localhost:5000,http://127.0.0.1:5000` | Gateway |
+| `PROXY_TIMEOUT_MS` | Proxy request timeout in milliseconds | `5000` | Gateway |
+| `MAX_REQUEST_BODY_SIZE` | Maximum permitted request body size in bytes | `1048576` (1MB) | Gateway |
 | `PORT` | Backend HTTP listening port | `4000` | Backend |
-| `HOST` | Backend bind host address | `0.0.0.0` | Backend |
-| `NODE_ENV` | Environment mode (`development`/`production`) | `development` | Backend |
+| `HOST` | Bind host address | `0.0.0.0` | Gateway/Backend |
+| `NODE_ENV` | Environment mode (`development`/`production`) | `production` | All |
 | `CORS_ORIGIN` | Allowed origin for CORS requests | `http://localhost:3000` | Backend |
 | `FRONTEND_PORT` | Frontend HTTP listening port | `3000` | Frontend |
 | `VITE_BACKEND_URL` | Backend API URL for frontend client | `http://localhost:4000` | Frontend |
+| `VITE_GATEWAY_URL` | Gateway URL for frontend client | `http://localhost:8080` | Frontend |
 | `POSTGRES_USER` | PostgreSQL superuser username | `deception_user` | Database |
 | `POSTGRES_PASSWORD`| PostgreSQL superuser password | `deception_pass` | Database |
 | `POSTGRES_DB` | PostgreSQL default database | `deception_db` | Database |
@@ -184,9 +241,10 @@ cd backend && npm test
 
 ---
 
-## 7. Next Stage: Stage 2 Preview
+## 7. Next Stage: Stage 3 Preview
 
-- **Stage 2: Reverse-Proxy Gateway & Traffic Interception (`gateway/`)**
-  - Implement reverse-proxy traffic interceptor.
-  - Request inspection pipeline & feature extraction.
-  - Dynamic routing rules engine.
+- **Stage 3: ML Detection Engine (`detection/`)**
+  - Implement Python-based ML detection service.
+  - Request feature extraction (payload entropy, path anomalies, header patterns).
+  - Anomaly detection scoring API with confidence scores.
+  - Streaming telemetry hooks connecting the Stage 2 Gateway to the ML Detection service.

@@ -1,0 +1,16 @@
+{
+  "name": "deception-test-origin",
+  "version": "0.1.0",
+  "description": "Authorized internal test origin service for Stage 2 Gateway",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

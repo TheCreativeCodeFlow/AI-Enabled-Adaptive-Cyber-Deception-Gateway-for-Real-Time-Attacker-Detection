@@ -45,8 +45,8 @@ flowchart TD
 
     classDef active fill:#1b5e20,stroke:#4caf50,color:#fff;
     classDef planned fill:#424242,stroke:#9e9e9e,color:#fff,stroke-dasharray: 5 5;
-    class Backend,Frontend,DB active;
-    class Gateway,MLService,DecoyEnv planned;
+    class Backend,Frontend,DB,Gateway active;
+    class MLService,DecoyEnv planned;
 ```
 
 ---
@@ -63,9 +63,10 @@ flowchart TD
 - **Role:** Central control plane, API provider, and telemetry coordinator.
 - **Stage 1 Scope:** Health check service (`GET /health`), CORS support, structured graceful shutdown, and containerized deployment.
 
-### 3.3 `gateway/` (Stage 2 — Reserved)
-- **Tech Stack:** Reverse proxy (e.g., Envoy, OpenResty, or Node/Go proxy).
-- **Role:** Primary traffic ingress. Intercepts HTTP/S requests, extracts behavioral features (headers, timing, payload entropy, path anomalies), queries the ML detection engine, and conditionally proxies requests to either genuine services or the deception runtime.
+### 3.3 `gateway/` (Stage 2 — Active)
+- **Tech Stack:** Node.js, Express, TypeScript reverse proxy.
+- **Role:** Primary perimeter traffic ingress. Intercepts HTTP/S requests, normalizes paths, strictly validates upstream whitelisting (preventing SSRF and open proxy), enforces body size limits, handles timeouts, attaches request IDs (`X-Request-ID`), preserves response headers/cookies, and outputs structured zero-leakage logs.
+- **Stage 2 Scope:** Fully functional reverse proxy routing client requests to an isolated internal test origin (`http://test-origin:5000`) without public host exposure. Prepared for Stage 3 ML inspection hooks.
 
 ### 3.4 `detection/` (Stage 3 — Reserved)
 - **Tech Stack:** Python (FastAPI/gRPC, PyTorch / Scikit-learn).
@@ -133,16 +134,16 @@ flowchart TD
 | Stage | Focus Area | Deliverables | Current Status |
 |---|---|---|---|
 | **Stage 1** | **Repository Foundation & Architecture** | Modular directory layout, minimal React frontend, Express TypeScript backend with `GET /health`, Docker Compose orchestration, PostgreSQL healthcheck, architecture documentation. | **Active / Complete** |
-| **Stage 2** | **Gateway & Traffic Interception** | Reverse-proxy service in `gateway/`, request inspection pipeline, routing policies, configurable routing rules. | *Reserved* |
+| **Stage 2** | **Gateway & Traffic Interception** | Reverse-proxy service in `gateway/`, request inspection pipeline, routing policies, configurable routing rules, isolated test origin. | **Active / Complete** |
 | **Stage 3** | **ML Detection Engine** | Python ML service in `detection/`, feature extraction, anomaly detection model, scoring API, session context tracking. | *Reserved* |
 | **Stage 4** | **Dynamic Deception Runtime** | Sandboxed honeypot containers in `deception/`, decoy targets, canary token generator, lateral egress barriers. | *Reserved* |
 | **Stage 5** | **Dashboard, Telemetry & SIEM** | Interactive threat visualization in `frontend/`, attack graph replay, alert notifications, SIEM event export. | *Reserved* |
 
 ---
 
-## 7. Current State & Known Limitations (Stage 1)
+## 7. Current State & Known Limitations (Stage 2)
 
 - **Authentication & Authorization:** Not yet implemented.
 - **Database Schemas:** PostgreSQL container runs and passes healthcheck, but application tables/migrations will be introduced in subsequent stages.
-- **Traffic Routing:** Gateway directory is reserved; requests are directly accessible to individual services in local development.
-- **ML Detection & Honeypots:** No ML models or dynamic honeypot traps exist in Stage 1; no fake metrics are displayed.
+- **Traffic Routing:** Gateway reverse proxy is active and routes traffic strictly to the authorized internal test origin (`http://test-origin:5000`). Dynamic policy routing to deception targets will be integrated in Stage 4.
+- **ML Detection & Honeypots:** ML models and dynamic honeypot traps remain reserved for Stages 3 and 4; no fake metrics are displayed.
