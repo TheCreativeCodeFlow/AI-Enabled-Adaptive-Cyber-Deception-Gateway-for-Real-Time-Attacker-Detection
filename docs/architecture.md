@@ -29,7 +29,7 @@ flowchart TD
     end
 
     subgraph DeceptionZone["Isolated Deception Zone (Containment)"]
-        DecoyEnv[Deception Runtime<br/>Dynamic Honeypots & Decoy Services<br/><i>deception/ - Stage 4</i>]
+        DecoyEnv[Deception Runtime & DSG<br/>Stateful Honeypots & Decoy Services<br/><i>deception/ - Stage 4</i>]
     end
 
     Client -->|HTTP/HTTPS| Gateway
@@ -37,7 +37,7 @@ flowchart TD
     MLService -->|Threat Score & Classification| Gateway
 
     Gateway -->|Benign Traffic Routing| Backend
-    Gateway -.->|Future Diverted Traffic (Stage 4)| DecoyEnv
+    Gateway -.->|Verified Runtime (Diversion Deferred)| DecoyEnv
 
     Frontend -->|Admin & Status Queries| Backend
     Backend -->|Read/Write State| DB
@@ -45,8 +45,7 @@ flowchart TD
 
     classDef active fill:#1b5e20,stroke:#4caf50,color:#fff;
     classDef planned fill:#424242,stroke:#9e9e9e,color:#fff,stroke-dasharray: 5 5;
-    class Backend,Frontend,DB,Gateway,MLService active;
-    class DecoyEnv planned;
+    class Backend,Frontend,DB,Gateway,MLService,DecoyEnv active;
 ```
 
 ---
@@ -78,13 +77,22 @@ flowchart TD
   - Dual-scoring ensemble outputting calibrated risk scores [0.0, 1.0], classification labels (`BENIGN`, `SUSPICIOUS`, `MALICIOUS`), and structured explainable evidence tags.
   - Zero host exposure; communicates exclusively across internal Docker bridge networks.
 
-### 3.5 `deception/` (Stage 4 — Reserved)
-- **Tech Stack:** Containerized shadow runtimes, dynamic mock services, synthetic databases, and canary tokens.
-- **Role:** Absorbs diverted attacker traffic. Provides realistic, believable interactions while strictly confining network egress to prevent pivot attacks.
+### 3.5 `deception/` (Stage 4 — Active)
+- **Tech Stack:** Node.js, Express, TypeScript.
+- **Role:** Isolated, stateful active cyber deception runtime and Deception State Graph (DSG).
+- **Stage 4 Scope:**
+  - Deception State Graph (DSG) with validated nodes (`entrypoint`, `catalog`, `users`, `files`, `admin`, `auth`) and strict transition boundaries.
+  - Three-tier state architecture:
+    1. *Protected Policy Layer:* Frozen, immutable safety constraints and operation allowlists.
+    2. *Controlled Dynamic Layer:* Session-specific cloned synthetic records (users, files, services, decoy injection).
+    3. *Observation Layer:* Pseudonymous session identifiers, visited nodes, telemetry timestamps, and interaction history.
+  - Deterministic Deception Strategy Selector with policy assertion (`ADD_SYNTHETIC_DECOY_RECORD`, `EXPOSE_SYNTHETIC_SERVICE`, `INCREASE_OBSERVATION_DETAIL`, `MAINTAIN_CURRENT_STATE`, `DISABLE_DECEPTION`).
+  - Synthetic APIs (`/api/catalog`, `/api/users`, `/api/files`, `/api/admin`, `/api/auth/login`) with zero access to real databases, host files, or real credentials.
+  - Strictly containerized on internal Docker network (`deception-network`, port `5050`) with no published host port, unprivileged user `node`, sliding TTL session expiration, and LRU memory capacity controls.
 
 ### 3.6 `infra/` (Stage 1 — Active)
 - **Tech Stack:** Docker, Docker Compose, PostgreSQL 16.
-- **Role:** Declarative local and staging infrastructure management. Provides reproducible service orchestration and verified healthchecks.
+- **Role:** Declarative local and staging infrastructure management. Provides reproducible service orchestration and verified healthchecks across all 7 platform services.
 
 ---
 
@@ -107,10 +115,10 @@ flowchart TD
 ═════════════════════════   ═══════════════════════════════════════════════
       │                                 │
       ▼                                 ▼
- [ Backend & Database ]        [ Deception Honeypots ]
+ [ Backend & Database ]        [ Deception Honeypots & DSG ]
 ```
 
-1. **Perimeter Boundary (Untrusted to DMZ):** Only the Gateway service exposes public ports. No internal backend services or databases are accessible directly from the public network.
+1. **Perimeter Boundary (Untrusted to DMZ):** Only the Gateway service exposes public ports. No internal backend services, databases, or deception containers are accessible directly from the public network.
 2. **Core Boundary (DMZ to Internal Services):** Backend APIs and ML detection services communicate only with verified internal clients over private Docker bridge networks.
 3. **Deception Isolation Boundary (Containment):** The deception runtime is strictly isolated from core production systems. Deception containers have zero outbound network routes to internal subnets or the wider internet to prevent pivot/lateral movement attacks. Egress logging is asynchronous and unidirectionally sanitized.
 
@@ -126,12 +134,12 @@ flowchart TD
 5. Gateway attaches correlation and audit metadata and forwards request unchanged to genuine `backend/` or origin service.
 6. Upstream processes request and returns response through Gateway to user.
 
-### 5.2 Malicious Traffic Flow (Stage 3 Shadow Mode vs Stage 4 Deception)
+### 5.2 Malicious Traffic Flow (Stage 3 & 4 Shadow Mode vs Stage 5 Active Policy Diversion)
 1. Adversary executes scanning, SQL injection, path traversal, or probe requests against Gateway.
 2. Gateway extracts derived features and queries Detection service.
 3. Detection engine flags malicious patterns (`score >= 0.70`, label `MALICIOUS`) with evidence factors.
-4. **Stage 3 (Shadow Mode):** Gateway logs classification and security evidence, sets telemetry headers, but **does not block or divert**. Traffic continues to the authorized test origin to validate detector fidelity without service interruption.
-5. **Stage 4 (Future Deception Runtime):** Gateway will transparently divert sessions to `deception/` honeypot environment, presenting synthetic responses and sandboxed decoy targets.
+4. **Stage 4 (Deception Runtime Verification & Shadow Mode):** The isolated Deception Runtime (`deception/`) is verified and healthy on the internal network. However, **gateway traffic diversion is intentionally inactive** in Stage 4. All gateway traffic continues normal forwarding to the test origin in Shadow Mode.
+5. **Stage 5 (Future Dynamic Diversion):** Gateway policy routing will be activated to transparently divert confirmed attacker sessions into `deception/`.
 
 ---
 
@@ -142,14 +150,14 @@ flowchart TD
 | **Stage 1** | **Repository Foundation & Architecture** | Modular directory layout, minimal React frontend, Express TypeScript backend with `GET /health`, Docker Compose orchestration, PostgreSQL healthcheck, architecture documentation. | **Active / Complete** |
 | **Stage 2** | **Gateway & Traffic Interception** | Reverse-proxy service in `gateway/`, request inspection pipeline, routing policies, configurable routing rules, isolated test origin. | **Active / Complete** |
 | **Stage 3** | **ML Detection Engine & Gateway Integration** | Python FastAPI ML service in `detection/`, feature extraction, dual deterministic + scikit-learn models, shadow mode gateway integration, fail-open resilience. | **Active / Complete** |
-| **Stage 4** | **Dynamic Deception Runtime** | Sandboxed honeypot containers in `deception/`, decoy targets, canary token generator, lateral egress barriers. | *Reserved* |
-| **Stage 5** | **Dashboard, Telemetry & SIEM** | Interactive threat visualization in `frontend/`, attack graph replay, alert notifications, SIEM event export. | *Reserved* |
+| **Stage 4** | **Dynamic Deception Runtime & DSG** | Isolated Node.js/TypeScript deception service in `deception/`, Deception State Graph (DSG), three logical state layers, deterministic strategy selector, session-isolated synthetic APIs. | **Active / Complete** |
+| **Stage 5** | **Dynamic Traffic Diversion, Dashboard & Telemetry** | Active gateway routing policy diversion, interactive threat visualization in `frontend/`, attack graph replay, alert notifications, SIEM event export. | *Reserved* |
 
 ---
 
-## 7. Current State & Known Limitations (Stage 3)
+## 7. Current State & Known Limitations (Stage 4)
 
-- **Shadow Mode Traffic Execution:** In Stage 3, all requests are forwarded directly to the authorized upstream origin (`test-origin`), regardless of whether the detection service classifies them as `BENIGN`, `SUSPICIOUS`, or `MALICIOUS`. Dynamic redirection into honeypots is strictly reserved for Stage 4.
-- **Fail-Open Resilience:** If the detection service is unreachable or exceeds the response timeout (default 500ms), the gateway continues proxying without returning client errors.
-- **Synthetic Training Data Limitations:** The machine learning baseline is trained on synthetic feature distributions generated by `detection/train.py`. While it provides verified classification across structured anomalies, it does not represent real-world zero-day attack distributions. Production deployments will require continuous online retraining on authenticated honeypot telemetry.
-- **Authentication & Database Schemas:** Application authentication and database migrations remain reserved for subsequent stages.
+- **Gateway Diversion Inactive:** The deception runtime is fully operational and tested in isolation on the Docker network, but gateway diversion remains inactive in Stage 4 to preserve strict validation boundaries.
+- **In-Memory Session Store:** Deception sessions are maintained in-memory using `InMemorySessionStore` with sliding TTL (30 minutes) and LRU capacity eviction (1,000 sessions). A persistent storage interface (`SessionStore`) is defined to support external databases (e.g., Redis or PostgreSQL) in future stages without architectural changes.
+- **Synthetic Data Boundaries:** All synthetic users, files, and services are mocked fixtures. No real credentials, production data, or host filesystem paths are reachable.
+- **Authentication & Database Schemas:** Main application authentication and persistent telemetry migrations remain reserved for Stage 5.

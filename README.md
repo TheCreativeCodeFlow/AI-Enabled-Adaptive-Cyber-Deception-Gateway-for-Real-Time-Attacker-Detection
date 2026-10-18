@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 3 — ML Detection Engine and Gateway Integration**
+> **Current Status: Stage 4 — Isolated Dynamic Deception Runtime and DSG**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning and diverts adversaries into isolated, high-interaction honeypots in real time.
 
@@ -16,13 +16,18 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts
 ├── detection/             # [Stage 3 — Active] Python FastAPI ML anomaly detection service
-│   ├── src/               # Application code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
+│   ├── src/               # Code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
 │   ├── tests/             # Pytest test suite (test_detection.py)
 │   ├── train.py           # Reproducible model training pipeline
 │   ├── model.joblib       # Serialized StandardScaler + RandomForest pipeline
 │   ├── requirements.txt   # Python dependencies
 │   ├── Dockerfile         # Python 3.11 container build
 │   └── README.md          # Model specifications, feature schema & synthetic data limitations
+├── deception/             # [Stage 4 — Active] Isolated dynamic deception runtime & DSG
+│   ├── src/               # Code (app.ts, dsg.ts, policy.ts, sessionStore.ts, strategy.ts, syntheticData.ts)
+│   ├── Dockerfile         # Multi-stage container build with unprivileged node user
+│   ├── package.json       # Dependencies & test scripts
+│   └── README.md          # DSG specifications, layer models & API contracts
 ├── backend/               # [Stage 1 — Active] Node.js, Express & TypeScript core service
 │   ├── src/               # Application code (app.ts, index.ts, index.test.ts)
 │   ├── Dockerfile         # Multi-stage container build
@@ -32,11 +37,10 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
-├── deception/             # [Reserved — Stage 4] Isolated honeypots & decoy runtime
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
 │   └── architecture.md    # System architecture, trust boundaries & roadmap
-├── docker-compose.yml     # Local multi-service orchestration
+├── docker-compose.yml     # Local multi-service orchestration (7 services)
 ├── .env.example           # Environment template
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
@@ -61,7 +65,7 @@ cp .env.example .env
 ```
 
 ### 3.2 Build and Start Services
-Start all 6 services in detached mode:
+Start all 7 services in detached mode:
 ```bash
 docker compose up -d --build
 ```
@@ -75,6 +79,7 @@ docker compose ps
 You should see:
 - `deception-gateway`: `healthy` (published host port `8080`)
 - `deception-detection`: `healthy` (internal port `8000`, no published host port)
+- `deception-runtime`: `healthy` (internal port `5050`, no published host port)
 - `deception-test-origin`: `healthy` (internal port `5000`, no published host port)
 - `deception-backend`: `healthy` (published host port `4000`)
 - `deception-frontend`: `healthy` (published host port `3000`)
@@ -85,7 +90,10 @@ You should see:
 # Follow logs across all services
 docker compose logs -f
 
-# Follow gateway logs (includes detection inference duration and risk score)
+# Follow deception runtime logs
+docker compose logs -f deception
+
+# Follow gateway logs (includes detection scores and shadow-mode status)
 docker compose logs -f gateway
 
 # Follow detection engine logs
@@ -109,6 +117,16 @@ docker compose down -v
 ## 4. Local Development (Without Docker)
 
 You can run individual services directly on the host machine.
+
+### Deception Runtime (Isolated DSG Service)
+```bash
+cd deception
+npm install
+npm test
+npm run build
+npm run dev
+```
+- Health Check: `http://localhost:5050/health`
 
 ### Gateway (Reverse Proxy + Detection Integration)
 ```bash
@@ -159,29 +177,20 @@ npm run dev
 
 ## 5. Verification & Testing
 
-### 5.1 Gateway Health Endpoint
+### 5.1 Deception Runtime Verification
 ```bash
-curl -i http://localhost:8080/health
-```
-Expected JSON Response (`HTTP 200 OK`):
-```json
-{
-  "status": "healthy",
-  "service": "gateway",
-  "stage": "Stage 3 — ML Detection Engine and Gateway Integration",
-  "upstream": "http://test-origin:5000",
-  "detectionService": "http://detection:8000",
-  "detectionEnabled": true,
-  "timestamp": "...",
-  "uptime": 120.5
-}
+# Verify health check inside Docker network
+docker exec deception-runtime node -e "fetch('http://127.0.0.1:5050/health').then(r => r.json()).then(console.log)"
+
+# Output:
+# { status: 'healthy', service: 'deception-runtime', stage: 'Stage 4 — Dynamic Deception Runtime and DSG', policyVersion: '1.0.0-immutable', ... }
 ```
 
-### 5.2 Shadow Mode Traffic Forwarding
-In Stage 3, all requests are forwarded faithfully to the authorized upstream origin, with real-time detection headers attached.
+### 5.2 Gateway Shadow Mode Traffic Forwarding
+In Stage 4, gateway traffic diversion remains inactive. All requests continue to be forwarded faithfully to the authorized upstream origin with detection headers attached.
 
 ```bash
-# 1. Benign Request (classified as BENIGN, forwarded to origin)
+# 1. Benign Request
 curl -i http://localhost:8080/
 
 # Output Headers:
@@ -189,7 +198,7 @@ curl -i http://localhost:8080/
 # X-Detection-Classification: BENIGN
 # X-Origin-ID: authorized-test-origin
 
-# 2. Suspicious Probe (classified as SUSPICIOUS or MALICIOUS, forwarded in shadow mode)
+# 2. Suspicious Probe (Shadow Mode Verification)
 curl -i -H "User-Agent: sqlmap/1.5.2" "http://localhost:8080/api/admin/probe?id=1%20UNION%20SELECT%20null,null--"
 
 # Output Headers:
@@ -198,28 +207,21 @@ curl -i -H "User-Agent: sqlmap/1.5.2" "http://localhost:8080/api/admin/probe?id=
 # X-Origin-ID: authorized-test-origin
 ```
 
-### 5.3 Zero-Leakage Privacy & Structured Logging
-Inspect gateway structured logs to confirm that zero credentials, cookies, or request bodies are logged:
+### 5.3 Automated Test Suites across All Services
 ```bash
-docker compose logs --tail=5 gateway
-```
-Sample log entry:
-```json
-{"level":"INFO","timestamp":"2026-10-18T15:36:50.497Z","requestId":"629fc0c6-7862-4f3b-93c9-a0344293b446","method":"GET","path":"/api/admin/probe?...","statusCode":200,"durationMs":19.47,"clientIp":"172.18.0.1","userAgent":"sqlmap/1.5.2","detectionScore":0.355,"detectionClassification":"SUSPICIOUS","detectionInferenceMs":14.421}
-```
+# 1. Deception Runtime Unit, DSG, Strategy & Isolation Tests
+cd deception && npm test
 
-### 5.4 Automated Test Suites
-```bash
-# 1. Detection Service Pytest Suite
+# 2. Detection Service Pytest Suite
 PYTHONPATH=detection ./detection/.venv/bin/pytest detection/tests/test_detection.py
 
-# 2. Gateway Unit, Integration, Shadow Mode & Security Tests
+# 3. Gateway Unit, Integration, Shadow Mode & Security Tests
 cd gateway && npm test
 
-# 3. Backend Unit & Health Tests
+# 4. Backend Unit & Health Tests
 cd backend && npm test
 
-# 4. Frontend Production Build Verification
+# 5. Frontend Production Build Verification
 cd frontend && npm run build
 ```
 
@@ -233,13 +235,17 @@ cd frontend && npm run build
 | `ORIGIN_URL` | Upstream target origin URL | `http://test-origin:5000` | Gateway |
 | `ALLOWED_ORIGINS` | Comma-separated whitelist of approved origins | `http://test-origin:5000,http://localhost:5000,http://127.0.0.1:5000` | Gateway |
 | `PROXY_TIMEOUT_MS` | Proxy request timeout in milliseconds | `5000` | Gateway |
-| `MAX_REQUEST_BODY_SIZE` | Maximum permitted request body size in bytes | `1048576` (1MB) | Gateway |
+| `MAX_REQUEST_BODY_SIZE` | Maximum permitted request body size in bytes | `1048576` (1MB) | Gateway/Deception |
 | `DETECTION_SERVICE_URL` | Internal URL of ML detection engine | `http://detection:8000` | Gateway |
 | `DETECTION_TIMEOUT_MS` | Detection request timeout before fail-open | `500` | Gateway |
 | `DETECTION_ENABLED` | Enable or disable ML detection inspection | `true` | Gateway |
 | `DETECTION_PORT` | Python FastAPI detection service port | `8000` | Detection |
+| `DECEPTION_PORT` | Deception runtime HTTP listening port | `5050` | Deception |
+| `DECEPTION_SERVICE_URL`| Internal URL of Deception runtime | `http://deception:5050` | Deception |
+| `SESSION_TTL_MS` | Deception session sliding TTL in ms | `1800000` (30m) | Deception |
+| `MAX_SESSIONS` | Maximum in-memory concurrent sessions | `1000` | Deception |
 | `PORT` | Backend HTTP listening port | `4000` | Backend |
-| `HOST` | Bind host address | `0.0.0.0` | Gateway/Backend/Detection |
+| `HOST` | Bind host address | `0.0.0.0` | Gateway/Backend/Detection/Deception |
 | `NODE_ENV` | Environment mode (`development`/`production`) | `production` | All Node |
 | `CORS_ORIGIN` | Allowed origin for CORS requests | `http://localhost:3000` | Backend |
 | `FRONTEND_PORT` | Frontend HTTP listening port | `3000` | Frontend |
@@ -255,10 +261,9 @@ cd frontend && npm run build
 
 ---
 
-## 7. Next Stage: Stage 4 Preview
+## 7. Next Stage: Stage 5 Preview
 
-- **Stage 4: Dynamic Deception Runtime (`deception/`)**
-  - Implement isolated decoy containers and honeypot runtimes.
-  - Gateway dynamic policy routing: transition from Stage 3 Shadow Mode to active diversion of attacker sessions (`score >= threshold`).
-  - Believable mock services (fake admin dashboards, simulated SQL databases, decoy files, canary tokens).
-  - Unidirectional audit telemetry streaming back to backend without network egress risks.
+- **Stage 5: Dynamic Traffic Diversion, Dashboard & Telemetry**
+  - Gateway active policy diversion: route confirmed malicious sessions (`risk_score >= threshold`) from genuine backend into isolated `deception/` runtime.
+  - Interactive attack graph & session replay in `frontend/`.
+  - SIEM telemetry pipeline: stream sanitized deception audit logs to backend for threat intelligence analytics.

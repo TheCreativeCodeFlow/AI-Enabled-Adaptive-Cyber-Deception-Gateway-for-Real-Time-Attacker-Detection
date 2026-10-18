@@ -49,7 +49,7 @@ export default function App() {
   return (
     <div className="container">
       <header className="header">
-        <div className="badge">Stage 3: ML Detection Engine & Gateway Shadow Mode</div>
+        <div className="badge">Stage 4: Isolated Dynamic Deception Runtime & DSG</div>
         <h1>AI-Enabled Adaptive Cyber Deception Gateway</h1>
         <p className="subtitle">
           Real-Time Attacker Detection & Active Defense Platform
@@ -195,24 +195,24 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>infra/</h3>
               </div>
-              <p>Docker Compose multi-service orchestration (gateway, detection, test-origin, backend, frontend, postgres).</p>
-              <span className="stage-pill">Stage 1-3: Active</span>
+              <p>Docker Compose multi-service orchestration (gateway, detection, deception, test-origin, backend, frontend, postgres).</p>
+              <span className="stage-pill">Stage 1-4: Active</span>
             </div>
 
-            <div className="module-item reserved">
+            <div className="module-item active">
               <div className="module-header">
-                <span className="dot yellow"></span>
+                <span className="dot green"></span>
                 <h3>deception/</h3>
               </div>
-              <p>Isolated deception runtime and dynamic honeypots.</p>
-              <span className="stage-pill reserved">Stage 4: Reserved</span>
+              <p>Isolated cyber deception runtime with Deception State Graph (DSG), session isolation & synthetic APIs.</p>
+              <span className="stage-pill">Stage 4: Active</span>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="footer">
-        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 3 ML Detection & Gateway Shadow Mode</p>
+        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 4 Dynamic Deception Runtime & DSG</p>
       </footer>
     </div>
   );
