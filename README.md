@@ -1,8 +1,8 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 7 — Multi-Tenant Organisation Management and Application Onboarding**
+> **Current Status: Stage 8 — End-to-End Security Validation and Evaluation Framework**
 
-A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, and zero-leak deception quarantine policies.
+A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, and a formal research evaluation framework.
 
 ---
 
@@ -10,11 +10,11 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 
 ```
 .
-├── gateway/               # [Stage 2, 3, 5, 6 — Active] Reverse proxy, ML scoring, policy controller & operator RBAC
-│   ├── src/               # Code (app.ts, proxy.ts, auth.ts, controller.ts, sessionRouter.ts, detector.ts, features.ts, config.ts, logger.ts)
+├── gateway/               # [Stage 2, 3, 5, 6, 8 — Active] Reverse proxy, ML scoring, policy controller, metrics & events
+│   ├── src/               # Code (app.ts, proxy.ts, auth.ts, controller.ts, sessionRouter.ts, metrics.ts, eventRecorder.ts, des.ts, features.ts)
 │   ├── test-origin/       # Authorized internal test origin (unexposed to host)
 │   ├── Dockerfile         # Multi-stage container build
-│   └── package.json       # Dependencies & test scripts
+│   └── package.json       # Dependencies & test scripts (56 unit, controller, RBAC & Stage 8 tests)
 ├── detection/             # [Stage 3 — Active] Python FastAPI ML anomaly detection service
 │   ├── src/               # Code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
 │   ├── tests/             # Pytest test suite (test_detection.py)
@@ -26,21 +26,25 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 ├── deception/             # [Stage 4-6 — Active] Isolated dynamic deception runtime & DSG
 │   ├── src/               # Code (app.ts, dsg.ts, policy.ts, sessionStore.ts, strategy.ts, syntheticData.ts)
 │   ├── Dockerfile         # Multi-stage container build with unprivileged node user
-│   └── package.json       # Dependencies & test scripts
-├── backend/               # [Stage 1, 6, 7 — Active] Multi-tenant orgs, app onboarding, DNS TXT verification, RBAC & audit
+│   └── package.json       # Dependencies & test scripts (18 tests)
+├── backend/               # [Stage 1, 6, 7, 8 — Active] Multi-tenant orgs, app onboarding, DNS TXT verification, event pipeline & RBAC
 │   ├── src/               # Application code (app.ts, auth.ts, orgAuth.ts, originValidation.ts, domainVerification.ts, db.ts, config.ts, routes/)
 │   ├── Dockerfile         # Multi-stage container build
-│   └── package.json       # Dependencies & test scripts (index.test.ts, stage7.test.ts)
-├── frontend/              # [Stage 1-7 — Active] React Vite console with multi-tenant workspace, app onboarding & DNS check
+│   └── package.json       # Dependencies & test scripts (32 tests)
+├── frontend/              # [Stage 1-8 — Active] React Vite console with multi-tenant workspace, app onboarding, events pipeline & metrics
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
+├── scripts/               # [Stage 8] Reproducible evaluation runner comparing B1, B2, B3, B4 configurations
+│   └── evaluation_runner.py # Benchmark generator & metric calculator (DES, Precision, Recall, F1, Latencies)
+├── reports/               # [Stage 8] Benchmark output artifacts and reproducibility records
+│   └── evaluation_results.json # Full 120-request benchmark comparative results
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
-│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, RBAC matrix & roadmap
+│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, DES math & benchmark results
 ├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks, isolated deception)
-├── .env.example           # Environment template with Stage 7 variables
+├── .env.example           # Environment template with Stage 8 variables
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
 
@@ -343,12 +347,34 @@ curl -s http://localhost:4000/api/orgs/$ORG_ID/audit \
   -H "Authorization: Bearer $TOKEN" | jq .auditEvents
 ```
 
-### 5.6 Automated Test Suites across All Services (87 Tests Total)
+### 5.6 Stage 8 Security Events Pipeline, Metrics & Research Evaluation Walkthrough
+
 ```bash
-# 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC & Quarantine Tests (38 tests)
+# 1. Inspect Live Gateway Percentile Latency & Telemetry Metrics
+curl -s http://localhost:8080/api/gateway/metrics | jq .
+
+# 2. Query Unified Security Events Pipeline for an Organisation (Tenant Scoped)
+curl -s http://localhost:4000/api/orgs/$ORG_ID/events?limit=10 \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# 3. Retrieve Aggregated Security Event Metrics & Deception Summary
+curl -s http://localhost:4000/api/orgs/$ORG_ID/events/summary \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# 4. Execute the Standalone Research Evaluation Runner (120 Synthetic Benchmark Requests)
+# Compares B1 (Direct), B2 (Static Honeypot), B3 (Rule-Based Heuristic), and B4 (Proposed ML+DSG)
+python3 scripts/evaluation_runner.py
+
+# 5. Inspect Generated Evaluation Results Artifact
+cat reports/evaluation_results.json | jq .
+```
+
+### 5.7 Automated Test Suites across All Services (112 Tests Total)
+```bash
+# 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & E2E Tests (56 tests)
 cd gateway && npm test
 
-# 2. Backend Health, Operator Auth, Multi-Tenant Models, DNS TXT & SSRF Tests (25 tests)
+# 2. Backend Health, Operator Auth, Multi-Tenant Models, DNS TXT, Stage 8 Event Pipeline & SSRF Tests (32 tests)
 cd backend && npm test
 
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
@@ -357,7 +383,10 @@ cd deception && npm test
 # 4. Detection Service Pytest Suite (6 tests)
 cd detection && .venv/bin/pytest
 
-# 5. Frontend Production Build Verification
+# 5. Standalone Evaluation Benchmark Suite (120 synthetic benchmark requests)
+python3 scripts/evaluation_runner.py
+
+# 6. Frontend Production Build Verification
 cd frontend && npm run build
 ```
 
@@ -376,6 +405,8 @@ cd frontend && npm run build
 | `DECEPTION_SCORE_THRESHOLD` | Minimum risk score required for diversion | `0.70` | Gateway |
 | `DECEPTION_FAILURE_POLICY` | Deception failure mode (`quarantine` [default] or `fallback_origin`) | `quarantine` | Gateway |
 | `OPERATOR_JWT_SECRET` | Secret key for signing operator authentication tokens | `deception-gateway-operator-secret-key-32chars-min!` | Gateway/Backend |
+| `SERVICE_SHARED_SECRET` | Shared secret for internal gateway-to-backend event pipeline | `deception-internal-service-secret-key-32chars!` | Gateway/Backend |
+| `BACKEND_URL` | Internal URL of backend service for event dispatch | `http://backend:4000` | Gateway |
 | `BCRYPT_SALT_ROUNDS` | Salt rounds for password hashing | `12` | Backend |
 | `PROXY_TIMEOUT_MS` | Proxy request timeout in milliseconds | `5000` | Gateway |
 | `MAX_REQUEST_BODY_SIZE` | Maximum permitted request body size in bytes | `1048576` (1MB) | Gateway/Deception |

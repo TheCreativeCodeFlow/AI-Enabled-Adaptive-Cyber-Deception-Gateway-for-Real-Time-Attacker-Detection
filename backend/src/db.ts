@@ -117,6 +117,31 @@ export interface OrgAuditEventRecord {
   created_at: string;
 }
 
+export interface SecurityEventRecord {
+  id: string;
+  request_id: string;
+  session_id: string;
+  organisation_id?: string;
+  application_id?: string;
+  timestamp: string;
+  method: string;
+  path: string;
+  status_code: number;
+  duration_ms: number;
+  detection_score?: number;
+  detection_classification?: string;
+  detection_latency_ms?: number;
+  routing_decision: 'ORIGIN' | 'DECEPTION' | 'OBSERVE_ONLY';
+  routing_reason: string;
+  routing_mode: 'shadow' | 'active';
+  deception_node?: string;
+  deception_strategy?: string;
+  failure_quarantined: boolean;
+  client_ip: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+}
+
 let pool: Pool | null = null;
 let useInMemory = false;
 
@@ -130,6 +155,7 @@ export const memApplications = new Map<string, ApplicationRecord>();
 export const memVerifications = new Map<string, DomainVerificationRecord>();
 export const memProtections = new Map<string, ApplicationProtectionRecord>();
 export const memOrgAuditEvents: OrgAuditEventRecord[] = [];
+export const memSecurityEvents: SecurityEventRecord[] = [];
 
 export function getPool(): Pool | null {
   return pool;
@@ -266,6 +292,31 @@ export async function initDb(): Promise<void> {
           created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS security_events (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          request_id VARCHAR(128) NOT NULL,
+          session_id VARCHAR(128) NOT NULL,
+          organisation_id UUID REFERENCES organisations(id) ON DELETE CASCADE,
+          application_id UUID REFERENCES applications(id) ON DELETE CASCADE,
+          timestamp TIMESTAMPTZ NOT NULL,
+          method VARCHAR(16) NOT NULL,
+          path VARCHAR(1024) NOT NULL,
+          status_code INT NOT NULL,
+          duration_ms FLOAT NOT NULL,
+          detection_score FLOAT,
+          detection_classification VARCHAR(64),
+          detection_latency_ms FLOAT,
+          routing_decision VARCHAR(32) NOT NULL,
+          routing_reason VARCHAR(128) NOT NULL,
+          routing_mode VARCHAR(32) NOT NULL DEFAULT 'shadow',
+          deception_node VARCHAR(128),
+          deception_strategy VARCHAR(128),
+          failure_quarantined BOOLEAN NOT NULL DEFAULT false,
+          client_ip VARCHAR(128) NOT NULL,
+          metadata JSONB DEFAULT '{}',
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE INDEX IF NOT EXISTS idx_operators_username ON operators(username);
         CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_organisations_slug ON organisations(slug);
@@ -274,6 +325,11 @@ export async function initDb(): Promise<void> {
         CREATE INDEX IF NOT EXISTS idx_applications_org ON applications(organisation_id);
         CREATE INDEX IF NOT EXISTS idx_domain_verifications_app ON domain_verifications(application_id);
         CREATE INDEX IF NOT EXISTS idx_org_audit_org_created ON organisation_audit_events(organisation_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_security_events_org ON security_events(organisation_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_security_events_app ON security_events(application_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_security_events_req ON security_events(request_id);
+        CREATE INDEX IF NOT EXISTS idx_security_events_sess ON security_events(session_id);
+        CREATE INDEX IF NOT EXISTS idx_security_events_decision ON security_events(routing_decision);
       `);
       console.log('[Backend-DB] PostgreSQL migrations verified successfully.');
     } finally {
@@ -857,6 +913,46 @@ function executeInMemoryQuery(text: string, params: any[]): { rows: any[]; rowCo
     return { rows: filtered, rowCount: filtered.length };
   }
 
+  // Stage 8: Security Events Pipeline
+  if (norm.includes('insert into security_events')) {
+    const newEvent: SecurityEventRecord = {
+      id: crypto.randomUUID(),
+      request_id: params[0],
+      session_id: params[1],
+      organisation_id: params[2] || undefined,
+      application_id: params[3] || undefined,
+      timestamp: params[4] || new Date().toISOString(),
+      method: params[5],
+      path: params[6],
+      status_code: parseInt(params[7], 10),
+      duration_ms: parseFloat(params[8]),
+      detection_score: params[9] !== undefined && params[9] !== null ? parseFloat(params[9]) : undefined,
+      detection_classification: params[10] || undefined,
+      detection_latency_ms: params[11] !== undefined && params[11] !== null ? parseFloat(params[11]) : undefined,
+      routing_decision: params[12] || 'ORIGIN',
+      routing_reason: params[13] || 'UNKNOWN',
+      routing_mode: params[14] || 'shadow',
+      deception_node: params[15] || undefined,
+      deception_strategy: params[16] || undefined,
+      failure_quarantined: Boolean(params[17]),
+      client_ip: params[18] || 'unknown',
+      metadata: typeof params[19] === 'string' ? JSON.parse(params[19]) : params[19] || {},
+      created_at: new Date().toISOString(),
+    };
+    memSecurityEvents.push(newEvent);
+    return { rows: [newEvent], rowCount: 1 };
+  }
+
+  if (norm.includes('select') && norm.includes('from security_events')) {
+    let filtered = [...memSecurityEvents];
+    if (norm.includes('where organisation_id = $1') || norm.includes('organisation_id = $1')) {
+      const orgId = params[0];
+      filtered = filtered.filter((e) => e.organisation_id === orgId);
+    }
+    filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return { rows: filtered, rowCount: filtered.length };
+  }
+
   return { rows: [], rowCount: 0 };
 }
 
@@ -870,6 +966,7 @@ export function clearInMemoryDb(): void {
   memVerifications.clear();
   memProtections.clear();
   memOrgAuditEvents.length = 0;
+  memSecurityEvents.length = 0;
 }
 
 export async function closeDb(): Promise<void> {

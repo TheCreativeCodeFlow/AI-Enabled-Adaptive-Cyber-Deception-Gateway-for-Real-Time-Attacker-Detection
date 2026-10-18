@@ -70,6 +70,14 @@ export default function App() {
   const [auditEvents, setAuditEvents] = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
+  // Stage 8 Security Events & Observability State
+  const [securityEvents, setSecurityEvents] = useState([]);
+  const [eventsSummary, setEventsSummary] = useState(null);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventFilterDecision, setEventFilterDecision] = useState('ALL');
+  const [gatewayMetrics, setGatewayMetrics] = useState(null);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+
   // 1. Fetch Health Metrics
   const fetchAllHealth = async () => {
     setHealthLoading(true);
@@ -381,14 +389,73 @@ export default function App() {
     }
   };
 
+  // 11. Fetch Security Events Pipeline (Stage 8)
+  const fetchSecurityEvents = async () => {
+    if (!token && !selectedOrgId) return;
+    setEventsLoading(true);
+    try {
+      let url = `${BACKEND_URL}/api/orgs/${selectedOrgId}/events?limit=50`;
+      if (eventFilterDecision && eventFilterDecision !== 'ALL') {
+        url += `&routingDecision=${eventFilterDecision}`;
+      }
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSecurityEvents(data.events || []);
+      } else {
+        const gwRes = await fetch(`${GATEWAY_URL}/api/gateway/events?limit=50`);
+        if (gwRes.ok) {
+          const gwData = await gwRes.json();
+          setSecurityEvents(gwData.events || []);
+        }
+      }
+
+      // Fetch summary
+      const sumRes = await fetch(`${BACKEND_URL}/api/orgs/${selectedOrgId}/events/summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (sumRes.ok) {
+        const sumData = await sumRes.json();
+        setEventsSummary(sumData.summary || null);
+      }
+    } catch (err) {
+      console.error('Failed to load security events:', err);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  // 12. Fetch Gateway Operational Metrics (Stage 8)
+  const fetchGatewayMetrics = async () => {
+    setMetricsLoading(true);
+    try {
+      const res = await fetch(`${GATEWAY_URL}/api/gateway/metrics`);
+      if (res.ok) {
+        const data = await res.json();
+        setGatewayMetrics(data);
+      }
+    } catch (err) {
+      console.error('Failed to load gateway metrics:', err);
+    } finally {
+      setMetricsLoading(false);
+    }
+  };
+
   // Auto-fetch data on active org or tab change
   useEffect(() => {
     if (selectedOrgId && token) {
       if (activeTab === 'apps') fetchApplications();
       if (activeTab === 'members') fetchMembers();
       if (activeTab === 'audit') fetchAuditEvents();
+      if (activeTab === 'events') fetchSecurityEvents();
+      if (activeTab === 'telemetry') {
+        fetchAllHealth();
+        fetchGatewayMetrics();
+      }
     }
-  }, [selectedOrgId, activeTab, token]);
+  }, [selectedOrgId, activeTab, token, eventFilterDecision]);
 
   const activeOrg = organisations.find((o) => o.id === selectedOrgId);
 
@@ -396,10 +463,10 @@ export default function App() {
     <div className="container">
       {/* Header */}
       <header className="header">
-        <div className="badge">Stage 7: Multi-Tenant Organisation Management & Application Onboarding</div>
+        <div className="badge">Stage 8: End-to-End Security Validation & Evaluation Framework</div>
         <h1>AI-Enabled Adaptive Cyber Deception Gateway</h1>
         <p className="subtitle">
-          Multi-Tenant Isolation, Cryptographic DNS TXT Verification & Adaptive Deception Routing
+          Real-Time Attacker Detection, Adaptive DSG Diversion, Unified Event Pipeline & Evaluation Metrics
         </p>
       </header>
 
@@ -635,6 +702,18 @@ export default function App() {
               Protected Applications ({applications.length})
             </button>
             <button
+              className={`tab-btn ${activeTab === 'events' ? 'active' : ''}`}
+              onClick={() => setActiveTab('events')}
+            >
+              Security Events Pipeline ({securityEvents.length})
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'telemetry' ? 'active' : ''}`}
+              onClick={() => setActiveTab('telemetry')}
+            >
+              Observability & Metrics
+            </button>
+            <button
               className={`tab-btn ${activeTab === 'members' ? 'active' : ''}`}
               onClick={() => setActiveTab('members')}
             >
@@ -645,12 +724,6 @@ export default function App() {
               onClick={() => setActiveTab('audit')}
             >
               Organisation Audit Trail
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'telemetry' ? 'active' : ''}`}
-              onClick={() => setActiveTab('telemetry')}
-            >
-              System Telemetry & Health
             </button>
           </div>
 
@@ -957,88 +1030,327 @@ export default function App() {
             </section>
           )}
 
-          {/* TAB 4: SYSTEM TELEMETRY */}
-          {activeTab === 'telemetry' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-              {/* Gateway Health Card */}
-              <section className="card health-card">
-                <div className="card-header">
-                  <h2>Gateway Health (Port 8080)</h2>
-                  <button className="btn btn-small" onClick={fetchAllHealth} disabled={healthLoading}>
-                    {healthLoading ? 'Checking...' : 'Refresh'}
+          {/* TAB: SECURITY EVENTS PIPELINE (STAGE 8) */}
+          {activeTab === 'events' && (
+            <section className="card">
+              <div className="card-header">
+                <div>
+                  <h2>Security Events Pipeline & Ingestion</h2>
+                  <p className="section-desc" style={{ marginBottom: 0 }}>
+                    Auditable, tenant-isolated real-time security events captured across proxy routing decisions with credential redaction.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <select
+                    className="select"
+                    style={{ width: 'auto', fontSize: '0.85rem' }}
+                    value={eventFilterDecision}
+                    onChange={(e) => setEventFilterDecision(e.target.value)}
+                  >
+                    <option value="ALL">All Decisions</option>
+                    <option value="ORIGIN">Origin Forwarded</option>
+                    <option value="DECEPTION">Deception Diverted</option>
+                    <option value="OBSERVE_ONLY">Observe Only</option>
+                  </select>
+                  <button className="btn btn-small" onClick={fetchSecurityEvents} disabled={eventsLoading}>
+                    {eventsLoading ? 'Loading...' : 'Refresh'}
                   </button>
                 </div>
-                <div className="endpoint-info">
-                  Target: <code>{GATEWAY_URL}/health</code>
+              </div>
+
+              {/* Summary Metric Cards */}
+              <div className="stat-cards-grid">
+                <div className="stat-card">
+                  <div className="stat-card-val">{eventsSummary?.totalEvents ?? securityEvents.length}</div>
+                  <div className="stat-card-label">Total Events</div>
                 </div>
-
-                {gatewayError && (
-                  <div className="status-box error">
-                    <span className="indicator red"></span>
-                    <div>
-                      <strong>Gateway Unreachable:</strong> {gatewayError}
-                    </div>
+                <div className="stat-card">
+                  <div className="stat-card-val" style={{ color: 'var(--accent-blue)' }}>
+                    {eventsSummary?.byDecision?.ORIGIN ?? securityEvents.filter((e) => e.routing_decision === 'ORIGIN').length}
                   </div>
-                )}
-
-                {gatewayHealth && (
-                  <div className="status-box success">
-                    <span className="indicator green"></span>
-                    <div className="status-details">
-                      <div className="status-title">
-                        <strong>Status:</strong> {gatewayHealth.status.toUpperCase()}
-                      </div>
-                      <div className="meta-grid">
-                        <div><strong>Service:</strong> {gatewayHealth.service}</div>
-                        <div><strong>Stage:</strong> {gatewayHealth.stage}</div>
-                        <div><strong>Routing Mode:</strong> {gatewayHealth.routingMode?.toUpperCase() || 'SHADOW'}</div>
-                        <div><strong>Killswitch:</strong> {gatewayHealth.emergencyDisableDiversion ? 'ACTIVATED' : 'DISENGAGED'}</div>
-                        <div><strong>Deception Upstream:</strong> {gatewayHealth.deceptionService}</div>
-                        <div><strong>Deception Sessions:</strong> {gatewayHealth.activeDeceptionSessions ?? 0}</div>
-                        <div><strong>Score Threshold:</strong> {gatewayHealth.deceptionThreshold ?? '0.70'}</div>
-                        <div><strong>Last Checked:</strong> {lastChecked}</div>
-                      </div>
-                    </div>
+                  <div className="stat-card-label">Origin Forwarded</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-val" style={{ color: '#ba68c8' }}>
+                    {eventsSummary?.byDecision?.DECEPTION ?? securityEvents.filter((e) => e.routing_decision === 'DECEPTION').length}
                   </div>
-                )}
-              </section>
+                  <div className="stat-card-label">Deception Diverted</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-val" style={{ color: 'var(--accent-yellow)' }}>
+                    {eventsSummary?.byDecision?.OBSERVE_ONLY ?? securityEvents.filter((e) => e.routing_decision === 'OBSERVE_ONLY').length}
+                  </div>
+                  <div className="stat-card-label">Observe Only</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-val" style={{ color: 'var(--accent-red)' }}>
+                    {eventsSummary?.quarantinedCount ?? securityEvents.filter((e) => e.quarantined).length}
+                  </div>
+                  <div className="stat-card-label">Quarantined</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-card-val" style={{ color: 'var(--accent-green)' }}>
+                    {eventsSummary?.avgScore !== undefined && eventsSummary?.avgScore !== null
+                      ? Number(eventsSummary.avgScore).toFixed(2)
+                      : (securityEvents.length > 0
+                          ? (securityEvents.reduce((acc, e) => acc + (Number(e.risk_score) || 0), 0) / securityEvents.length).toFixed(2)
+                          : '0.00')}
+                  </div>
+                  <div className="stat-card-label">Avg Risk Score</div>
+                </div>
+              </div>
 
-              {/* Backend Health Card */}
-              <section className="card health-card">
+              {/* Events Table */}
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Method & Path</th>
+                      <th>Decision</th>
+                      <th>Score</th>
+                      <th>Classification</th>
+                      <th>Session ID</th>
+                      <th>Target Upstream</th>
+                      <th>Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {securityEvents.map((evt) => {
+                      const decisionBadge =
+                        evt.routing_decision === 'DECEPTION'
+                          ? 'badge-purple'
+                          : evt.routing_decision === 'ORIGIN'
+                          ? 'badge-blue'
+                          : 'badge-yellow';
+
+                      return (
+                        <tr key={evt.id || `${evt.timestamp || evt.created_at}-${evt.session_id}-${Math.random()}`}>
+                          <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            {evt.created_at ? new Date(evt.created_at).toLocaleTimeString() : (evt.timestamp ? new Date(evt.timestamp).toLocaleTimeString() : 'Just now')}
+                          </td>
+                          <td>
+                            <strong>{evt.method}</strong>{' '}
+                            <code style={{ fontSize: '0.8rem' }}>{evt.path}</code>
+                          </td>
+                          <td>
+                            <span className={`badge-pill ${decisionBadge}`}>
+                              {evt.routing_decision}
+                            </span>
+                            {evt.quarantined && (
+                              <span className="badge-pill badge-red" style={{ marginLeft: '0.25rem' }}>
+                                QUARANTINE
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <code>{typeof evt.risk_score === 'number' ? evt.risk_score.toFixed(3) : evt.risk_score}</code>
+                          </td>
+                          <td style={{ color: 'var(--text-muted)' }}>
+                            {evt.classification || 'unknown'}
+                          </td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {evt.session_id ? `${evt.session_id.substring(0, 10)}...` : 'N/A'}
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            {evt.routing_decision === 'DECEPTION'
+                              ? evt.deception_service || 'deception-runtime'
+                              : evt.origin_upstream || 'test-origin'}
+                          </td>
+                          <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                            {evt.latency_ms !== undefined ? `${Math.round(evt.latency_ms)}ms` : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {securityEvents.length === 0 && (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          No security events recorded yet for this organisation.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* TAB: SYSTEM TELEMETRY & OBSERVABILITY */}
+          {activeTab === 'telemetry' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Operational Metrics Section */}
+              <section className="card">
                 <div className="card-header">
-                  <h2>Backend Service (Port 4000)</h2>
-                </div>
-                <div className="endpoint-info">
-                  Target: <code>{BACKEND_URL}/health</code>
+                  <div>
+                    <h2>Operational Observability & Latency Percentiles</h2>
+                    <p className="section-desc" style={{ marginBottom: 0 }}>
+                      Live in-memory telemetry for gateway dispatch, ML detection engine, and dynamic deception runtime.
+                    </p>
+                  </div>
+                  <button className="btn btn-small" onClick={() => { fetchAllHealth(); fetchGatewayMetrics(); }} disabled={metricsLoading}>
+                    {metricsLoading ? 'Refreshing...' : 'Refresh Metrics'}
+                  </button>
                 </div>
 
-                {backendError && (
-                  <div className="status-box error">
-                    <span className="indicator red"></span>
-                    <div>
-                      <strong>Backend Unreachable:</strong> {backendError}
+                {gatewayMetrics ? (
+                  <>
+                    <div className="stat-cards-grid">
+                      <div className="stat-card">
+                        <div className="stat-card-val">{gatewayMetrics.requests?.total ?? 0}</div>
+                        <div className="stat-card-label">Total Handled</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-card-val" style={{ color: 'var(--accent-blue)' }}>
+                          {gatewayMetrics.routingBreakdown?.ORIGIN ?? 0}
+                        </div>
+                        <div className="stat-card-label">Origin Routed</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-card-val" style={{ color: '#ba68c8' }}>
+                          {gatewayMetrics.routingBreakdown?.DECEPTION ?? 0}
+                        </div>
+                        <div className="stat-card-label">Deception Routed</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-card-val" style={{ color: 'var(--accent-yellow)' }}>
+                          {gatewayMetrics.routingBreakdown?.OBSERVE_ONLY ?? 0}
+                        </div>
+                        <div className="stat-card-label">Observe Only</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-card-val" style={{ color: 'var(--accent-cyan)' }}>
+                          {gatewayMetrics.activeDeceptionSessions ?? 0}
+                        </div>
+                        <div className="stat-card-label">Active DSG Sessions</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-card-val" style={{ color: 'var(--accent-red)' }}>
+                          {gatewayMetrics.errors?.quarantinedDeception ?? 0}
+                        </div>
+                        <div className="stat-card-label">Quarantined</div>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {backendHealth && (
-                  <div className="status-box success">
-                    <span className="indicator green"></span>
-                    <div className="status-details">
-                      <div className="status-title">
-                        <strong>Status:</strong> {backendHealth.status.toUpperCase()}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                      <div className="card" style={{ background: 'var(--bg-card)', padding: '1rem' }}>
+                        <h4 style={{ color: 'var(--accent-cyan)', marginBottom: '0.5rem' }}>Gateway Latency</h4>
+                        <div className="meta-grid">
+                          <div><strong>Average:</strong> {gatewayMetrics.latencies?.gateway?.avgMs ? `${gatewayMetrics.latencies.gateway.avgMs.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p50:</strong> {gatewayMetrics.latencies?.gateway?.p50Ms ? `${gatewayMetrics.latencies.gateway.p50Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p95:</strong> {gatewayMetrics.latencies?.gateway?.p95Ms ? `${gatewayMetrics.latencies.gateway.p95Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>Sample Count:</strong> {gatewayMetrics.latencies?.gateway?.count ?? 0}</div>
+                        </div>
                       </div>
-                      <div className="meta-grid">
-                        <div><strong>Service:</strong> {backendHealth.service}</div>
-                        <div><strong>Stage:</strong> {backendHealth.stage}</div>
-                        <div><strong>Database:</strong> Connected (PostgreSQL)</div>
-                        <div><strong>Multi-Tenant:</strong> Active (Stage 7)</div>
-                        <div><strong>Last Checked:</strong> {lastChecked}</div>
+
+                      <div className="card" style={{ background: 'var(--bg-card)', padding: '1rem' }}>
+                        <h4 style={{ color: 'var(--accent-green)', marginBottom: '0.5rem' }}>Detection Engine</h4>
+                        <div className="meta-grid">
+                          <div><strong>Average:</strong> {gatewayMetrics.latencies?.detection?.avgMs ? `${gatewayMetrics.latencies.detection.avgMs.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p50:</strong> {gatewayMetrics.latencies?.detection?.p50Ms ? `${gatewayMetrics.latencies.detection.p50Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p95:</strong> {gatewayMetrics.latencies?.detection?.p95Ms ? `${gatewayMetrics.latencies.detection.p95Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>Detector Errors:</strong> {gatewayMetrics.errors?.detectionServiceErrors ?? 0}</div>
+                        </div>
+                      </div>
+
+                      <div className="card" style={{ background: 'var(--bg-card)', padding: '1rem' }}>
+                        <h4 style={{ color: '#ba68c8', marginBottom: '0.5rem' }}>Deception Runtime</h4>
+                        <div className="meta-grid">
+                          <div><strong>Average:</strong> {gatewayMetrics.latencies?.deception?.avgMs ? `${gatewayMetrics.latencies.deception.avgMs.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p50:</strong> {gatewayMetrics.latencies?.deception?.p50Ms ? `${gatewayMetrics.latencies.deception.p50Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>p95:</strong> {gatewayMetrics.latencies?.deception?.p95Ms ? `${gatewayMetrics.latencies.deception.p95Ms.toFixed(1)} ms` : '0 ms'}</div>
+                          <div><strong>Deception Errors:</strong> {gatewayMetrics.errors?.deceptionServiceErrors ?? 0}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </>
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>Gateway operational metrics loading or unavailable.</p>
                 )}
               </section>
+
+              {/* Service Health Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {/* Gateway Health Card */}
+                <section className="card health-card">
+                  <div className="card-header">
+                    <h2>Gateway Health (Port 8080)</h2>
+                    <button className="btn btn-small" onClick={fetchAllHealth} disabled={healthLoading}>
+                      {healthLoading ? 'Checking...' : 'Refresh'}
+                    </button>
+                  </div>
+                  <div className="endpoint-info">
+                    Target: <code>{GATEWAY_URL}/health</code>
+                  </div>
+
+                  {gatewayError && (
+                    <div className="status-box error">
+                      <span className="indicator red"></span>
+                      <div>
+                        <strong>Gateway Unreachable:</strong> {gatewayError}
+                      </div>
+                    </div>
+                  )}
+
+                  {gatewayHealth && (
+                    <div className="status-box success">
+                      <span className="indicator green"></span>
+                      <div className="status-details">
+                        <div className="status-title">
+                          <strong>Status:</strong> {gatewayHealth.status.toUpperCase()}
+                        </div>
+                        <div className="meta-grid">
+                          <div><strong>Service:</strong> {gatewayHealth.service}</div>
+                          <div><strong>Stage:</strong> {gatewayHealth.stage}</div>
+                          <div><strong>Routing Mode:</strong> {gatewayHealth.routingMode?.toUpperCase() || 'SHADOW'}</div>
+                          <div><strong>Killswitch:</strong> {gatewayHealth.emergencyDisableDiversion ? 'ACTIVATED' : 'DISENGAGED'}</div>
+                          <div><strong>Deception Upstream:</strong> {gatewayHealth.deceptionService}</div>
+                          <div><strong>Deception Sessions:</strong> {gatewayHealth.activeDeceptionSessions ?? 0}</div>
+                          <div><strong>Score Threshold:</strong> {gatewayHealth.deceptionThreshold ?? '0.70'}</div>
+                          <div><strong>Last Checked:</strong> {lastChecked}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* Backend Health Card */}
+                <section className="card health-card">
+                  <div className="card-header">
+                    <h2>Backend Service (Port 4000)</h2>
+                  </div>
+                  <div className="endpoint-info">
+                    Target: <code>{BACKEND_URL}/health</code>
+                  </div>
+
+                  {backendError && (
+                    <div className="status-box error">
+                      <span className="indicator red"></span>
+                      <div>
+                        <strong>Backend Unreachable:</strong> {backendError}
+                      </div>
+                    </div>
+                  )}
+
+                  {backendHealth && (
+                    <div className="status-box success">
+                      <span className="indicator green"></span>
+                      <div className="status-details">
+                        <div className="status-title">
+                          <strong>Status:</strong> {backendHealth.status.toUpperCase()}
+                        </div>
+                        <div className="meta-grid">
+                          <div><strong>Service:</strong> {backendHealth.service}</div>
+                          <div><strong>Stage:</strong> {backendHealth.stage}</div>
+                          <div><strong>Database:</strong> Connected (PostgreSQL)</div>
+                          <div><strong>Pipeline:</strong> Security Events & Metrics</div>
+                          <div><strong>Last Checked:</strong> {lastChecked}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              </div>
             </div>
           )}
         </main>
@@ -1046,7 +1358,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="footer">
-        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 7 Multi-Tenant Management & Application Onboarding</p>
+        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 8 End-to-End Security Validation & Evaluation Framework</p>
       </footer>
     </div>
   );

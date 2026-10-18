@@ -3,11 +3,13 @@ import https from 'node:https';
 import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { GatewayConfig } from './config';
-import { logRequest } from './logger';
+import { logRequest, sanitizePath } from './logger';
 import { extractFeatures } from './features';
 import { queryDetectionEngine, DetectionScoreResult } from './detector';
 import { evaluateRoutingPolicy, ControllerDecision } from './controller';
 import { SessionRoutingStore, defaultSessionRouter } from './sessionRouter';
+import { MetricsCollector, defaultMetricsCollector } from './metrics';
+import { SecurityEventRecorder, defaultEventRecorder } from './eventRecorder';
 
 const HOP_BY_HOP_HEADERS = new Set([
   'connection',
@@ -93,7 +95,9 @@ function extractSessionId(req: Request): { sessionId: string; isNewSession: bool
 
 export function createProxyMiddleware(
   config: GatewayConfig,
-  sessionRouter: SessionRoutingStore = defaultSessionRouter
+  sessionRouter: SessionRoutingStore = defaultSessionRouter,
+  metricsCollector: MetricsCollector = defaultMetricsCollector,
+  eventRecorder: SecurityEventRecorder = defaultEventRecorder
 ) {
   const originBase = new URL(config.originUrl);
   const deceptionBase = new URL(config.deceptionServiceUrl);
@@ -356,6 +360,9 @@ export function createProxyMiddleware(
             upstreamRes.on('end', () => {
               const duration = process.hrtime(startTime);
               const durationMs = duration[0] * 1000 + duration[1] / 1e6;
+              const finalDecision =
+                (res.getHeader('X-Routing-Decision') as string) || decision.target;
+
               logRequest({
                 timestamp: new Date().toISOString(),
                 requestId,
@@ -366,8 +373,7 @@ export function createProxyMiddleware(
                 clientIp,
                 userAgent,
                 sessionId,
-                routingDecision:
-                  (res.getHeader('X-Routing-Decision') as string) || decision.target,
+                routingDecision: finalDecision,
                 routingReason: decision.reason,
                 routingMode: config.routingMode,
                 targetOrigin: targetBase.origin,
@@ -376,6 +382,41 @@ export function createProxyMiddleware(
                 detectionInferenceMs: detectionResult.inferenceDurationMs,
                 ...(detectionResult.error ? { detectionError: detectionResult.error } : {}),
               });
+
+              // Operational metrics recording
+              metricsCollector.recordRequest({
+                durationMs,
+                statusCode,
+                routingDecision: finalDecision,
+                detectionScore: detectionResult.riskScore,
+                detectionLatencyMs: detectionResult.inferenceDurationMs,
+                detectionError: detectionResult.error,
+                isDeceptionTarget: isDeceptionAttempt,
+                deceptionLatencyMs: isDeceptionAttempt ? durationMs : undefined,
+                isQuarantined: false,
+              });
+
+              // Unified security event dispatch
+              eventRecorder.recordEvent(
+                {
+                  requestId,
+                  sessionId,
+                  timestamp: new Date().toISOString(),
+                  method: req.method,
+                  path: sanitizePath(req.originalUrl),
+                  statusCode,
+                  durationMs,
+                  detectionScore: detectionResult.riskScore,
+                  detectionClassification: detectionResult.classification,
+                  detectionLatencyMs: detectionResult.inferenceDurationMs,
+                  routingDecision: finalDecision,
+                  routingReason: decision.reason,
+                  routingMode: config.routingMode,
+                  failureQuarantined: false,
+                  clientIp,
+                },
+                config
+              );
             });
           }
         );
@@ -413,6 +454,39 @@ export function createProxyMiddleware(
                 detectionScore: detectionResult.riskScore,
                 detectionClassification: detectionResult.classification,
               });
+
+              metricsCollector.recordRequest({
+                durationMs,
+                statusCode: 503,
+                routingDecision: 'DECEPTION',
+                detectionScore: detectionResult.riskScore,
+                detectionLatencyMs: detectionResult.inferenceDurationMs,
+                isDeceptionTarget: true,
+                deceptionLatencyMs: durationMs,
+                deceptionError: 'Deception runtime timed out; quarantined',
+                isQuarantined: true,
+              });
+
+              eventRecorder.recordEvent(
+                {
+                  requestId,
+                  sessionId,
+                  timestamp: new Date().toISOString(),
+                  method: req.method,
+                  path: sanitizePath(req.originalUrl),
+                  statusCode: 503,
+                  durationMs,
+                  detectionScore: detectionResult.riskScore,
+                  detectionClassification: detectionResult.classification,
+                  detectionLatencyMs: detectionResult.inferenceDurationMs,
+                  routingDecision: 'DECEPTION',
+                  routingReason: 'DECEPTION_UNAVAILABLE_QUARANTINED',
+                  routingMode: config.routingMode,
+                  failureQuarantined: true,
+                  clientIp,
+                },
+                config
+              );
 
               res.setHeader('X-Routing-Fallback', 'quarantined');
               res.setHeader('X-Routing-Decision', 'DECEPTION');
@@ -457,6 +531,35 @@ export function createProxyMiddleware(
               detectionClassification: detectionResult.classification,
             });
 
+            metricsCollector.recordRequest({
+              durationMs,
+              statusCode: 504,
+              routingDecision: 'ORIGIN',
+              detectionScore: detectionResult.riskScore,
+              detectionLatencyMs: detectionResult.inferenceDurationMs,
+            });
+
+            eventRecorder.recordEvent(
+              {
+                requestId,
+                sessionId,
+                timestamp: new Date().toISOString(),
+                method: req.method,
+                path: sanitizePath(req.originalUrl),
+                statusCode: 504,
+                durationMs,
+                detectionScore: detectionResult.riskScore,
+                detectionClassification: detectionResult.classification,
+                detectionLatencyMs: detectionResult.inferenceDurationMs,
+                routingDecision: 'ORIGIN',
+                routingReason: 'UPSTREAM_TIMEOUT',
+                routingMode: config.routingMode,
+                failureQuarantined: false,
+                clientIp,
+              },
+              config
+            );
+
             res.status(504).json({
               error: 'Gateway Timeout',
               message: 'Upstream origin service timed out.',
@@ -497,6 +600,39 @@ export function createProxyMiddleware(
                 detectionScore: detectionResult.riskScore,
                 detectionClassification: detectionResult.classification,
               });
+
+              metricsCollector.recordRequest({
+                durationMs,
+                statusCode: 503,
+                routingDecision: 'DECEPTION',
+                detectionScore: detectionResult.riskScore,
+                detectionLatencyMs: detectionResult.inferenceDurationMs,
+                isDeceptionTarget: true,
+                deceptionLatencyMs: durationMs,
+                deceptionError: `Deception runtime unavailable: ${err.code || err.message}; quarantined`,
+                isQuarantined: true,
+              });
+
+              eventRecorder.recordEvent(
+                {
+                  requestId,
+                  sessionId,
+                  timestamp: new Date().toISOString(),
+                  method: req.method,
+                  path: sanitizePath(req.originalUrl),
+                  statusCode: 503,
+                  durationMs,
+                  detectionScore: detectionResult.riskScore,
+                  detectionClassification: detectionResult.classification,
+                  detectionLatencyMs: detectionResult.inferenceDurationMs,
+                  routingDecision: 'DECEPTION',
+                  routingReason: 'DECEPTION_UNAVAILABLE_QUARANTINED',
+                  routingMode: config.routingMode,
+                  failureQuarantined: true,
+                  clientIp,
+                },
+                config
+              );
 
               res.setHeader('X-Routing-Fallback', 'quarantined');
               res.setHeader('X-Routing-Decision', 'DECEPTION');
@@ -539,6 +675,35 @@ export function createProxyMiddleware(
             detectionScore: detectionResult.riskScore,
             detectionClassification: detectionResult.classification,
           });
+
+          metricsCollector.recordRequest({
+            durationMs,
+            statusCode: 502,
+            routingDecision: 'ORIGIN',
+            detectionScore: detectionResult.riskScore,
+            detectionLatencyMs: detectionResult.inferenceDurationMs,
+          });
+
+          eventRecorder.recordEvent(
+            {
+              requestId,
+              sessionId,
+              timestamp: new Date().toISOString(),
+              method: req.method,
+              path: sanitizePath(req.originalUrl),
+              statusCode: 502,
+              durationMs,
+              detectionScore: detectionResult.riskScore,
+              detectionClassification: detectionResult.classification,
+              detectionLatencyMs: detectionResult.inferenceDurationMs,
+              routingDecision: 'ORIGIN',
+              routingReason: 'UPSTREAM_ERROR',
+              routingMode: config.routingMode,
+              failureQuarantined: false,
+              clientIp,
+            },
+            config
+          );
 
           res.status(502).json({
             error: 'Bad Gateway',

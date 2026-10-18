@@ -1,0 +1,141 @@
+{
+  "timestamp": "2026-10-18T17:33:04Z",
+  "datasetSummary": {
+    "totalSamples": 120,
+    "benignSamples": 60,
+    "attackSamples": 60,
+    "attackCategories": [
+      "SQLI",
+      "TRAVERSAL",
+      "RECON",
+      "CMDI"
+    ]
+  },
+  "configurations": [
+    {
+      "name": "B1: Direct Origin Forwarding",
+      "description": "Direct pass-through without ML detection or deception environment.",
+      "tp": 0,
+      "fp": 0,
+      "tn": 60,
+      "fn": 60,
+      "diverted_count": 0,
+      "origin_leak_count": 60,
+      "origin_leakage_rate_pct": 100.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.5,
+      "fpr": 0.0,
+      "fnr": 1.0,
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0
+      },
+      "latency_p50_ms": 0.82,
+      "latency_p95_ms": 1.01,
+      "latency_mean_ms": 0.81,
+      "overhead_pct": 0.0
+    },
+    {
+      "name": "B2: Static Heuristic Deception",
+      "description": "Simple keyword matching with static unstateful decoy response.",
+      "tp": 7,
+      "fp": 0,
+      "tn": 60,
+      "fn": 53,
+      "diverted_count": 7,
+      "origin_leak_count": 53,
+      "origin_leakage_rate_pct": 88.3,
+      "precision": 1.0,
+      "recall": 0.1167,
+      "f1": 0.209,
+      "accuracy": 0.5583,
+      "fpr": 0.0,
+      "fnr": 0.8833,
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0
+      },
+      "latency_p50_ms": 1.45,
+      "latency_p95_ms": 1.93,
+      "latency_mean_ms": 1.44,
+      "overhead_pct": 76.8
+    },
+    {
+      "name": "B3: Rule-Based Adaptive Routing",
+      "description": "Signature regex filters with basic routing, without ML anomaly scoring.",
+      "tp": 33,
+      "fp": 0,
+      "tn": 60,
+      "fn": 27,
+      "diverted_count": 33,
+      "origin_leak_count": 27,
+      "origin_leakage_rate_pct": 45.0,
+      "precision": 1.0,
+      "recall": 0.55,
+      "f1": 0.7097,
+      "accuracy": 0.775,
+      "fpr": 0.0,
+      "fnr": 0.45,
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0
+      },
+      "latency_p50_ms": 2.14,
+      "latency_p95_ms": 2.75,
+      "latency_mean_ms": 2.12,
+      "overhead_pct": 161.0
+    },
+    {
+      "name": "B4: Proposed Adaptive Cyber Deception Gateway",
+      "description": "ML Anomaly Detector + Deterministic Policy Controller + Stateful DSG Runtime + Strict Quarantine.",
+      "tp": 57,
+      "fp": 2,
+      "tn": 58,
+      "fn": 3,
+      "diverted_count": 59,
+      "origin_leak_count": 0,
+      "origin_leakage_rate_pct": 0.0,
+      "precision": 0.9661,
+      "recall": 0.95,
+      "f1": 0.958,
+      "accuracy": 0.9583,
+      "fpr": 0.0333,
+      "fnr": 0.05,
+      "des": 1.0,
+      "des_details": {
+        "score": 1.0,
+        "origin_leakage": false,
+        "depth_score": 1.0,
+        "consistency_score": 1.0,
+        "dwell_score": 1.0,
+        "engagement_score": 1.0
+      },
+      "latency_p50_ms": 3.16,
+      "latency_p95_ms": 3.89,
+      "latency_mean_ms": 3.16,
+      "overhead_pct": 285.4
+    }
+  ],
+  "methodologicalLimitations": [
+    "Evaluated on synthetic benchmark workloads; synthetic performance metrics do not imply real-world detection or deception accuracy against zero-day or adaptive human adversaries.",
+    "Dwell time normalization uses a finite interaction threshold (K=10 interactions) calibrated for short-lived benchmark trials rather than multi-day persistent threats.",
+    "Deception Effectiveness Score measures immersion, state continuity, and containment; it does not replace origin least-privilege or host-based security hardening."
+  ]
+}

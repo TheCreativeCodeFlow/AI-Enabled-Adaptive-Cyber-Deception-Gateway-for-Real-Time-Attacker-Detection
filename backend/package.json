@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/index.test.ts src/stage7.test.ts"
+    "test": "tsx --test src/index.test.ts src/stage7.test.ts src/stage8.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

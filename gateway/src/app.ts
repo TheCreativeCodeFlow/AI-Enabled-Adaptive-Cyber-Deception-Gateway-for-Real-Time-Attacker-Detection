@@ -4,18 +4,24 @@ import cors from 'cors';
 import { GatewayConfig, getConfig } from './config';
 import { createProxyMiddleware } from './proxy';
 import { SessionRoutingStore, defaultSessionRouter } from './sessionRouter';
+import { MetricsCollector, defaultMetricsCollector } from './metrics';
+import { SecurityEventRecorder, defaultEventRecorder } from './eventRecorder';
 
 import { createOperatorAuthMiddleware, requireOperatorPermission } from './auth';
 
 export function createApp(
   customConfig?: Partial<GatewayConfig>,
-  customSessionRouter?: SessionRoutingStore
+  customSessionRouter?: SessionRoutingStore,
+  customMetricsCollector?: MetricsCollector,
+  customEventRecorder?: SecurityEventRecorder
 ): Express {
   const config: GatewayConfig = {
     ...getConfig(),
     ...customConfig,
   };
   const sessionRouter = customSessionRouter || defaultSessionRouter;
+  const metricsCollector = customMetricsCollector || defaultMetricsCollector;
+  const eventRecorder = customEventRecorder || defaultEventRecorder;
   const operatorAuth = createOperatorAuthMiddleware(config);
 
   const app = express();
@@ -41,6 +47,12 @@ export function createApp(
 
   // Dedicated gateway health check (handled locally, not forwarded)
   app.get('/health', (_req: Request, res: Response) => {
+    const metrics = metricsCollector.getSummary(
+      sessionRouter.getActiveDeceptionCount(),
+      config.emergencyDisableDiversion,
+      config.routingMode
+    );
+
     res.status(200).json({
       status: 'healthy',
       service: 'gateway',
@@ -56,11 +68,38 @@ export function createApp(
       deceptionFailurePolicy: config.deceptionFailurePolicy,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
+      metrics: {
+        totalRequests: metrics.totalRequests,
+        routingBreakdown: metrics.routingBreakdown,
+        quarantinedRequests: metrics.quarantinedRequests,
+        gatewayLatencyP50Ms: metrics.gatewayLatency.p50Ms,
+        gatewayLatencyP95Ms: metrics.gatewayLatency.p95Ms,
+      },
     });
   });
 
   // Body parser for administrative gateway endpoints only
   app.use('/api/gateway', express.json());
+
+  // Operational metrics endpoint (Stage 8 Observability)
+  app.get('/api/gateway/metrics', (_req: Request, res: Response) => {
+    const summary = metricsCollector.getSummary(
+      sessionRouter.getActiveDeceptionCount(),
+      config.emergencyDisableDiversion,
+      config.routingMode
+    );
+    res.status(200).json(summary);
+  });
+
+  // Gateway recent security events endpoint (Stage 8 Observability)
+  app.get('/api/gateway/events', (req: Request, res: Response) => {
+    const limit = parseInt((req.query.limit as string) || '50', 10);
+    const events = eventRecorder.getRecentEvents(limit);
+    res.status(200).json({
+      events,
+      total: events.length,
+    });
+  });
 
   // Administrative control: Emergency disable toggle (requires routing:control permission)
   app.post(
@@ -124,7 +163,7 @@ export function createApp(
   );
 
   // All other traffic is handled by the secure reverse-proxy middleware with adaptive diversion
-  app.use(createProxyMiddleware(config, sessionRouter));
+  app.use(createProxyMiddleware(config, sessionRouter, metricsCollector, eventRecorder));
 
   return app;
 }

@@ -33,6 +33,7 @@ services:
       CORS_ORIGIN: http://localhost:3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-deception_user}:${POSTGRES_PASSWORD:-deception_pass}@postgres:5432/${POSTGRES_DB:-deception_db}
       OPERATOR_JWT_SECRET: ${OPERATOR_JWT_SECRET:-deception-gateway-operator-secret-key-32chars-min!}
+      SERVICE_SHARED_SECRET: ${SERVICE_SHARED_SECRET:-deception-internal-service-secret-key-32chars!}
     ports:
       - "${PORT:-4000}:4000"
     depends_on:
@@ -162,6 +163,8 @@ services:
       DECEPTION_SCORE_THRESHOLD: "0.70"
       OPERATOR_JWT_SECRET: ${OPERATOR_JWT_SECRET:-deception-gateway-operator-secret-key-32chars-min!}
       DECEPTION_FAILURE_POLICY: ${DECEPTION_FAILURE_POLICY:-quarantine}
+      BACKEND_URL: ${BACKEND_URL:-http://backend:4000}
+      SERVICE_SHARED_SECRET: ${SERVICE_SHARED_SECRET:-deception-internal-service-secret-key-32chars!}
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
     depends_on:

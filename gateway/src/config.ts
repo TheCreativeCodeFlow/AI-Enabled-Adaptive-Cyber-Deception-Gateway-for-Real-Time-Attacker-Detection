@@ -18,6 +18,8 @@ export interface GatewayConfig {
   deceptionScoreThreshold: number;
   operatorJwtSecret: string;
   deceptionFailurePolicy: 'quarantine' | 'fallback_origin';
+  backendUrl: string;
+  serviceSharedSecret: string;
 }
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -95,6 +97,8 @@ export function getConfig(): GatewayConfig {
 
   const rawFailurePolicy = process.env.DECEPTION_FAILURE_POLICY?.toLowerCase();
   const deceptionFailurePolicy = rawFailurePolicy === 'quarantine' ? 'quarantine' : 'fallback_origin';
+  const backendUrl = process.env.BACKEND_URL || 'http://backend:4000';
+  const serviceSharedSecret = process.env.SERVICE_SHARED_SECRET || 'deception-gateway-internal-service-secret';
 
   return {
     port,
@@ -112,5 +116,7 @@ export function getConfig(): GatewayConfig {
     deceptionScoreThreshold,
     operatorJwtSecret,
     deceptionFailurePolicy,
+    backendUrl,
+    serviceSharedSecret,
   };
 }
