@@ -1,8 +1,8 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 6 — Security Hardening and Operator Authentication**
+> **Current Status: Stage 7 — Multi-Tenant Organisation Management and Application Onboarding**
 
-A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with role-based access control, cryptographic session hardening, and zero-leak deception quarantine policies.
+A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, and zero-leak deception quarantine policies.
 
 ---
 
@@ -26,22 +26,21 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 ├── deception/             # [Stage 4-6 — Active] Isolated dynamic deception runtime & DSG
 │   ├── src/               # Code (app.ts, dsg.ts, policy.ts, sessionStore.ts, strategy.ts, syntheticData.ts)
 │   ├── Dockerfile         # Multi-stage container build with unprivileged node user
-│   ├── package.json       # Dependencies & test scripts
-│   └── README.md          # DSG specifications, layer models & API contracts
-├── backend/               # [Stage 1 & 6 — Active] PostgreSQL-backed operator auth, RBAC & audit logging
-│   ├── src/               # Application code (app.ts, auth.ts, db.ts, config.ts, routes/authRoutes.ts, routes/auditRoutes.ts)
-│   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts
-├── frontend/              # [Stage 1-6 — Active] React with JavaScript and Vite operator console
+├── backend/               # [Stage 1, 6, 7 — Active] Multi-tenant orgs, app onboarding, DNS TXT verification, RBAC & audit
+│   ├── src/               # Application code (app.ts, auth.ts, orgAuth.ts, originValidation.ts, domainVerification.ts, db.ts, config.ts, routes/)
+│   ├── Dockerfile         # Multi-stage container build
+│   └── package.json       # Dependencies & test scripts (index.test.ts, stage7.test.ts)
+├── frontend/              # [Stage 1-7 — Active] React Vite console with multi-tenant workspace, app onboarding & DNS check
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
-│   └── architecture.md    # System architecture, trust boundaries, RBAC matrix & roadmap
+│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, RBAC matrix & roadmap
 ├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks, isolated deception)
-├── .env.example           # Environment template with Stage 6 variables
+├── .env.example           # Environment template with Stage 7 variables
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
 
@@ -303,12 +302,53 @@ curl -i -H "X-Session-ID: trapped-attacker-session" "http://localhost:8080/api/a
 # X-Routing-Reason: DECEPTION_UNAVAILABLE_QUARANTINED
 ```
 
-### 5.5 Automated Test Suites across All Services (73 Tests Total)
+### 5.5 Stage 7 Multi-Tenant Onboarding & DNS TXT Verification Walkthrough
+
+```bash
+# 1. Login to obtain JWT Bearer Token
+TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sec_admin","password":"SuperSecretAdminPassword123!"}' | jq -r .token)
+
+# 2. Create Organisation Workspace
+ORG_ID=$(curl -s -X POST http://localhost:4000/api/orgs \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Acme Cyber Corp","slug":"acme-corp","description":"Enterprise Tenant"}' | jq -r .organisation.id)
+
+# 3. Register Application with Approved Domain & Origin
+# (Returns unverified status and cryptographic DNS TXT challenge: _deception-challenge.<domain>)
+APP_ID=$(curl -s -X POST http://localhost:4000/api/orgs/$ORG_ID/apps \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "displayName": "Acme Customer Portal",
+    "environment": "production",
+    "approvedDomain": "portal.acme.com",
+    "configuredOrigin": "http://test-origin:5000"
+  }' | jq -r .application.id)
+
+# 4. Attempt Interception Activation while Unverified (Enforces Safety Invariant: HTTP 400 Rejected)
+curl -i -X POST http://localhost:4000/api/orgs/$ORG_ID/apps/$APP_ID/activate \
+  -H "Authorization: Bearer $TOKEN"
+# HTTP/1.1 400 Bad Request
+# {"error":"Bad Request","message":"Cannot activate unverified application (domain is not verified)..."}
+
+# 5. Execute Server-Side DNS TXT Check to Verify Domain Ownership
+curl -s -X POST http://localhost:4000/api/orgs/$ORG_ID/apps/$APP_ID/verify \
+  -H "Authorization: Bearer $TOKEN"
+
+# 6. Retrieve Tenant-Scoped Audit Event Trail
+curl -s http://localhost:4000/api/orgs/$ORG_ID/audit \
+  -H "Authorization: Bearer $TOKEN" | jq .auditEvents
+```
+
+### 5.6 Automated Test Suites across All Services (87 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC & Quarantine Tests (38 tests)
 cd gateway && npm test
 
-# 2. Backend Health, Operator Authentication, PostgreSQL Migrations & Audit Tests (11 tests)
+# 2. Backend Health, Operator Auth, Multi-Tenant Models, DNS TXT & SSRF Tests (25 tests)
 cd backend && npm test
 
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
