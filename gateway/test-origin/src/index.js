@@ -43,6 +43,16 @@ app.get('/api/echo', (req, res) => {
   });
 });
 
+// Admin / probe test endpoint
+app.all('/api/admin*', (req, res) => {
+  res.setHeader('X-Origin-ID', 'authorized-test-origin');
+  res.json({
+    origin: 'test-origin',
+    message: 'Admin endpoint reached on test origin',
+    path: req.path,
+  });
+});
+
 // Echo POST body and set cookie & custom header
 app.post('/api/echo', (req, res) => {
   res.setHeader('X-Origin-ID', 'authorized-test-origin');

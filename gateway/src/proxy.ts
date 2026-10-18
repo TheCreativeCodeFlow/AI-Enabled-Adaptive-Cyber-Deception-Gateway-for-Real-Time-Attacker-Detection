@@ -3,6 +3,8 @@ import https from 'node:https';
 import { Request, Response, NextFunction } from 'express';
 import { GatewayConfig } from './config';
 import { logRequest } from './logger';
+import { extractFeatures } from './features';
+import { queryDetectionEngine, DetectionScoreResult } from './detector';
 
 const HOP_BY_HOP_HEADERS = new Set([
   'connection',
@@ -40,6 +42,11 @@ export function createProxyMiddleware(config: GatewayConfig) {
     const requestId = (req.headers['x-request-id'] as string) || (res.getHeader('X-Request-ID') as string);
     const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
     const userAgent = (req.headers['user-agent'] as string) || 'unknown';
+
+    // Strip client-supplied detection headers to prevent spoofing
+    delete req.headers['x-detection-score'];
+    delete req.headers['x-detection-classification'];
+    delete req.headers['x-detection-error'];
 
     // 1. Enforce body size limit via Content-Length header if present
     const contentLengthHeader = req.headers['content-length'];
@@ -142,7 +149,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
       }
     });
 
-    req.on('end', () => {
+    req.on('end', async () => {
       if (payloadTooLarge) {
         const duration = process.hrtime(startTime);
         const durationMs = duration[0] * 1000 + duration[1] / 1e6;
@@ -171,7 +178,18 @@ export function createProxyMiddleware(config: GatewayConfig) {
         outgoingHeaders['content-length'] = requestBody.length;
       }
 
-      // 5. Dispatch outgoing request to upstream
+      // 5. Stage 3 Feature Extraction & Asynchronous ML Detection (Shadow Mode)
+      const features = extractFeatures(req, requestId, requestBody.length);
+      const detectionResult: DetectionScoreResult = await queryDetectionEngine(features, config);
+
+      // Attach detection outcome headers to client response (for verification & observability)
+      res.setHeader('X-Detection-Score', detectionResult.riskScore.toFixed(4));
+      res.setHeader('X-Detection-Classification', detectionResult.classification);
+      if (detectionResult.error) {
+        res.setHeader('X-Detection-Error', detectionResult.error);
+      }
+
+      // 6. SHADOW MODE: Forward request to authorized test-origin regardless of detection result
       let isTimedOut = false;
       const proxyReq = transport.request(
         {
@@ -209,7 +227,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
             }
           }
 
-          // Always ensure X-Request-ID is in client response
+          // Always ensure X-Request-ID and Detection metadata are preserved
           res.setHeader('X-Request-ID', requestId);
 
           // Pipe origin response back to client
@@ -227,6 +245,10 @@ export function createProxyMiddleware(config: GatewayConfig) {
               durationMs,
               clientIp,
               userAgent,
+              detectionScore: detectionResult.riskScore,
+              detectionClassification: detectionResult.classification,
+              detectionInferenceMs: detectionResult.inferenceDurationMs,
+              ...(detectionResult.error ? { detectionError: detectionResult.error } : {}),
             });
           });
         }
@@ -250,6 +272,8 @@ export function createProxyMiddleware(config: GatewayConfig) {
             clientIp,
             userAgent,
             error: 'Upstream origin timed out',
+            detectionScore: detectionResult.riskScore,
+            detectionClassification: detectionResult.classification,
           });
 
           res.status(504).json({
@@ -276,6 +300,8 @@ export function createProxyMiddleware(config: GatewayConfig) {
           clientIp,
           userAgent,
           error: `Upstream origin error: ${err.code || err.message}`,
+          detectionScore: detectionResult.riskScore,
+          detectionClassification: detectionResult.classification,
         });
 
         res.status(502).json({

@@ -36,14 +36,16 @@ export function createApp(customConfig?: Partial<GatewayConfig>): Express {
     res.status(200).json({
       status: 'healthy',
       service: 'gateway',
-      stage: 'Stage 2 — Secure Reverse-Proxy Gateway',
+      stage: 'Stage 3 — ML Detection Engine and Gateway Integration',
       upstream: config.originUrl,
+      detectionService: config.detectionServiceUrl,
+      detectionEnabled: config.detectionEnabled,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     });
   });
 
-  // All other traffic is handled by the secure reverse-proxy middleware
+  // All other traffic is handled by the secure reverse-proxy middleware with shadow-mode ML detection
   app.use(createProxyMiddleware(config));
 
   return app;

@@ -38,3 +38,12 @@ postgres_data/
 # Testing & Coverage
 coverage/
 .nyc_output/
+.pytest_cache/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+

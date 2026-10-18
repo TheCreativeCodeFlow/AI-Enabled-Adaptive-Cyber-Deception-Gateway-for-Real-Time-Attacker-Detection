@@ -9,6 +9,9 @@ export interface GatewayConfig {
   allowedOrigins: string[];
   proxyTimeoutMs: number;
   maxRequestBodySize: number; // in bytes
+  detectionServiceUrl: string;
+  detectionTimeoutMs: number;
+  detectionEnabled: boolean;
 }
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -44,7 +47,7 @@ export function validateOriginUrl(rawUrl: string, allowedOrigins: string[]): URL
 
   if (!normalizedAllowed.includes(parsed.origin)) {
     throw new Error(
-      `Forbidden ORIGIN_URL "${parsed.origin}". Allowed origins in Stage 2: [${normalizedAllowed.join(', ')}]`
+      `Forbidden ORIGIN_URL "${parsed.origin}". Allowed origins in Stage 2/3: [${normalizedAllowed.join(', ')}]`
     );
   }
 
@@ -64,6 +67,10 @@ export function getConfig(): GatewayConfig {
   const rawOriginUrl = process.env.ORIGIN_URL || 'http://test-origin:5000';
   const validatedOrigin = validateOriginUrl(rawOriginUrl, rawAllowedOrigins);
 
+  const detectionServiceUrl = process.env.DETECTION_SERVICE_URL || 'http://detection:8000';
+  const detectionTimeoutMs = parseInt(process.env.DETECTION_TIMEOUT_MS || '500', 10);
+  const detectionEnabled = process.env.DETECTION_ENABLED !== 'false';
+
   return {
     port,
     host,
@@ -71,5 +78,8 @@ export function getConfig(): GatewayConfig {
     allowedOrigins: rawAllowedOrigins,
     proxyTimeoutMs,
     maxRequestBodySize,
+    detectionServiceUrl,
+    detectionTimeoutMs,
+    detectionEnabled,
   };
 }

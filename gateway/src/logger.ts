@@ -8,6 +8,10 @@ export interface RequestLogMetadata {
   clientIp?: string;
   userAgent?: string;
   error?: string;
+  detectionScore?: number;
+  detectionClassification?: string;
+  detectionInferenceMs?: number;
+  detectionError?: string;
 }
 
 const REDACTED_HEADERS = new Set([
@@ -46,7 +50,6 @@ export function sanitizeHeaders(
  * Never outputs raw request bodies or sensitive headers.
  */
 export function logRequest(metadata: RequestLogMetadata): void {
-  // Output clean, structured single-line JSON log
   const logLine = JSON.stringify({
     level: metadata.statusCode >= 500 ? 'ERROR' : 'INFO',
     timestamp: metadata.timestamp,
@@ -57,6 +60,10 @@ export function logRequest(metadata: RequestLogMetadata): void {
     durationMs: Math.round(metadata.durationMs * 100) / 100,
     clientIp: metadata.clientIp || 'unknown',
     userAgent: metadata.userAgent || 'unknown',
+    ...(metadata.detectionScore !== undefined ? { detectionScore: metadata.detectionScore } : {}),
+    ...(metadata.detectionClassification ? { detectionClassification: metadata.detectionClassification } : {}),
+    ...(metadata.detectionInferenceMs !== undefined ? { detectionInferenceMs: metadata.detectionInferenceMs } : {}),
+    ...(metadata.detectionError ? { detectionError: metadata.detectionError } : {}),
     ...(metadata.error ? { error: metadata.error } : {}),
   });
 

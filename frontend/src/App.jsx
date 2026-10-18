@@ -49,7 +49,7 @@ export default function App() {
   return (
     <div className="container">
       <header className="header">
-        <div className="badge">Stage 2: Secure Reverse-Proxy Gateway</div>
+        <div className="badge">Stage 3: ML Detection Engine & Gateway Shadow Mode</div>
         <h1>AI-Enabled Adaptive Cyber Deception Gateway</h1>
         <p className="subtitle">
           Real-Time Attacker Detection & Active Defense Platform
@@ -95,7 +95,9 @@ export default function App() {
                     <div><strong>Service:</strong> {gatewayHealth.service}</div>
                     <div><strong>Stage:</strong> {gatewayHealth.stage}</div>
                     <div><strong>Upstream:</strong> {gatewayHealth.upstream}</div>
+                    <div><strong>Detector:</strong> {gatewayHealth.detectionEnabled ? 'Active (Shadow Mode)' : 'Disabled'}</div>
                     <div><strong>Uptime:</strong> {gatewayHealth.uptime ? `${Math.round(gatewayHealth.uptime)}s` : 'N/A'}</div>
+                    <div><strong>Last Checked:</strong> {lastChecked}</div>
                   </div>
                 </div>
               </div>
@@ -157,8 +159,17 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>gateway/</h3>
               </div>
-              <p>Reverse-proxy traffic interception, SSRF defense & test origin routing.</p>
-              <span className="stage-pill">Stage 2: Active</span>
+              <p>Reverse-proxy traffic interception, feature extraction & shadow-mode ML detection.</p>
+              <span className="stage-pill">Stage 2-3: Active</span>
+            </div>
+
+            <div className="module-item active">
+              <div className="module-header">
+                <span className="dot green"></span>
+                <h3>detection/</h3>
+              </div>
+              <p>Python FastAPI ML engine with dual deterministic & scikit-learn anomaly scoring.</p>
+              <span className="stage-pill">Stage 3: Active</span>
             </div>
 
             <div className="module-item active">
@@ -184,17 +195,8 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>infra/</h3>
               </div>
-              <p>Docker Compose multi-service orchestration (gateway, test-origin, backend, frontend, postgres).</p>
-              <span className="stage-pill">Stage 1-2: Active</span>
-            </div>
-
-            <div className="module-item reserved">
-              <div className="module-header">
-                <span className="dot yellow"></span>
-                <h3>detection/</h3>
-              </div>
-              <p>Python ML service for real-time anomaly detection and threat scoring.</p>
-              <span className="stage-pill reserved">Stage 3: Reserved</span>
+              <p>Docker Compose multi-service orchestration (gateway, detection, test-origin, backend, frontend, postgres).</p>
+              <span className="stage-pill">Stage 1-3: Active</span>
             </div>
 
             <div className="module-item reserved">
@@ -210,7 +212,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 2 Reverse-Proxy Gateway</p>
+        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 3 ML Detection & Gateway Shadow Mode</p>
       </footer>
     </div>
   );
