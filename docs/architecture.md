@@ -11,61 +11,69 @@ The **AI-Enabled Adaptive Cyber Deception Gateway** is a defensive cyber securit
 ```mermaid
 flowchart TD
     subgraph UntrustedZone["Untrusted Network (External)"]
-        Client[Incoming Client Traffic]
+        Client["Incoming Client Traffic (Benign / Adversary)"]
     end
 
     subgraph DMZ["DMZ / Ingress Layer"]
-        Gateway[Gateway Service<br/>Reverse-Proxy & Traffic Interceptor<br/><i>gateway/ - Stage 2</i>]
+        Gateway["Gateway Service<br/>Reverse-Proxy & Decision Controller<br/><i>gateway/ - Stage 2, 3, 5</i>"]
     end
 
-    subgraph CoreZone["Core Application Zone"]
-        Backend[Backend Core API<br/>Node.js / Express / TypeScript<br/><i>backend/ - Stage 1</i>]
-        Frontend[Operator Dashboard & UI<br/>React / Vite<br/><i>frontend/ - Stage 1</i>]
-        DB[(PostgreSQL Database<br/>Events & Telemetry<br/><i>infra/ - Stage 1</i>)]
+    subgraph CoreZone["Core Application Zone (Authorized Network)"]
+        Origin["Test Origin Service<br/>Authorized Application<br/><i>gateway/test-origin/</i>"]
+        Backend["Backend Core API<br/>Node.js / Express / TypeScript<br/><i>backend/ - Stage 1</i>"]
+        Frontend["Operator Dashboard & UI<br/>React / Vite<br/><i>frontend/ - Stage 1-5</i>"]
+        DB[("PostgreSQL Database<br/>Events & Telemetry<br/><i>infra/ - Stage 1</i>")]
     end
 
     subgraph MLZone["Machine Learning Zone"]
-        MLService[Detection Service<br/>Python ML Anomaly Engine<br/><i>detection/ - Stage 3</i>]
+        MLService["Detection Service<br/>Python ML Anomaly Engine<br/><i>detection/ - Stage 3</i>"]
     end
 
-    subgraph DeceptionZone["Isolated Deception Zone (Containment)"]
-        DecoyEnv[Deception Runtime & DSG<br/>Stateful Honeypots & Decoy Services<br/><i>deception/ - Stage 4</i>]
+    subgraph DeceptionZone["Isolated Deception Zone (Strict Containment)"]
+        DecoyEnv["Deception Runtime & DSG<br/>Stateful Honeypots & Decoy Services<br/><i>deception/ - Stage 4-5</i>"]
     end
 
-    Client -->|HTTP/HTTPS| Gateway
-    Gateway -->|Feature Stream & Telemetry (Shadow Mode)| MLService
+    Client -->|HTTP/HTTPS Request| Gateway
+    Gateway -->|Feature Extraction & Telemetry| MLService
     MLService -->|Threat Score & Classification| Gateway
 
-    Gateway -->|Benign Traffic Routing| Backend
-    Gateway -.->|Verified Runtime (Diversion Deferred)| DecoyEnv
+    Gateway -->|Benign Traffic & Observe Only (Origin)| Origin
+    Gateway -->|Policy-Controlled Diversion (Active Mode)| DecoyEnv
+    Gateway -.->|Safe Fallback if Deception Fails| Origin
 
     Frontend -->|Admin & Status Queries| Backend
     Backend -->|Read/Write State| DB
-    DecoyEnv -.->|Sanitized Audit Logs| Backend
 
     classDef active fill:#1b5e20,stroke:#4caf50,color:#fff;
-    classDef planned fill:#424242,stroke:#9e9e9e,color:#fff,stroke-dasharray: 5 5;
-    class Backend,Frontend,DB,Gateway,MLService,DecoyEnv active;
+    class Origin,Backend,Frontend,DB,Gateway,MLService,DecoyEnv active;
 ```
 
 ---
 
 ## 3. Service Responsibilities
 
-### 3.1 `frontend/` (Stage 1 — Active)
+### 3.1 `frontend/` (Stage 1-5 — Active)
 - **Tech Stack:** React, JavaScript, Vite.
 - **Role:** Web operator interface for monitoring system health, reviewing threat intelligence, and configuring gateway policies.
-- **Stage 1 Scope:** Minimal landing page displaying live backend connection status, module readiness status, and system metadata.
+- **Stage 5 Scope:** Live operator dashboard displaying real-time gateway health, active routing mode (`shadow` vs `active`), emergency killswitch status, deception session counters, and service module readiness.
 
 ### 3.2 `backend/` (Stage 1 — Active)
 - **Tech Stack:** Node.js, Express, TypeScript.
 - **Role:** Central control plane, API provider, and telemetry coordinator.
 - **Stage 1 Scope:** Health check service (`GET /health`), CORS support, structured graceful shutdown, and containerized deployment.
 
-### 3.3 `gateway/` (Stage 2 & Stage 3 — Active)
+### 3.3 `gateway/` (Stage 2, Stage 3, Stage 5 — Active)
 - **Tech Stack:** Node.js, Express, TypeScript reverse proxy.
-- **Role:** Primary perimeter traffic ingress. Intercepts HTTP/S requests, normalizes paths, strictly validates upstream whitelisting (preventing SSRF and open proxy), enforces body size limits, handles timeouts, attaches request IDs (`X-Request-ID`), preserves response headers/cookies, and outputs structured zero-leakage logs.
-- **Stage 3 Integration:** Extracts security-relevant request metadata (path entropy, depth, query tokens, request rate, header anomalies, body size) without transmitting raw bodies, cookies, or auth tokens. Queries the internal detection engine in **Shadow Mode** with strict timeouts (fail-open resilience). Replaces/strips any client-provided `X-Detection-*` spoofed headers and forwards all traffic faithfully to authorized upstream.
+- **Role:** Primary perimeter traffic ingress, feature extraction pipeline, and deterministic routing decision controller.
+- **Stage 5 Policy-Controlled Traffic Diversion:**
+  - **Deterministic Decision Controller (`controller.ts`):** Evaluates detection score, classification, multi-factor evidence, pseudonymous session identifier, routing mode, and emergency killswitch state. Outputs: `ORIGIN`, `DECEPTION`, or `OBSERVE_ONLY`.
+  - **Conservative Defaults (Shadow Mode):** Default routing mode is `shadow`, ensuring zero traffic is diverted until explicitly opted into `active` mode.
+  - **Sticky Session Router (`sessionRouter.ts`):** In-memory session tracking with sliding TTL (30 minutes) and LRU capacity eviction. Once a session is assigned to deception in active mode, subsequent requests remain sticky in the synthetic environment to maintain DSG state continuity.
+  - **Safe Fail-Open & Degradation Resilience:**
+    - If the Detection service is offline or times out, the gateway falls back safely to `ORIGIN` (`DETECTION_UNAVAILABLE_FALLBACK`).
+    - If the Deception runtime is offline or crashes, the gateway automatically catches the error and executes an instant safe fallback to the authorized test origin, attaching `X-Routing-Fallback: deception-unavailable`.
+  - **Emergency Killswitch:** Operational toggle (`POST /api/gateway/emergency-disable`) immediately halts all diversion and routes 100% of traffic to origin (`EMERGENCY_DISABLE_ACTIVE`).
+  - **Spoofing Protection:** Strips all incoming client-supplied `X-Routing-*` and `X-Detection-*` headers.
 
 ### 3.4 `detection/` (Stage 3 — Active)
 - **Tech Stack:** Python 3.11/3.14, FastAPI, Pydantic, Scikit-learn (RandomForestClassifier + StandardScaler), Uvicorn.
@@ -77,10 +85,10 @@ flowchart TD
   - Dual-scoring ensemble outputting calibrated risk scores [0.0, 1.0], classification labels (`BENIGN`, `SUSPICIOUS`, `MALICIOUS`), and structured explainable evidence tags.
   - Zero host exposure; communicates exclusively across internal Docker bridge networks.
 
-### 3.5 `deception/` (Stage 4 — Active)
+### 3.5 `deception/` (Stage 4-5 — Active)
 - **Tech Stack:** Node.js, Express, TypeScript.
 - **Role:** Isolated, stateful active cyber deception runtime and Deception State Graph (DSG).
-- **Stage 4 Scope:**
+- **Stage 4-5 Scope:**
   - Deception State Graph (DSG) with validated nodes (`entrypoint`, `catalog`, `users`, `files`, `admin`, `auth`) and strict transition boundaries.
   - Three-tier state architecture:
     1. *Protected Policy Layer:* Frozen, immutable safety constraints and operation allowlists.
@@ -88,11 +96,12 @@ flowchart TD
     3. *Observation Layer:* Pseudonymous session identifiers, visited nodes, telemetry timestamps, and interaction history.
   - Deterministic Deception Strategy Selector with policy assertion (`ADD_SYNTHETIC_DECOY_RECORD`, `EXPOSE_SYNTHETIC_SERVICE`, `INCREASE_OBSERVATION_DETAIL`, `MAINTAIN_CURRENT_STATE`, `DISABLE_DECEPTION`).
   - Synthetic APIs (`/api/catalog`, `/api/users`, `/api/files`, `/api/admin`, `/api/auth/login`) with zero access to real databases, host files, or real credentials.
-  - Strictly containerized on internal Docker network (`deception-network`, port `5050`) with no published host port, unprivileged user `node`, sliding TTL session expiration, and LRU memory capacity controls.
+  - Strictly containerized on internal Docker network (`deception-isolated-network`, port `5050`) with no published host port, unprivileged user `node`, sliding TTL session expiration, and LRU memory capacity controls.
 
-### 3.6 `infra/` (Stage 1 — Active)
+### 3.6 `infra/` (Stage 1-5 — Active)
 - **Tech Stack:** Docker, Docker Compose, PostgreSQL 16.
 - **Role:** Declarative local and staging infrastructure management. Provides reproducible service orchestration and verified healthchecks across all 7 platform services.
+- **Network Isolation:** Manages dual bridge networks: `deception-network` (interconnecting gateway, test-origin, detection, backend, frontend, postgres) and `deception-isolated-network` (connecting only gateway and deception runtime). Deception containers have zero physical routes to origin or database networks.
 
 ---
 
@@ -105,41 +114,63 @@ flowchart TD
  TRUST BOUNDARY 1: Perimeter Ingress (TLS Termination, Rate Limiting, WAF)
 ═════════════════╪═════════════════════════════════════════════════════════
                  ▼
-       [ Gateway Reverse Proxy ]
-        /                     \
-       / (Benign)              \ (Malicious / Suspected)
-      ▼                         ▼
-═════════════════════════   ═══════════════════════════════════════════════
- TRUST BOUNDARY 2: Core      TRUST BOUNDARY 3: Deception Isolation Barrier
- (Internal VPC / Auth)       (Air-gapped Sandbox / Egress Zero-Trust)
-═════════════════════════   ═══════════════════════════════════════════════
-      │                                 │
-      ▼                                 ▼
- [ Backend & Database ]        [ Deception Honeypots & DSG ]
+       [ Gateway Reverse Proxy & Decision Controller ]
+        /                                       \
+       / (Benign or Observe-Only)                \ (High-Confidence Malicious)
+      ▼                                           ▼
+═════════════════════════             ═══════════════════════════════════════
+ TRUST BOUNDARY 2: Core                TRUST BOUNDARY 3: Deception Isolation Barrier
+ (Internal VPC / Auth)                 (Dedicated Docker Bridge: deception-isolated-network)
+═════════════════════════             ═══════════════════════════════════════
+      │                                                   │
+      ▼                                                   ▼
+ [ Test Origin / Backend / DB ]               [ Deception Honeypots & DSG ]
 ```
 
-1. **Perimeter Boundary (Untrusted to DMZ):** Only the Gateway service exposes public ports. No internal backend services, databases, or deception containers are accessible directly from the public network.
+1. **Perimeter Boundary (Untrusted to DMZ):** Only the Gateway service exposes public ports (`8080`). No internal backend services, databases, or deception containers are accessible directly from the public network.
 2. **Core Boundary (DMZ to Internal Services):** Backend APIs and ML detection services communicate only with verified internal clients over private Docker bridge networks.
-3. **Deception Isolation Boundary (Containment):** The deception runtime is strictly isolated from core production systems. Deception containers have zero outbound network routes to internal subnets or the wider internet to prevent pivot/lateral movement attacks. Egress logging is asynchronous and unidirectionally sanitized.
+3. **Deception Isolation Boundary (Containment):** The deception runtime is strictly isolated on `deception-isolated-network`. It has zero network routes to the test-origin, backend, database, or host system. Egress logging is asynchronous and unidirectionally sanitized.
 
 ---
 
-## 5. Request & Data Flows
+## 5. Decision Controller & Traffic Routing Policies
 
-### 5.1 Benign Traffic Flow (Normal Path)
-1. User sends request to Gateway.
-2. Gateway extracts security-relevant metadata (zero credentials/bodies).
-3. Gateway queries Detection service asynchronously or within bounded timeout (`/score`).
-4. Detection service evaluates threat score (`score < threshold`, label `BENIGN`).
-5. Gateway attaches correlation and audit metadata and forwards request unchanged to genuine `backend/` or origin service.
-6. Upstream processes request and returns response through Gateway to user.
+### 5.1 Routing Evaluation State Machine
 
-### 5.2 Malicious Traffic Flow (Stage 3 & 4 Shadow Mode vs Stage 5 Active Policy Diversion)
-1. Adversary executes scanning, SQL injection, path traversal, or probe requests against Gateway.
-2. Gateway extracts derived features and queries Detection service.
-3. Detection engine flags malicious patterns (`score >= 0.70`, label `MALICIOUS`) with evidence factors.
-4. **Stage 4 (Deception Runtime Verification & Shadow Mode):** The isolated Deception Runtime (`deception/`) is verified and healthy on the internal network. However, **gateway traffic diversion is intentionally inactive** in Stage 4. All gateway traffic continues normal forwarding to the test origin in Shadow Mode.
-5. **Stage 5 (Future Dynamic Diversion):** Gateway policy routing will be activated to transparently divert confirmed attacker sessions into `deception/`.
+```mermaid
+flowchart TD
+    Req[Incoming HTTP Request] --> Feat[Feature Extraction]
+    Feat --> Det[ML Detection Scoring]
+    Det --> Ctrl{Decision Controller}
+
+    Ctrl -->|Emergency Disable Active| Origin1[ORIGIN - EMERGENCY_DISABLE_ACTIVE]
+    Ctrl -->|Routing Mode != active| Origin2[ORIGIN - SHADOW_MODE_ACTIVE]
+    Ctrl -->|Session Has Existing Assignment| Dec1[DECEPTION - STICKY_SESSION_ASSIGNMENT]
+    Ctrl -->|Detection Unavailable / Malformed| Origin3[ORIGIN - DETECTION_UNAVAILABLE_FALLBACK]
+    Ctrl -->|Score < 0.40 or BENIGN| Origin4[ORIGIN - BENIGN_EVALUATION]
+    Ctrl -->|Score < Threshold or SUSPICIOUS| Obs[OBSERVE_ONLY - SUSPICIOUS_OBSERVE_ONLY]
+    Ctrl -->|Score >= Threshold + Multi-Evidence| Dec2[DECEPTION - HIGH_CONFIDENCE_MALICIOUS_DIVERT]
+    Ctrl -->|Single Weak Signal| Obs2[OBSERVE_ONLY - INSUFFICIENT_CORROBORATION]
+
+    Obs --> ForwardOrigin[Forward to Authorized Test Origin]
+    Origin1 --> ForwardOrigin
+    Origin2 --> ForwardOrigin
+    Origin3 --> ForwardOrigin
+    Origin4 --> ForwardOrigin
+
+    Dec1 --> ForwardDecoy[Forward to Isolated Deception Runtime]
+    Dec2 --> ForwardDecoy
+
+    ForwardDecoy -.->|Runtime Failure / Timeout| Fallback[Safe Fallback to Origin + X-Routing-Fallback Header]
+```
+
+### 5.2 Routing Targets and Response Headers
+
+| Decision Target | Route Destination | Description | Key Response Headers |
+|---|---|---|---|
+| `ORIGIN` | `ORIGIN_URL` (`http://test-origin:5000`) | Benign traffic, shadow mode execution, or safe fallback | `X-Routing-Decision: ORIGIN`<br/>`X-Routing-Reason: ...`<br/>`X-Origin-ID: authorized-test-origin` |
+| `OBSERVE_ONLY` | `ORIGIN_URL` (`http://test-origin:5000`) | Suspicious or uncertain traffic routed to origin with telemetry | `X-Routing-Decision: OBSERVE_ONLY`<br/>`X-Routing-Reason: SUSPICIOUS_OBSERVE_ONLY` |
+| `DECEPTION` | `DECEPTION_SERVICE_URL` (`http://deception:5050`) | Confirmed malicious attacker session diverted to synthetic DSG | `X-Routing-Decision: DECEPTION`<br/>`X-Routing-Reason: HIGH_CONFIDENCE_MALICIOUS_DIVERT`<br/>`X-Deception-Runtime: active`<br/>`X-DSG-Current-Node: ...` |
 
 ---
 
@@ -151,13 +182,14 @@ flowchart TD
 | **Stage 2** | **Gateway & Traffic Interception** | Reverse-proxy service in `gateway/`, request inspection pipeline, routing policies, configurable routing rules, isolated test origin. | **Active / Complete** |
 | **Stage 3** | **ML Detection Engine & Gateway Integration** | Python FastAPI ML service in `detection/`, feature extraction, dual deterministic + scikit-learn models, shadow mode gateway integration, fail-open resilience. | **Active / Complete** |
 | **Stage 4** | **Dynamic Deception Runtime & DSG** | Isolated Node.js/TypeScript deception service in `deception/`, Deception State Graph (DSG), three logical state layers, deterministic strategy selector, session-isolated synthetic APIs. | **Active / Complete** |
-| **Stage 5** | **Dynamic Traffic Diversion, Dashboard & Telemetry** | Active gateway routing policy diversion, interactive threat visualization in `frontend/`, attack graph replay, alert notifications, SIEM event export. | *Reserved* |
+| **Stage 5** | **Policy-Controlled Traffic Diversion** | Deterministic decision controller, configurable routing modes (`shadow`/`active`), sticky session router with sliding TTL, safe fallback resilience, dedicated isolated deception network, operator emergency killswitch. | **Active / Complete** |
 
 ---
 
-## 7. Current State & Known Limitations (Stage 4)
+## 7. Current State & Known Limitations (Stage 5)
 
-- **Gateway Diversion Inactive:** The deception runtime is fully operational and tested in isolation on the Docker network, but gateway diversion remains inactive in Stage 4 to preserve strict validation boundaries.
-- **In-Memory Session Store:** Deception sessions are maintained in-memory using `InMemorySessionStore` with sliding TTL (30 minutes) and LRU capacity eviction (1,000 sessions). A persistent storage interface (`SessionStore`) is defined to support external databases (e.g., Redis or PostgreSQL) in future stages without architectural changes.
-- **Synthetic Data Boundaries:** All synthetic users, files, and services are mocked fixtures. No real credentials, production data, or host filesystem paths are reachable.
-- **Authentication & Database Schemas:** Main application authentication and persistent telemetry migrations remain reserved for Stage 5.
+- **Controlled Origin Scope:** Traffic diversion operates exclusively on the registered local test origin application (`http://test-origin:5000`) and internal deception runtime (`http://deception:5050`). Live production traffic and public internet domains are strictly prohibited.
+- **Conservative Default Mode:** The default deployment mode is `shadow` mode (`ROUTING_MODE=shadow`). Diversion requires explicit operational activation (`ROUTING_MODE=active`).
+- **In-Memory Session Store:** Active deception session stickiness is maintained using an in-memory sliding TTL store with LRU capacity limits (5,000 sessions).
+- **Synthetic Data Boundaries:** All synthetic users, files, and services in the deception environment are mocked fixtures. No real credentials, production data, or host filesystem paths are reachable.
+

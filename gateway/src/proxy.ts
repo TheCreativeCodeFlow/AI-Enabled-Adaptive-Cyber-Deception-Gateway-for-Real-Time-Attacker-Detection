@@ -1,10 +1,13 @@
 import http from 'node:http';
 import https from 'node:https';
+import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { GatewayConfig } from './config';
 import { logRequest } from './logger';
 import { extractFeatures } from './features';
 import { queryDetectionEngine, DetectionScoreResult } from './detector';
+import { evaluateRoutingPolicy, ControllerDecision } from './controller';
+import { SessionRoutingStore, defaultSessionRouter } from './sessionRouter';
 
 const HOP_BY_HOP_HEADERS = new Set([
   'connection',
@@ -32,21 +35,63 @@ function isPathTraversal(path: string): boolean {
   return segments.some((segment) => segment === '..' || segment.includes('..'));
 }
 
-export function createProxyMiddleware(config: GatewayConfig) {
+/**
+ * Derives or extracts a stable pseudonymous session identifier.
+ * Sanitizes client-provided headers and falls back to a deterministic hash.
+ */
+function extractSessionId(req: Request, clientIp: string, userAgent: string): string {
+  const clientSessionHeader = req.headers['x-session-id'];
+  if (
+    typeof clientSessionHeader === 'string' &&
+    /^[a-zA-Z0-9_-]{4,64}$/.test(clientSessionHeader.trim())
+  ) {
+    return clientSessionHeader.trim();
+  }
+
+  if (req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;\s*)deception_session=([a-zA-Z0-9_-]{4,64})/);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  // Derive stable pseudonymous session identifier from client characteristics without storing raw IP/UA
+  const hash = crypto
+    .createHash('sha256')
+    .update(`${clientIp}:${userAgent}`)
+    .digest('hex')
+    .slice(0, 16);
+  return `sess_${hash}`;
+}
+
+export function createProxyMiddleware(
+  config: GatewayConfig,
+  sessionRouter: SessionRoutingStore = defaultSessionRouter
+) {
   const originBase = new URL(config.originUrl);
-  const isHttps = originBase.protocol === 'https:';
-  const transport = isHttps ? https : http;
+  const deceptionBase = new URL(config.deceptionServiceUrl);
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const startTime = process.hrtime();
-    const requestId = (req.headers['x-request-id'] as string) || (res.getHeader('X-Request-ID') as string);
-    const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+    const requestId =
+      (req.headers['x-request-id'] as string) ||
+      (res.getHeader('X-Request-ID') as string) ||
+      crypto.randomUUID();
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
     const userAgent = (req.headers['user-agent'] as string) || 'unknown';
 
-    // Strip client-supplied detection headers to prevent spoofing
+    // Strip client-supplied routing & detection headers to prevent spoofing
     delete req.headers['x-detection-score'];
     delete req.headers['x-detection-classification'];
     delete req.headers['x-detection-error'];
+    delete req.headers['x-routing-decision'];
+    delete req.headers['x-routing-reason'];
+    delete req.headers['x-routing-mode'];
+    delete req.headers['x-routing-fallback'];
+
+    // Extract or derive stable pseudonymous session ID
+    const sessionId = extractSessionId(req, clientIp, userAgent);
 
     // 1. Enforce body size limit via Content-Length header if present
     const contentLengthHeader = req.headers['content-length'];
@@ -64,6 +109,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
           durationMs,
           clientIp,
           userAgent,
+          sessionId,
           error: 'Payload Too Large (Content-Length exceeded limit)',
         });
 
@@ -76,8 +122,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
       }
     }
 
-    // 2. Normalize and construct destination URL strictly against authorized origin
-    // Reject path traversal attempts that attempt to climb directory hierarchies
+    // 2. Reject path traversal attempts
     if (req.path.includes('/../') || req.path.endsWith('/..') || isPathTraversal(req.path)) {
       const duration = process.hrtime(startTime);
       const durationMs = duration[0] * 1000 + duration[1] / 1e6;
@@ -90,6 +135,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
         durationMs,
         clientIp,
         userAgent,
+        sessionId,
         error: 'Path Traversal detected',
       });
 
@@ -101,40 +147,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
       return;
     }
 
-    // Construct destination URL - client headers (Host, X-Forwarded-Host, etc.) NEVER override origin
-    const targetUrl = new URL(req.originalUrl, config.originUrl);
-
-    // Strict validation: target URL origin must match authorized origin exactly
-    if (targetUrl.origin !== config.originUrl) {
-      res.status(400).json({
-        error: 'Bad Request',
-        message: 'Invalid destination URL.',
-        requestId,
-      });
-      return;
-    }
-
-    // 3. Prepare outgoing headers
-    const outgoingHeaders: http.OutgoingHttpHeaders = {};
-    for (const [key, value] of Object.entries(req.headers)) {
-      const lower = key.toLowerCase();
-      if (!HOP_BY_HOP_HEADERS.has(lower) && lower !== 'host') {
-        outgoingHeaders[key] = value;
-      }
-    }
-
-    // Set Host header strictly to upstream origin host
-    outgoingHeaders['host'] = originBase.host;
-
-    // Propagate request ID
-    outgoingHeaders['x-request-id'] = requestId;
-
-    // Forwarding client IP metadata
-    const existingXff = req.headers['x-forwarded-for'];
-    outgoingHeaders['x-forwarded-for'] = existingXff ? `${existingXff}, ${clientIp}` : clientIp;
-    outgoingHeaders['x-forwarded-proto'] = req.protocol;
-
-    // 4. Buffer and validate request body stream against maxRequestBodySize
+    // 3. Buffer and validate request body stream against maxRequestBodySize
     const bodyChunks: Buffer[] = [];
     let receivedBytes = 0;
     let payloadTooLarge = false;
@@ -162,6 +175,7 @@ export function createProxyMiddleware(config: GatewayConfig) {
           durationMs,
           clientIp,
           userAgent,
+          sessionId,
           error: 'Payload Too Large (Streamed body exceeded limit)',
         });
 
@@ -174,66 +188,175 @@ export function createProxyMiddleware(config: GatewayConfig) {
       }
 
       const requestBody = Buffer.concat(bodyChunks);
-      if (requestBody.length > 0) {
-        outgoingHeaders['content-length'] = requestBody.length;
-      }
 
-      // 5. Stage 3 Feature Extraction & Asynchronous ML Detection (Shadow Mode)
+      // 4. Feature Extraction & Asynchronous ML Detection
       const features = extractFeatures(req, requestId, requestBody.length);
       const detectionResult: DetectionScoreResult = await queryDetectionEngine(features, config);
 
-      // Attach detection outcome headers to client response (for verification & observability)
+      // 5. Policy Decision Evaluation (Stage 5 Decision Controller)
+      const hasExistingDeception = sessionRouter.isSessionAssignedToDeception(sessionId);
+      const decision: ControllerDecision = evaluateRoutingPolicy({
+        riskScore: detectionResult.riskScore,
+        classification: detectionResult.classification,
+        evidence: detectionResult.evidence,
+        sessionId,
+        hasExistingDeceptionAssignment: hasExistingDeception,
+        routingMode: config.routingMode,
+        emergencyDisableDiversion: config.emergencyDisableDiversion,
+        deceptionScoreThreshold: config.deceptionScoreThreshold,
+      });
+
+      // Maintain sticky session assignment in store if diverted to deception
+      if (decision.target === 'DECEPTION' && !hasExistingDeception) {
+        sessionRouter.assignSessionToDeception(
+          sessionId,
+          decision.reason,
+          detectionResult.riskScore
+        );
+      }
+
+      // Attach detection & routing outcome headers to client response
+      res.setHeader('X-Request-ID', requestId);
+      res.setHeader('X-Session-ID', sessionId);
       res.setHeader('X-Detection-Score', detectionResult.riskScore.toFixed(4));
       res.setHeader('X-Detection-Classification', detectionResult.classification);
+      res.setHeader('X-Routing-Decision', decision.target);
+      res.setHeader('X-Routing-Reason', decision.reason);
+      res.setHeader('X-Routing-Mode', config.routingMode);
       if (detectionResult.error) {
         res.setHeader('X-Detection-Error', detectionResult.error);
       }
 
-      // 6. SHADOW MODE: Forward request to authorized test-origin regardless of detection result
-      let isTimedOut = false;
-      const proxyReq = transport.request(
-        {
-          protocol: targetUrl.protocol,
-          hostname: targetUrl.hostname,
-          port: targetUrl.port || (isHttps ? 443 : 80),
-          path: `${targetUrl.pathname}${targetUrl.search}`,
-          method: req.method,
-          headers: outgoingHeaders,
-          timeout: config.proxyTimeoutMs,
-        },
-        (originRes) => {
-          // Preserve origin HTTP status
-          const statusCode = originRes.statusCode || 200;
-          res.status(statusCode);
+      // 6. Upstream Proxy Request Execution with Safe Fallback
+      const isDeceptionTarget = decision.target === 'DECEPTION';
+      const initialTargetBase = isDeceptionTarget ? config.deceptionServiceUrl : config.originUrl;
 
-          // Preserve legitimate origin headers and multiple cookies
-          for (let i = 0; i < originRes.rawHeaders.length; i += 2) {
-            const headerName = originRes.rawHeaders[i];
-            const headerValue = originRes.rawHeaders[i + 1];
-            const lowerName = headerName.toLowerCase();
+      function executeProxyRequest(targetBaseUrl: string, isDeceptionAttempt: boolean) {
+        const targetBase = new URL(targetBaseUrl);
+        const isHttps = targetBase.protocol === 'https:';
+        const transport = isHttps ? https : http;
 
-            if (!HOP_BY_HOP_HEADERS.has(lowerName)) {
-              if (lowerName === 'set-cookie') {
-                const existing = res.getHeader('Set-Cookie');
-                if (existing) {
-                  const cookies = Array.isArray(existing) ? existing : [String(existing)];
-                  res.setHeader('Set-Cookie', [...cookies, headerValue]);
+        // Construct destination URL - client headers never override target
+        const targetUrl = new URL(req.originalUrl, targetBaseUrl);
+
+        // Strict validation: target URL origin must match authorized target origin exactly
+        if (targetUrl.origin !== targetBase.origin) {
+          res.status(400).json({
+            error: 'Bad Request',
+            message: 'Invalid destination URL.',
+            requestId,
+          });
+          return;
+        }
+
+        // Prepare outgoing headers
+        const outgoingHeaders: http.OutgoingHttpHeaders = {};
+        for (const [key, value] of Object.entries(req.headers)) {
+          const lower = key.toLowerCase();
+          if (!HOP_BY_HOP_HEADERS.has(lower) && lower !== 'host') {
+            outgoingHeaders[key] = value;
+          }
+        }
+
+        // Set Host header strictly to upstream host
+        outgoingHeaders['host'] = targetBase.host;
+        outgoingHeaders['x-request-id'] = requestId;
+        outgoingHeaders['x-session-id'] = sessionId;
+
+        const existingXff = req.headers['x-forwarded-for'];
+        outgoingHeaders['x-forwarded-for'] = existingXff
+          ? `${existingXff}, ${clientIp}`
+          : clientIp;
+        outgoingHeaders['x-forwarded-proto'] = req.protocol;
+
+        if (requestBody.length > 0) {
+          outgoingHeaders['content-length'] = requestBody.length;
+        }
+
+        let isTimedOut = false;
+        const proxyReq = transport.request(
+          {
+            protocol: targetUrl.protocol,
+            hostname: targetUrl.hostname,
+            port: targetUrl.port || (isHttps ? 443 : 80),
+            path: `${targetUrl.pathname}${targetUrl.search}`,
+            method: req.method,
+            headers: outgoingHeaders,
+            timeout: config.proxyTimeoutMs,
+          },
+          (upstreamRes) => {
+            const statusCode = upstreamRes.statusCode || 200;
+            res.status(statusCode);
+
+            for (let i = 0; i < upstreamRes.rawHeaders.length; i += 2) {
+              const headerName = upstreamRes.rawHeaders[i];
+              const headerValue = upstreamRes.rawHeaders[i + 1];
+              const lowerName = headerName.toLowerCase();
+
+              if (!HOP_BY_HOP_HEADERS.has(lowerName)) {
+                if (lowerName === 'set-cookie') {
+                  const existing = res.getHeader('Set-Cookie');
+                  if (existing) {
+                    const cookies = Array.isArray(existing) ? existing : [String(existing)];
+                    res.setHeader('Set-Cookie', [...cookies, headerValue]);
+                  } else {
+                    res.setHeader('Set-Cookie', headerValue);
+                  }
                 } else {
-                  res.setHeader('Set-Cookie', headerValue);
+                  res.setHeader(headerName, headerValue);
                 }
-              } else {
-                res.setHeader(headerName, headerValue);
               }
             }
+
+            // Always ensure tracking headers are preserved
+            res.setHeader('X-Request-ID', requestId);
+            res.setHeader('X-Session-ID', sessionId);
+
+            upstreamRes.pipe(res);
+
+            upstreamRes.on('end', () => {
+              const duration = process.hrtime(startTime);
+              const durationMs = duration[0] * 1000 + duration[1] / 1e6;
+              logRequest({
+                timestamp: new Date().toISOString(),
+                requestId,
+                method: req.method,
+                path: req.originalUrl,
+                statusCode,
+                durationMs,
+                clientIp,
+                userAgent,
+                sessionId,
+                routingDecision:
+                  (res.getHeader('X-Routing-Decision') as string) || decision.target,
+                routingReason: decision.reason,
+                routingMode: config.routingMode,
+                targetOrigin: targetBase.origin,
+                detectionScore: detectionResult.riskScore,
+                detectionClassification: detectionResult.classification,
+                detectionInferenceMs: detectionResult.inferenceDurationMs,
+                ...(detectionResult.error ? { detectionError: detectionResult.error } : {}),
+              });
+            });
+          }
+        );
+
+        proxyReq.on('timeout', () => {
+          isTimedOut = true;
+          proxyReq.destroy(new Error('ProxyTimeout'));
+
+          // Safe fallback if deception runtime times out
+          if (isDeceptionAttempt && !res.headersSent) {
+            console.warn(
+              `[Gateway-Routing] Deception runtime timed out for request ${requestId}. Executing safe fallback to origin.`
+            );
+            res.setHeader('X-Routing-Fallback', 'deception-unavailable');
+            res.setHeader('X-Routing-Decision', 'ORIGIN');
+            executeProxyRequest(config.originUrl, false);
+            return;
           }
 
-          // Always ensure X-Request-ID and Detection metadata are preserved
-          res.setHeader('X-Request-ID', requestId);
-
-          // Pipe origin response back to client
-          originRes.pipe(res);
-
-          originRes.on('end', () => {
+          if (!res.headersSent) {
             const duration = process.hrtime(startTime);
             const durationMs = duration[0] * 1000 + duration[1] / 1e6;
             logRequest({
@@ -241,25 +364,42 @@ export function createProxyMiddleware(config: GatewayConfig) {
               requestId,
               method: req.method,
               path: req.originalUrl,
-              statusCode,
+              statusCode: 504,
               durationMs,
               clientIp,
               userAgent,
+              sessionId,
+              routingDecision: 'ORIGIN',
+              routingReason: 'UPSTREAM_TIMEOUT',
+              routingMode: config.routingMode,
+              targetOrigin: targetBase.origin,
+              error: 'Upstream service timed out',
               detectionScore: detectionResult.riskScore,
               detectionClassification: detectionResult.classification,
-              detectionInferenceMs: detectionResult.inferenceDurationMs,
-              ...(detectionResult.error ? { detectionError: detectionResult.error } : {}),
             });
-          });
-        }
-      );
 
-      // Handle origin timeout
-      proxyReq.on('timeout', () => {
-        isTimedOut = true;
-        proxyReq.destroy(new Error('ProxyTimeout'));
+            res.status(504).json({
+              error: 'Gateway Timeout',
+              message: 'Upstream origin service timed out.',
+              requestId,
+            });
+          }
+        });
 
-        if (!res.headersSent) {
+        proxyReq.on('error', (err: any) => {
+          if (isTimedOut || res.headersSent) return;
+
+          // Safe fallback if deception runtime is unreachable or crashes
+          if (isDeceptionAttempt) {
+            console.warn(
+              `[Gateway-Routing] Deception runtime unavailable (${err.code || err.message}) for request ${requestId}. Executing safe fallback to origin.`
+            );
+            res.setHeader('X-Routing-Fallback', 'deception-unavailable');
+            res.setHeader('X-Routing-Decision', 'ORIGIN');
+            executeProxyRequest(config.originUrl, false);
+            return;
+          }
+
           const duration = process.hrtime(startTime);
           const durationMs = duration[0] * 1000 + duration[1] / 1e6;
           logRequest({
@@ -267,58 +407,37 @@ export function createProxyMiddleware(config: GatewayConfig) {
             requestId,
             method: req.method,
             path: req.originalUrl,
-            statusCode: 504,
+            statusCode: 502,
             durationMs,
             clientIp,
             userAgent,
-            error: 'Upstream origin timed out',
+            sessionId,
+            routingDecision: 'ORIGIN',
+            routingReason: 'UPSTREAM_ERROR',
+            routingMode: config.routingMode,
+            targetOrigin: targetBase.origin,
+            error: `Upstream service error: ${err.code || err.message}`,
             detectionScore: detectionResult.riskScore,
             detectionClassification: detectionResult.classification,
           });
 
-          res.status(504).json({
-            error: 'Gateway Timeout',
-            message: 'Upstream origin service timed out.',
+          res.status(502).json({
+            error: 'Bad Gateway',
+            message: 'Upstream origin service is unavailable.',
             requestId,
           });
+        });
+
+        if (requestBody.length > 0) {
+          proxyReq.write(requestBody);
         }
-      });
-
-      // Handle connection errors (e.g., origin offline / connection refused)
-      proxyReq.on('error', (err: any) => {
-        if (isTimedOut || res.headersSent) return;
-
-        const duration = process.hrtime(startTime);
-        const durationMs = duration[0] * 1000 + duration[1] / 1e6;
-        logRequest({
-          timestamp: new Date().toISOString(),
-          requestId,
-          method: req.method,
-          path: req.originalUrl,
-          statusCode: 502,
-          durationMs,
-          clientIp,
-          userAgent,
-          error: `Upstream origin error: ${err.code || err.message}`,
-          detectionScore: detectionResult.riskScore,
-          detectionClassification: detectionResult.classification,
-        });
-
-        res.status(502).json({
-          error: 'Bad Gateway',
-          message: 'Upstream origin service is unavailable.',
-          requestId,
-        });
-      });
-
-      // Send buffered body
-      if (requestBody.length > 0) {
-        proxyReq.write(requestBody);
+        proxyReq.end();
       }
-      proxyReq.end();
+
+      executeProxyRequest(initialTargetBase, isDeceptionTarget);
     });
 
-    req.on('error', (err) => {
+    req.on('error', (_err) => {
       if (!res.headersSent) {
         res.status(400).json({
           error: 'Bad Request',

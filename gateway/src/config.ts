@@ -12,12 +12,19 @@ export interface GatewayConfig {
   detectionServiceUrl: string;
   detectionTimeoutMs: number;
   detectionEnabled: boolean;
+  routingMode: 'shadow' | 'active';
+  emergencyDisableDiversion: boolean;
+  deceptionServiceUrl: string;
+  deceptionScoreThreshold: number;
 }
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://test-origin:5000',
   'http://localhost:5000',
   'http://127.0.0.1:5000',
+  'http://deception:5050',
+  'http://localhost:5050',
+  'http://127.0.0.1:5050',
 ];
 
 export function validateOriginUrl(rawUrl: string, allowedOrigins: string[]): URL {
@@ -71,6 +78,14 @@ export function getConfig(): GatewayConfig {
   const detectionTimeoutMs = parseInt(process.env.DETECTION_TIMEOUT_MS || '500', 10);
   const detectionEnabled = process.env.DETECTION_ENABLED !== 'false';
 
+  const routingMode = (process.env.ROUTING_MODE?.toLowerCase() === 'active' ? 'active' : 'shadow') as
+    | 'shadow'
+    | 'active';
+  const emergencyDisableDiversion = process.env.EMERGENCY_DISABLE_DIVERSION === 'true';
+  const rawDeceptionUrl = process.env.DECEPTION_SERVICE_URL || 'http://deception:5050';
+  const validatedDeception = validateOriginUrl(rawDeceptionUrl, rawAllowedOrigins);
+  const deceptionScoreThreshold = parseFloat(process.env.DECEPTION_SCORE_THRESHOLD || '0.70');
+
   return {
     port,
     host,
@@ -81,5 +96,9 @@ export function getConfig(): GatewayConfig {
     detectionServiceUrl,
     detectionTimeoutMs,
     detectionEnabled,
+    routingMode,
+    emergencyDisableDiversion,
+    deceptionServiceUrl: validatedDeception.origin,
+    deceptionScoreThreshold,
   };
 }

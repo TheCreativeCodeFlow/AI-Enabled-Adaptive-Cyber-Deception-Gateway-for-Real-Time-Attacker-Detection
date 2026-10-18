@@ -12,6 +12,11 @@ export interface RequestLogMetadata {
   detectionClassification?: string;
   detectionInferenceMs?: number;
   detectionError?: string;
+  sessionId?: string;
+  routingDecision?: string;
+  routingReason?: string;
+  routingMode?: string;
+  targetOrigin?: string;
 }
 
 const REDACTED_HEADERS = new Set([
@@ -60,6 +65,11 @@ export function logRequest(metadata: RequestLogMetadata): void {
     durationMs: Math.round(metadata.durationMs * 100) / 100,
     clientIp: metadata.clientIp || 'unknown',
     userAgent: metadata.userAgent || 'unknown',
+    ...(metadata.sessionId ? { sessionId: metadata.sessionId } : {}),
+    ...(metadata.routingDecision ? { routingDecision: metadata.routingDecision } : {}),
+    ...(metadata.routingReason ? { routingReason: metadata.routingReason } : {}),
+    ...(metadata.routingMode ? { routingMode: metadata.routingMode } : {}),
+    ...(metadata.targetOrigin ? { targetOrigin: metadata.targetOrigin } : {}),
     ...(metadata.detectionScore !== undefined ? { detectionScore: metadata.detectionScore } : {}),
     ...(metadata.detectionClassification ? { detectionClassification: metadata.detectionClassification } : {}),
     ...(metadata.detectionInferenceMs !== undefined ? { detectionInferenceMs: metadata.detectionInferenceMs } : {}),

@@ -6,6 +6,7 @@ import { createApp } from './app';
 import { app as testOriginApp } from '../test-origin/src/index.js';
 import { validateOriginUrl } from './config';
 import { sanitizeHeaders } from './logger';
+import { SessionRoutingStore } from './sessionRouter';
 
 describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () => {
   let originServer: http.Server;
@@ -322,4 +323,324 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
       assert.strictEqual(sanitized['x-api-key'], '[REDACTED]');
     });
   });
+
+  describe('5. Stage 5: Policy-Controlled Traffic Diversion & Decision Controller', () => {
+    let deceptionServer: http.Server;
+    let deceptionPort: number;
+    let deceptionUrl: string;
+
+    let activeGatewayApp: any;
+    let shadowGatewayApp: any;
+    let fallbackGatewayApp: any;
+    let customSessionStore: SessionRoutingStore;
+
+    before(async () => {
+      // Import and start in-memory deception runtime
+      const { createApp: createDeceptionApp } = await import('../../deception/src/app');
+      await new Promise<void>((resolve) => {
+        deceptionServer = createDeceptionApp().listen(0, '127.0.0.1', () => {
+          const addr = deceptionServer.address() as any;
+          deceptionPort = addr.port;
+          deceptionUrl = `http://127.0.0.1:${deceptionPort}`;
+          resolve();
+        });
+      });
+
+      customSessionStore = new SessionRoutingStore(1800000, 100);
+
+      activeGatewayApp = createApp(
+        {
+          originUrl,
+          deceptionServiceUrl: deceptionUrl,
+          allowedOrigins: [originUrl, deceptionUrl, 'http://test-origin:5000', 'http://deception:5050'],
+          proxyTimeoutMs: 1500,
+          maxRequestBodySize: 1048576,
+          detectionServiceUrl: detectionUrl,
+          detectionTimeoutMs: 800,
+          detectionEnabled: true,
+          routingMode: 'active',
+          emergencyDisableDiversion: false,
+          deceptionScoreThreshold: 0.70,
+        },
+        customSessionStore
+      );
+
+      shadowGatewayApp = createApp({
+        originUrl,
+        deceptionServiceUrl: deceptionUrl,
+        allowedOrigins: [originUrl, deceptionUrl],
+        proxyTimeoutMs: 1500,
+        maxRequestBodySize: 1048576,
+        detectionServiceUrl: detectionUrl,
+        detectionTimeoutMs: 800,
+        detectionEnabled: true,
+        routingMode: 'shadow',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+
+      fallbackGatewayApp = createApp({
+        originUrl,
+        deceptionServiceUrl: 'http://127.0.0.1:49997', // Offline deception port
+        allowedOrigins: [originUrl, 'http://127.0.0.1:49997'],
+        proxyTimeoutMs: 1500,
+        maxRequestBodySize: 1048576,
+        detectionServiceUrl: detectionUrl,
+        detectionTimeoutMs: 800,
+        detectionEnabled: true,
+        routingMode: 'active',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+    });
+
+    after(async () => {
+      if (deceptionServer) {
+        await new Promise<void>((resolve) => deceptionServer.close(() => resolve()));
+      }
+    });
+
+    it('Health check exposes Stage 5 routing metadata, mode, and active deception counts', async () => {
+      const res = await request(activeGatewayApp).get('/health');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.stage, 'Stage 5 — Policy-Controlled Traffic Diversion');
+      assert.strictEqual(res.body.routingMode, 'active');
+      assert.strictEqual(res.body.emergencyDisableDiversion, false);
+      assert.strictEqual(res.body.deceptionService, deceptionUrl);
+      assert.strictEqual(res.body.deceptionThreshold, 0.70);
+      assert.strictEqual(typeof res.body.activeDeceptionSessions, 'number');
+    });
+
+    it('Shadow Mode Invariant: High-confidence malicious request never diverts to deception', async () => {
+      const res = await request(shadowGatewayApp).get('/api/admin/probe');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-routing-reason'], 'SHADOW_MODE_ACTIVE');
+      assert.strictEqual(res.headers['x-routing-mode'], 'shadow');
+      assert.strictEqual(res.headers['x-origin-id'], 'authorized-test-origin');
+      assert.strictEqual(res.headers['x-deception-runtime'], undefined);
+    });
+
+    it('Active Mode: Benign request routes to legitimate test origin', async () => {
+      const res = await request(activeGatewayApp).get('/api/echo');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-routing-reason'], 'BENIGN_EVALUATION');
+      assert.strictEqual(res.headers['x-routing-mode'], 'active');
+      assert.strictEqual(res.body.origin, 'test-origin');
+    });
+
+    it('Active Mode: High-confidence malicious request diverts to isolated deception runtime', async () => {
+      const attackerSessionId = 'session-attacker-alpha-1';
+      const res = await request(activeGatewayApp)
+        .get('/api/admin')
+        .set('X-Session-ID', attackerSessionId);
+
+      assert.strictEqual(res.headers['x-routing-decision'], 'DECEPTION');
+      assert.strictEqual(res.headers['x-routing-reason'], 'HIGH_CONFIDENCE_MALICIOUS_DIVERT');
+      assert.strictEqual(res.headers['x-routing-mode'], 'active');
+      assert.strictEqual(res.headers['x-deception-runtime'], 'active');
+      assert.strictEqual(res.headers['x-session-id'], attackerSessionId);
+      assert.ok(customSessionStore.isSessionAssignedToDeception(attackerSessionId));
+    });
+
+    it('Session Continuity: Subsequent requests from diverted session remain sticky in deception runtime', async () => {
+      const stickySessionId = 'session-attacker-alpha-1';
+      // Now requesting /api/catalog which exists in deception runtime
+      const res = await request(activeGatewayApp)
+        .get('/api/catalog')
+        .set('X-Session-ID', stickySessionId);
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'DECEPTION');
+      assert.strictEqual(res.headers['x-routing-reason'], 'STICKY_SESSION_ASSIGNMENT');
+      assert.strictEqual(res.headers['x-deception-runtime'], 'active');
+      assert.strictEqual(res.headers['x-dsg-current-node'], 'catalog');
+      assert.strictEqual(res.body.service, 'catalog');
+    });
+
+    it('Emergency Killswitch: Halts all diversion immediately and forces traffic to origin', async () => {
+      // 1. Activate emergency disable
+      const disableRes = await request(activeGatewayApp).post('/api/gateway/emergency-disable');
+      assert.strictEqual(disableRes.status, 200);
+      assert.strictEqual(disableRes.body.status, 'emergency_disable_activated');
+
+      // 2. High-confidence malicious request should now route to ORIGIN
+      const res = await request(activeGatewayApp)
+        .get('/api/admin/probe')
+        .set('X-Session-ID', 'session-attacker-emergency');
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-routing-reason'], 'EMERGENCY_DISABLE_ACTIVE');
+      assert.strictEqual(res.headers['x-origin-id'], 'authorized-test-origin');
+
+      // 3. Reactivate diversion
+      const enableRes = await request(activeGatewayApp).post('/api/gateway/emergency-enable');
+      assert.strictEqual(enableRes.status, 200);
+      assert.strictEqual(enableRes.body.status, 'emergency_disable_deactivated');
+    });
+
+    it('Session Reset: Clears session stickiness upon operator reset', async () => {
+      const resetSessionId = 'session-to-reset-99';
+      customSessionStore.assignSessionToDeception(resetSessionId, 'MANUAL_TEST', 0.88);
+      assert.strictEqual(customSessionStore.isSessionAssignedToDeception(resetSessionId), true);
+
+      const resetRes = await request(activeGatewayApp)
+        .post('/api/gateway/sessions/reset')
+        .send({ sessionId: resetSessionId });
+
+      assert.strictEqual(resetRes.status, 200);
+      assert.strictEqual(resetRes.body.status, 'session_cleared');
+      assert.strictEqual(customSessionStore.isSessionAssignedToDeception(resetSessionId), false);
+    });
+
+    it('Safe Fallback: Deception runtime failure automatically falls back to origin without error', async () => {
+      const res = await request(fallbackGatewayApp)
+        .get('/api/admin/probe')
+        .set('X-Session-ID', 'session-fallback-test');
+
+      // Gateway catches unreachable deception runtime and forwards safely to origin
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-fallback'], 'deception-unavailable');
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-origin-id'], 'authorized-test-origin');
+    });
+
+    it('Safe Fallback: Detection service unavailable falls back to origin in active mode', async () => {
+      const deadDetectorActiveApp = createApp({
+        originUrl,
+        deceptionServiceUrl: deceptionUrl,
+        allowedOrigins: [originUrl, deceptionUrl],
+        proxyTimeoutMs: 1500,
+        maxRequestBodySize: 1048576,
+        detectionServiceUrl: 'http://127.0.0.1:9999',
+        detectionTimeoutMs: 100,
+        detectionEnabled: true,
+        routingMode: 'active',
+        deceptionScoreThreshold: 0.70,
+      });
+
+      const res = await request(deadDetectorActiveApp).get('/');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-routing-reason'], 'DETECTION_UNAVAILABLE_FALLBACK');
+      assert.strictEqual(res.body.origin, 'test-origin');
+    });
+
+    it('Client Spoofing Prevention: Strips client routing headers and enforces server policy', async () => {
+      const res = await request(activeGatewayApp)
+        .get('/api/echo')
+        .set('X-Routing-Decision', 'DECEPTION')
+        .set('X-Routing-Mode', 'shadow')
+        .set('X-Routing-Fallback', 'none');
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers['x-routing-decision'], 'ORIGIN');
+      assert.strictEqual(res.headers['x-routing-mode'], 'active');
+      assert.strictEqual(res.headers['x-routing-fallback'], undefined);
+    });
+
+    it('Pseudonymous Session Derivation: Securely hashes client features if no header provided', async () => {
+      const res = await request(activeGatewayApp).get('/api/echo');
+      assert.strictEqual(res.status, 200);
+      const returnedSessionId = res.headers['x-session-id'];
+      assert.ok(returnedSessionId);
+      assert.ok(returnedSessionId.startsWith('sess_'));
+      assert.strictEqual(returnedSessionId.length >= 10, true);
+    });
+
+    it('Decision Controller Unit Tests: Strict evaluation and boundary checks', async () => {
+      const { evaluateRoutingPolicy } = await import('./controller');
+
+      // Emergency disable takes absolute priority
+      const emergencyResult = evaluateRoutingPolicy({
+        riskScore: 0.99,
+        classification: 'MALICIOUS',
+        evidence: ['high_risk'],
+        sessionId: 'sess_1',
+        hasExistingDeceptionAssignment: true,
+        routingMode: 'active',
+        emergencyDisableDiversion: true,
+        deceptionScoreThreshold: 0.70,
+      });
+      assert.strictEqual(emergencyResult.target, 'ORIGIN');
+      assert.strictEqual(emergencyResult.reason, 'EMERGENCY_DISABLE_ACTIVE');
+
+      // Shadow mode invariant
+      const shadowResult = evaluateRoutingPolicy({
+        riskScore: 0.95,
+        classification: 'MALICIOUS',
+        evidence: ['critical_attack'],
+        sessionId: 'sess_2',
+        hasExistingDeceptionAssignment: false,
+        routingMode: 'shadow',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+      assert.strictEqual(shadowResult.target, 'ORIGIN');
+      assert.strictEqual(shadowResult.reason, 'SHADOW_MODE_ACTIVE');
+
+      // Malformed / NaN score fallback
+      const nanResult = evaluateRoutingPolicy({
+        riskScore: NaN,
+        classification: 'MALICIOUS',
+        evidence: [],
+        sessionId: 'sess_3',
+        hasExistingDeceptionAssignment: false,
+        routingMode: 'active',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+      assert.strictEqual(nanResult.target, 'ORIGIN');
+      assert.strictEqual(nanResult.reason, 'DETECTION_UNAVAILABLE_FALLBACK');
+
+      // Suspicious below threshold -> OBSERVE_ONLY
+      const suspiciousResult = evaluateRoutingPolicy({
+        riskScore: 0.55,
+        classification: 'SUSPICIOUS',
+        evidence: ['recon'],
+        sessionId: 'sess_4',
+        hasExistingDeceptionAssignment: false,
+        routingMode: 'active',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+      assert.strictEqual(suspiciousResult.target, 'OBSERVE_ONLY');
+      assert.strictEqual(suspiciousResult.reason, 'SUSPICIOUS_OBSERVE_ONLY');
+
+      // High confidence multi-factor malicious -> DECEPTION
+      const maliciousResult = evaluateRoutingPolicy({
+        riskScore: 0.85,
+        classification: 'MALICIOUS',
+        evidence: ['admin_probe', 'sqli_detected'],
+        sessionId: 'sess_5',
+        hasExistingDeceptionAssignment: false,
+        routingMode: 'active',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+      });
+      assert.strictEqual(maliciousResult.target, 'DECEPTION');
+      assert.strictEqual(maliciousResult.reason, 'HIGH_CONFIDENCE_MALICIOUS_DIVERT');
+    });
+
+    it('SessionRoutingStore Unit Tests: Sliding TTL, capacity eviction, and resets', async () => {
+      const { SessionRoutingStore } = await import('./sessionRouter');
+      const store = new SessionRoutingStore(50, 2); // 50ms TTL, max 2 capacity
+
+      store.assignSessionToDeception('sess_a', 'REASON_A', 0.8);
+      store.assignSessionToDeception('sess_b', 'REASON_B', 0.9);
+      assert.strictEqual(store.isSessionAssignedToDeception('sess_a'), true);
+      assert.strictEqual(store.isSessionAssignedToDeception('sess_b'), true);
+
+      // LRU Eviction: Adding a 3rd session evicts oldest
+      store.assignSessionToDeception('sess_c', 'REASON_C', 0.95);
+      assert.strictEqual(store.getActiveDeceptionCount() <= 2, true);
+
+      // Expiration check
+      await new Promise((r) => setTimeout(r, 60));
+      assert.strictEqual(store.isSessionAssignedToDeception('sess_c'), false);
+    });
+  });
 });
+
