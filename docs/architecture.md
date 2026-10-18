@@ -183,13 +183,56 @@ flowchart TD
 | **Stage 3** | **ML Detection Engine & Gateway Integration** | Python FastAPI ML service in `detection/`, feature extraction, dual deterministic + scikit-learn models, shadow mode gateway integration, fail-open resilience. | **Active / Complete** |
 | **Stage 4** | **Dynamic Deception Runtime & DSG** | Isolated Node.js/TypeScript deception service in `deception/`, Deception State Graph (DSG), three logical state layers, deterministic strategy selector, session-isolated synthetic APIs. | **Active / Complete** |
 | **Stage 5** | **Policy-Controlled Traffic Diversion** | Deterministic decision controller, configurable routing modes (`shadow`/`active`), sticky session router with sliding TTL, safe fallback resilience, dedicated isolated deception network, operator emergency killswitch. | **Active / Complete** |
+| **Stage 6** | **Security Hardening & Operator Authentication** | PostgreSQL operator authentication, bcrypt password hashing (12 rounds), JWT sessions, RBAC (admin vs analyst), protected gateway control endpoints, session fixation defense, zero-leak deception quarantine failure policy, and strict `internal: true` network isolation. | **Active / Complete** |
 
 ---
 
-## 7. Current State & Known Limitations (Stage 5)
+## 7. Stage 6: Security Hardening & Operator Authentication
 
-- **Controlled Origin Scope:** Traffic diversion operates exclusively on the registered local test origin application (`http://test-origin:5000`) and internal deception runtime (`http://deception:5050`). Live production traffic and public internet domains are strictly prohibited.
-- **Conservative Default Mode:** The default deployment mode is `shadow` mode (`ROUTING_MODE=shadow`). Diversion requires explicit operational activation (`ROUTING_MODE=active`).
-- **In-Memory Session Store:** Active deception session stickiness is maintained using an in-memory sliding TTL store with LRU capacity limits (5,000 sessions).
-- **Synthetic Data Boundaries:** All synthetic users, files, and services in the deception environment are mocked fixtures. No real credentials, production data, or host filesystem paths are reachable.
+### 7.1 Role-Based Access Control (RBAC) Architecture
+
+| Role | Permissions | Permitted Actions | Prohibited Actions |
+|---|---|---|---|
+| `admin` | `*` (Full Administrative) | Emergency killswitch toggle, session reset, operator management, audit log access, all read/write actions | None |
+| `analyst` | `traffic:read`, `telemetry:read`, `audit:read` | View telemetry, inspect audit logs, monitor gateway status, read health endpoints | Toggling emergency killswitch, resetting sessions, modifying routing configurations (returns HTTP 403) |
+
+### 7.2 Protected Gateway Control APIs
+
+All privileged endpoints require a signed JWT token in the `Authorization: Bearer <token>` header:
+- `POST /api/gateway/emergency-disable` — Requires `routing:control` (Administrator).
+- `POST /api/gateway/emergency-enable` — Requires `routing:control` (Administrator).
+- `POST /api/gateway/sessions/reset` — Requires `sessions:reset` (Administrator).
+
+Unauthenticated requests receive HTTP 401 Unauthorized. Analyst requests receive HTTP 403 Forbidden with structured error details and operator identification logged in audit records. Privileged operations are sliding-window rate-limited to 30 requests per minute per operator.
+
+### 7.3 Zero-Leak Deception Failure Quarantine Policy
+
+To ensure attackers trapped in the deception environment never leak to the real application:
+- **Assigned Deception Sessions:** If a session is already classified as malicious and assigned to deception, any deception runtime timeout or connection failure returns **HTTP 503 Service Unavailable** with headers:
+  - `X-Routing-Fallback: quarantined`
+  - `X-Routing-Decision: DECEPTION`
+  - `X-Routing-Reason: DECEPTION_UNAVAILABLE_QUARANTINED`
+  The request is **never** forwarded to the real origin.
+- **Unassigned Sessions:** In standard mode (`DECEPTION_FAILURE_POLICY=fallback_origin`), initial unassigned requests preserve safe origin forwarding when deception is unavailable. In strict mode (`DECEPTION_FAILURE_POLICY=quarantine`), all high-risk requests are quarantined.
+
+### 7.4 Session Identity Hardening & Fixation Prevention
+
+- **Entropy:** Session IDs are generated using 192 bits of cryptographic randomness (`sess_${crypto.randomBytes(24).toString('base64url')}`). Predictable client characteristics hashing (`sha256(IP + UA)`) has been eliminated.
+- **Cookies:** Attached as `HttpOnly; SameSite=Lax` (`deception_session=...`) to prevent client-side script theft while preserving browser navigation.
+- **Fixation Defense:** Inbound session tokens are strictly validated against `/^[a-zA-Z0-9_-]{10,64}$/`. Malformed tokens, path traversal patterns (`..`), or script tags are rejected and replaced with fresh cryptographic session tokens.
+- **Log Privacy:** Session IDs are masked in routine logs (`sess_ab12...[REDACTED]`). Sensitive query parameters (`token`, `password`, `key`, `secret`, `jwt`) are automatically redacted via `sanitizePath`.
+
+### 7.5 Network Isolation Verification
+
+- **Deception Network:** `deception-isolated-network` is configured with `internal: true`. Docker blocks all ingress and egress between the deception runtime and external networks/internet.
+- **PostgreSQL Protection:** Host port mapping `5432:5432` has been removed from `docker-compose.yml`. Database access is restricted to internal container networking on `deception-network`.
+
+---
+
+## 8. Current State & Operational Controls (Stage 6)
+
+- **Operator Management:** Operator accounts and credentials are encrypted using bcrypt (12 rounds) and persisted in PostgreSQL. An in-memory store is maintained for standalone testing.
+- **Controlled Scope:** The reverse proxy diverts traffic only to the authorised local test origin and isolated deception container.
+- **Audit Trails:** Administrative login attempts, privileged toggles, and session resets are recorded in the `audit_logs` database table with timestamp, IP, operator ID, and action outcomes.
+
 

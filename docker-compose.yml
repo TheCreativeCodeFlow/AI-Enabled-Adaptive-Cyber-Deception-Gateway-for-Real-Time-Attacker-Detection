@@ -7,8 +7,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-deception_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-deception_pass}
       POSTGRES_DB: ${POSTGRES_DB:-deception_db}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -32,6 +32,7 @@ services:
       NODE_ENV: production
       CORS_ORIGIN: http://localhost:3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-deception_user}:${POSTGRES_PASSWORD:-deception_pass}@postgres:5432/${POSTGRES_DB:-deception_db}
+      OPERATOR_JWT_SECRET: ${OPERATOR_JWT_SECRET:-deception-gateway-operator-secret-key-32chars-min!}
     ports:
       - "${PORT:-4000}:4000"
     depends_on:
@@ -159,6 +160,8 @@ services:
       EMERGENCY_DISABLE_DIVERSION: ${EMERGENCY_DISABLE_DIVERSION:-false}
       DECEPTION_SERVICE_URL: http://deception:5050
       DECEPTION_SCORE_THRESHOLD: "0.70"
+      OPERATOR_JWT_SECRET: ${OPERATOR_JWT_SECRET:-deception-gateway-operator-secret-key-32chars-min!}
+      DECEPTION_FAILURE_POLICY: ${DECEPTION_FAILURE_POLICY:-quarantine}
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
     depends_on:
@@ -187,3 +190,4 @@ networks:
     driver: bridge
   deception-isolated-network:
     driver: bridge
+    internal: true

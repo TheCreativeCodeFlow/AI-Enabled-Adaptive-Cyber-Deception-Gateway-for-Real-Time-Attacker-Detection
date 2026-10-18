@@ -49,10 +49,10 @@ export default function App() {
   return (
     <div className="container">
       <header className="header">
-        <div className="badge">Stage 5: Policy-Controlled Traffic Diversion</div>
+        <div className="badge">Stage 6: Security Hardening & Operator Authentication</div>
         <h1>AI-Enabled Adaptive Cyber Deception Gateway</h1>
         <p className="subtitle">
-          Real-Time Attacker Detection & Active Defense Platform
+          Real-Time Attacker Detection, Policy-Controlled Traffic Diversion & Zero-Leak Deception Defense
         </p>
       </header>
 
@@ -98,7 +98,8 @@ export default function App() {
                     <div><strong>Killswitch:</strong> {gatewayHealth.emergencyDisableDiversion ? 'ACTIVATED' : 'DISENGAGED'}</div>
                     <div><strong>Deception Upstream:</strong> {gatewayHealth.deceptionService}</div>
                     <div><strong>Deception Sessions:</strong> {gatewayHealth.activeDeceptionSessions ?? 0}</div>
-                    <div><strong>Detection:</strong> {gatewayHealth.detectionEnabled ? 'Enabled' : 'Disabled'}</div>
+                    <div><strong>Failure Policy:</strong> {gatewayHealth.deceptionFailurePolicy?.toUpperCase() || 'QUARANTINE'}</div>
+                    <div><strong>Operator Auth:</strong> Enforced (RBAC)</div>
                     <div><strong>Score Threshold:</strong> {gatewayHealth.deceptionThreshold ?? '0.70'}</div>
                     <div><strong>Uptime:</strong> {gatewayHealth.uptime ? `${Math.round(gatewayHealth.uptime)}s` : 'N/A'}</div>
                     <div><strong>Last Checked:</strong> {lastChecked}</div>
@@ -111,7 +112,7 @@ export default function App() {
           {/* Backend Health Card */}
           <section className="card health-card">
             <div className="card-header">
-              <h2>Backend Health (Port 4000)</h2>
+              <h2>Backend & Auth (Port 4000)</h2>
             </div>
             <div className="endpoint-info">
               Target: <code>{BACKEND_URL}/health</code>
@@ -141,6 +142,9 @@ export default function App() {
                   <div className="meta-grid">
                     <div><strong>Service:</strong> {backendHealth.service}</div>
                     <div><strong>Stage:</strong> {backendHealth.stage}</div>
+                    <div><strong>Database:</strong> {backendHealth.database?.status || 'Connected'}</div>
+                    <div><strong>Security Model:</strong> Bcrypt (12 rounds) + JWT</div>
+                    <div><strong>RBAC Roles:</strong> Admin & Analyst</div>
                     <div><strong>Uptime:</strong> {backendHealth.uptime ? `${Math.round(backendHealth.uptime)}s` : 'N/A'}</div>
                     <div><strong>Last Checked:</strong> {lastChecked}</div>
                   </div>
@@ -163,8 +167,8 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>gateway/</h3>
               </div>
-              <p>Reverse proxy, feature extraction, ML scoring, and Stage 5 policy-controlled traffic diversion.</p>
-              <span className="stage-pill">Stage 2-5: Active</span>
+              <p>Reverse proxy with operator RBAC, session fixation protection, and zero-leak deception quarantine.</p>
+              <span className="stage-pill">Stage 2-6: Active</span>
             </div>
 
             <div className="module-item active">
@@ -182,7 +186,7 @@ export default function App() {
                 <h3>deception/</h3>
               </div>
               <p>Isolated cyber deception runtime with Deception State Graph (DSG), session isolation & synthetic APIs.</p>
-              <span className="stage-pill">Stage 4-5: Active</span>
+              <span className="stage-pill">Stage 4-6: Active</span>
             </div>
 
             <div className="module-item active">
@@ -190,8 +194,8 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>backend/</h3>
               </div>
-              <p>Express + TypeScript core API and health verification.</p>
-              <span className="stage-pill">Stage 1: Active</span>
+              <p>PostgreSQL-backed operator authentication, bcrypt password hashing, JWT sessions, and audit logging.</p>
+              <span className="stage-pill">Stage 1 & 6: Active</span>
             </div>
 
             <div className="module-item active">
@@ -199,8 +203,8 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>frontend/</h3>
               </div>
-              <p>React + Vite operator console and service health monitors.</p>
-              <span className="stage-pill">Stage 1-5: Active</span>
+              <p>React + Vite operator console, health telemetry monitors, and security status visualization.</p>
+              <span className="stage-pill">Stage 1-6: Active</span>
             </div>
 
             <div className="module-item active">
@@ -208,15 +212,15 @@ export default function App() {
                 <span className="dot green"></span>
                 <h3>infra/</h3>
               </div>
-              <p>Docker Compose multi-service orchestration with dedicated isolated networks for deception.</p>
-              <span className="stage-pill">Stage 1-5: Active</span>
+              <p>Docker Compose orchestration with strictly internal deception network and isolated PostgreSQL.</p>
+              <span className="stage-pill">Stage 1-6: Active</span>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="footer">
-        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 5 Policy-Controlled Traffic Diversion</p>
+        <p>AI-Enabled Adaptive Cyber Deception Gateway — Stage 6 Security Hardening & Operator Authentication</p>
       </footer>
     </div>
   );

@@ -1,8 +1,8 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 5 — Policy-Controlled Traffic Diversion**
+> **Current Status: Stage 6 — Security Hardening and Operator Authentication**
 
-A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning and diverts adversaries into isolated, high-interaction honeypots in real time.
+A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with role-based access control, cryptographic session hardening, and zero-leak deception quarantine policies.
 
 ---
 
@@ -10,8 +10,8 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 
 ```
 .
-├── gateway/               # [Stage 2, 3, 5 — Active] Reverse proxy, ML scoring & policy routing controller
-│   ├── src/               # Code (app.ts, proxy.ts, controller.ts, sessionRouter.ts, detector.ts, features.ts, config.ts, logger.ts)
+├── gateway/               # [Stage 2, 3, 5, 6 — Active] Reverse proxy, ML scoring, policy controller & operator RBAC
+│   ├── src/               # Code (app.ts, proxy.ts, auth.ts, controller.ts, sessionRouter.ts, detector.ts, features.ts, config.ts, logger.ts)
 │   ├── test-origin/       # Authorized internal test origin (unexposed to host)
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts
@@ -23,25 +23,25 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── requirements.txt   # Python dependencies
 │   ├── Dockerfile         # Python 3.11 container build
 │   └── README.md          # Model specifications, feature schema & synthetic data limitations
-├── deception/             # [Stage 4-5 — Active] Isolated dynamic deception runtime & DSG
+├── deception/             # [Stage 4-6 — Active] Isolated dynamic deception runtime & DSG
 │   ├── src/               # Code (app.ts, dsg.ts, policy.ts, sessionStore.ts, strategy.ts, syntheticData.ts)
 │   ├── Dockerfile         # Multi-stage container build with unprivileged node user
 │   ├── package.json       # Dependencies & test scripts
 │   └── README.md          # DSG specifications, layer models & API contracts
-├── backend/               # [Stage 1 — Active] Node.js, Express & TypeScript core service
-│   ├── src/               # Application code (app.ts, index.ts, index.test.ts)
+├── backend/               # [Stage 1 & 6 — Active] PostgreSQL-backed operator auth, RBAC & audit logging
+│   ├── src/               # Application code (app.ts, auth.ts, db.ts, config.ts, routes/authRoutes.ts, routes/auditRoutes.ts)
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts
-├── frontend/              # [Stage 1-5 — Active] React with JavaScript and Vite operator console
+├── frontend/              # [Stage 1-6 — Active] React with JavaScript and Vite operator console
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
-│   └── architecture.md    # System architecture, trust boundaries & roadmap
-├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks)
-├── .env.example           # Environment template
+│   └── architecture.md    # System architecture, trust boundaries, RBAC matrix & roadmap
+├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks, isolated deception)
+├── .env.example           # Environment template with Stage 6 variables
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
 
@@ -243,32 +243,79 @@ curl -i -H "X-Session-ID: attacker-session-01" "http://localhost:8080/api/catalo
 # X-DSG-Current-Node: catalog
 ```
 
-4. **Emergency Killswitch:**
+4. **Emergency Killswitch (Requires Operator Authentication):**
+Privileged endpoints require an authenticated administrator token:
 ```bash
-# Immediately force all traffic to legitimate origin:
-curl -X POST http://localhost:8080/api/gateway/emergency-disable
+# Obtain Admin JWT token
+ADMIN_TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YourAdminPassword123!"}' | jq -r .token)
+
+# Force all traffic to legitimate origin:
+curl -X POST http://localhost:8080/api/gateway/emergency-disable \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
 
 # Verify traffic routes to origin:
 curl -i -H "X-Session-ID: attacker-session-01" "http://localhost:8080/api/admin"
 # Returns: X-Routing-Decision: ORIGIN, X-Routing-Reason: EMERGENCY_DISABLE_ACTIVE
 
-# Re-enable:
-curl -X POST http://localhost:8080/api/gateway/emergency-enable
+# Re-enable active diversion:
+curl -X POST http://localhost:8080/api/gateway/emergency-enable \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
-### 5.4 Automated Test Suites across All Services
+### 5.4 Stage 6 Operator Authentication & RBAC
+
+1. **Register Operator Account:**
 ```bash
-# 1. Gateway Unit, Decision Controller, Session Routing & Integration Tests (29 tests)
+# Register an administrator account
+curl -s -X POST http://localhost:4000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sec_admin","password":"ComplexPassword123!","email":"admin@cyberdeception.local","role":"admin"}' | jq
+
+# Register a read-only analyst account
+curl -s -X POST http://localhost:4000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sec_analyst","password":"ComplexPassword123!","email":"analyst@cyberdeception.local","role":"analyst"}' | jq
+```
+
+2. **Login and Role Enforcement:**
+```bash
+# Login as Analyst
+ANALYST_TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sec_analyst","password":"ComplexPassword123!"}' | jq -r .token)
+
+# Attempt privileged operation (Fails with 403 Forbidden)
+curl -s -X POST http://localhost:8080/api/gateway/emergency-disable \
+  -H "Authorization: Bearer $ANALYST_TOKEN" | jq
+# Returns: {"error":"Forbidden","message":"Insufficient permissions...","requiredPermission":"routing:control"}
+```
+
+3. **Zero-Leak Deception Failure Quarantine:**
+When a session is classified as malicious and assigned to deception, any runtime failure returns HTTP 503 Quarantined to prevent the attacker from ever reaching the real origin:
+```bash
+curl -i -H "X-Session-ID: trapped-attacker-session" "http://localhost:8080/api/admin"
+# Returns on failure:
+# HTTP/1.1 503 Service Unavailable
+# X-Routing-Fallback: quarantined
+# X-Routing-Decision: DECEPTION
+# X-Routing-Reason: DECEPTION_UNAVAILABLE_QUARANTINED
+```
+
+### 5.5 Automated Test Suites across All Services (73 Tests Total)
+```bash
+# 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC & Quarantine Tests (38 tests)
 cd gateway && npm test
 
-# 2. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
+# 2. Backend Health, Operator Authentication, PostgreSQL Migrations & Audit Tests (11 tests)
+cd backend && npm test
+
+# 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 3. Detection Service Pytest Suite (6 tests)
+# 4. Detection Service Pytest Suite (6 tests)
 cd detection && .venv/bin/pytest
-
-# 4. Backend Unit & Health Tests (3 tests)
-cd backend && npm test
 
 # 5. Frontend Production Build Verification
 cd frontend && npm run build
@@ -282,11 +329,14 @@ cd frontend && npm run build
 |---|---|---|---|
 | `GATEWAY_PORT` | Gateway HTTP listening port | `8080` | Gateway |
 | `ORIGIN_URL` | Upstream target origin URL | `http://test-origin:5000` | Gateway |
-| `ALLOWED_ORIGINS` | Comma-separated whitelist of approved origins | `http://test-origin:5000,http://localhost:5000,http://127.0.0.1:5000,http://deception:5050` | Gateway |
+| `ALLOWED_ORIGINS` | Whitelist of approved origins | `http://test-origin:5000,http://deception:5050` | Gateway |
 | `ROUTING_MODE` | Routing mode (`shadow` [default] or `active`) | `shadow` | Gateway |
 | `EMERGENCY_DISABLE_DIVERSION` | Immediate killswitch to force all traffic to origin | `false` | Gateway |
 | `DECEPTION_SERVICE_URL`| Internal URL of Deception runtime | `http://deception:5050` | Gateway/Deception |
 | `DECEPTION_SCORE_THRESHOLD` | Minimum risk score required for diversion | `0.70` | Gateway |
+| `DECEPTION_FAILURE_POLICY` | Deception failure mode (`quarantine` [default] or `fallback_origin`) | `quarantine` | Gateway |
+| `OPERATOR_JWT_SECRET` | Secret key for signing operator authentication tokens | `deception-gateway-operator-secret-key-32chars-min!` | Gateway/Backend |
+| `BCRYPT_SALT_ROUNDS` | Salt rounds for password hashing | `12` | Backend |
 | `PROXY_TIMEOUT_MS` | Proxy request timeout in milliseconds | `5000` | Gateway |
 | `MAX_REQUEST_BODY_SIZE` | Maximum permitted request body size in bytes | `1048576` (1MB) | Gateway/Deception |
 | `DETECTION_SERVICE_URL` | Internal URL of ML detection engine | `http://detection:8000` | Gateway |
@@ -306,7 +356,7 @@ cd frontend && npm run build
 | `POSTGRES_USER` | PostgreSQL superuser username | `deception_user` | Database |
 | `POSTGRES_PASSWORD`| PostgreSQL superuser password | `deception_pass` | Database |
 | `POSTGRES_DB` | PostgreSQL default database | `deception_db` | Database |
-| `POSTGRES_PORT` | PostgreSQL external host port | `5432` | Database |
+| `POSTGRES_PORT` | PostgreSQL internal port (unmapped to host in Stage 6) | `5432` | Database |
 | `DATABASE_URL` | Full database connection string | `postgresql://...` | Backend/DB |
 
 > **Security Notice:** Never commit `.env` or production credentials to Git. Use `.env.example` as a template for local overrides.

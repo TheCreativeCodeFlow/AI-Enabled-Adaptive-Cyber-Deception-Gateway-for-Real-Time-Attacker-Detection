@@ -5,6 +5,8 @@ import { GatewayConfig, getConfig } from './config';
 import { createProxyMiddleware } from './proxy';
 import { SessionRoutingStore, defaultSessionRouter } from './sessionRouter';
 
+import { createOperatorAuthMiddleware, requireOperatorPermission } from './auth';
+
 export function createApp(
   customConfig?: Partial<GatewayConfig>,
   customSessionRouter?: SessionRoutingStore
@@ -14,6 +16,7 @@ export function createApp(
     ...customConfig,
   };
   const sessionRouter = customSessionRouter || defaultSessionRouter;
+  const operatorAuth = createOperatorAuthMiddleware(config);
 
   const app = express();
 
@@ -41,7 +44,7 @@ export function createApp(
     res.status(200).json({
       status: 'healthy',
       service: 'gateway',
-      stage: 'Stage 5 — Policy-Controlled Traffic Diversion',
+      stage: 'Stage 6 — Security Hardening and Operator Authentication',
       upstream: config.originUrl,
       detectionService: config.detectionServiceUrl,
       detectionEnabled: config.detectionEnabled,
@@ -50,6 +53,7 @@ export function createApp(
       deceptionService: config.deceptionServiceUrl,
       deceptionThreshold: config.deceptionScoreThreshold,
       activeDeceptionSessions: sessionRouter.getActiveDeceptionCount(),
+      deceptionFailurePolicy: config.deceptionFailurePolicy,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     });
@@ -58,47 +62,66 @@ export function createApp(
   // Body parser for administrative gateway endpoints only
   app.use('/api/gateway', express.json());
 
-  // Administrative control: Emergency disable toggle
-  app.post('/api/gateway/emergency-disable', (_req: Request, res: Response) => {
-    config.emergencyDisableDiversion = true;
-    res.status(200).json({
-      status: 'emergency_disable_activated',
-      emergencyDisableDiversion: config.emergencyDisableDiversion,
-      routingMode: config.routingMode,
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  app.post('/api/gateway/emergency-enable', (_req: Request, res: Response) => {
-    config.emergencyDisableDiversion = false;
-    res.status(200).json({
-      status: 'emergency_disable_deactivated',
-      emergencyDisableDiversion: config.emergencyDisableDiversion,
-      routingMode: config.routingMode,
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  // Administrative control: Reset active deception session(s)
-  app.post('/api/gateway/sessions/reset', (req: Request, res: Response) => {
-    const { sessionId } = req.body || {};
-    if (sessionId && typeof sessionId === 'string') {
-      const reset = sessionRouter.resetSessionAssignment(sessionId);
+  // Administrative control: Emergency disable toggle (requires routing:control permission)
+  app.post(
+    '/api/gateway/emergency-disable',
+    operatorAuth,
+    requireOperatorPermission('routing:control'),
+    (req: Request, res: Response) => {
+      config.emergencyDisableDiversion = true;
       res.status(200).json({
-        status: reset ? 'session_cleared' : 'session_not_found',
-        sessionId,
-        activeDeceptionSessions: sessionRouter.getActiveDeceptionCount(),
+        status: 'emergency_disable_activated',
+        emergencyDisableDiversion: config.emergencyDisableDiversion,
+        routingMode: config.routingMode,
+        operator: req.operator?.username,
+        timestamp: new Date().toISOString(),
       });
-      return;
     }
+  );
 
-    sessionRouter.clearAllAssignments();
-    res.status(200).json({
-      status: 'all_sessions_cleared',
-      activeDeceptionSessions: 0,
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.post(
+    '/api/gateway/emergency-enable',
+    operatorAuth,
+    requireOperatorPermission('routing:control'),
+    (req: Request, res: Response) => {
+      config.emergencyDisableDiversion = false;
+      res.status(200).json({
+        status: 'emergency_disable_deactivated',
+        emergencyDisableDiversion: config.emergencyDisableDiversion,
+        routingMode: config.routingMode,
+        operator: req.operator?.username,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
+
+  // Administrative control: Reset active deception session(s) (requires sessions:reset permission)
+  app.post(
+    '/api/gateway/sessions/reset',
+    operatorAuth,
+    requireOperatorPermission('sessions:reset'),
+    (req: Request, res: Response) => {
+      const { sessionId } = req.body || {};
+      if (sessionId && typeof sessionId === 'string') {
+        const reset = sessionRouter.resetSessionAssignment(sessionId);
+        res.status(200).json({
+          status: reset ? 'session_cleared' : 'session_not_found',
+          sessionId,
+          activeDeceptionSessions: sessionRouter.getActiveDeceptionCount(),
+          operator: req.operator?.username,
+        });
+        return;
+      }
+
+      sessionRouter.clearAllAssignments();
+      res.status(200).json({
+        status: 'all_sessions_cleared',
+        activeDeceptionSessions: 0,
+        operator: req.operator?.username,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
 
   // All other traffic is handled by the secure reverse-proxy middleware with adaptive diversion
   app.use(createProxyMiddleware(config, sessionRouter));

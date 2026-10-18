@@ -50,9 +50,55 @@ export function sanitizeHeaders(
   return sanitized;
 }
 
+const SENSITIVE_QUERY_PARAMS = new Set([
+  'token',
+  'key',
+  'apikey',
+  'api_key',
+  'secret',
+  'password',
+  'pass',
+  'auth',
+  'access_token',
+  'session',
+  'jwt',
+]);
+
+/**
+ * Masks session identifiers so unpredictable session tokens are not leaked into routine logs.
+ */
+export function maskSessionId(sessionId?: string): string | undefined {
+  if (!sessionId) return undefined;
+  if (sessionId.length <= 8) return 'sess_***';
+  return `${sessionId.slice(0, 6)}...[REDACTED]`;
+}
+
+/**
+ * Sanitizes URLs/paths to redact sensitive query parameters (credentials, API keys, tokens).
+ */
+export function sanitizePath(pathStr: string): string {
+  if (!pathStr || !pathStr.includes('?')) return pathStr;
+  try {
+    const [base, query] = pathStr.split('?');
+    const params = new URLSearchParams(query);
+    let modified = false;
+
+    for (const key of Array.from(params.keys())) {
+      if (SENSITIVE_QUERY_PARAMS.has(key.toLowerCase())) {
+        params.set(key, '[REDACTED]');
+        modified = true;
+      }
+    }
+
+    return modified ? `${base}?${params.toString()}` : pathStr;
+  } catch {
+    return pathStr;
+  }
+}
+
 /**
  * Formats and outputs structured JSON logs for HTTP traffic metadata.
- * Never outputs raw request bodies or sensitive headers.
+ * Never outputs raw request bodies, credentials, unmasked session IDs, or sensitive query params.
  */
 export function logRequest(metadata: RequestLogMetadata): void {
   const logLine = JSON.stringify({
@@ -60,12 +106,12 @@ export function logRequest(metadata: RequestLogMetadata): void {
     timestamp: metadata.timestamp,
     requestId: metadata.requestId,
     method: metadata.method,
-    path: metadata.path,
+    path: sanitizePath(metadata.path),
     statusCode: metadata.statusCode,
     durationMs: Math.round(metadata.durationMs * 100) / 100,
     clientIp: metadata.clientIp || 'unknown',
     userAgent: metadata.userAgent || 'unknown',
-    ...(metadata.sessionId ? { sessionId: metadata.sessionId } : {}),
+    ...(metadata.sessionId ? { sessionId: maskSessionId(metadata.sessionId) } : {}),
     ...(metadata.routingDecision ? { routingDecision: metadata.routingDecision } : {}),
     ...(metadata.routingReason ? { routingReason: metadata.routingReason } : {}),
     ...(metadata.routingMode ? { routingMode: metadata.routingMode } : {}),

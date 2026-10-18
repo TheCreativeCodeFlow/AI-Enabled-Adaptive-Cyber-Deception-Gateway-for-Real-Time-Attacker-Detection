@@ -16,6 +16,8 @@ export interface GatewayConfig {
   emergencyDisableDiversion: boolean;
   deceptionServiceUrl: string;
   deceptionScoreThreshold: number;
+  operatorJwtSecret: string;
+  deceptionFailurePolicy: 'quarantine' | 'fallback_origin';
 }
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -86,6 +88,14 @@ export function getConfig(): GatewayConfig {
   const validatedDeception = validateOriginUrl(rawDeceptionUrl, rawAllowedOrigins);
   const deceptionScoreThreshold = parseFloat(process.env.DECEPTION_SCORE_THRESHOLD || '0.70');
 
+  const operatorJwtSecret =
+    process.env.OPERATOR_JWT_SECRET ||
+    process.env.JWT_SECRET ||
+    'deception-gateway-operator-secret-key-32chars-min!';
+
+  const rawFailurePolicy = process.env.DECEPTION_FAILURE_POLICY?.toLowerCase();
+  const deceptionFailurePolicy = rawFailurePolicy === 'quarantine' ? 'quarantine' : 'fallback_origin';
+
   return {
     port,
     host,
@@ -100,5 +110,7 @@ export function getConfig(): GatewayConfig {
     emergencyDisableDiversion,
     deceptionServiceUrl: validatedDeception.origin,
     deceptionScoreThreshold,
+    operatorJwtSecret,
+    deceptionFailurePolicy,
   };
 }

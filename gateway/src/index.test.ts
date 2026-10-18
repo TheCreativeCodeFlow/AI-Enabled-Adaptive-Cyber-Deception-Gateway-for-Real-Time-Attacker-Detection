@@ -5,8 +5,9 @@ import request from 'supertest';
 import { createApp } from './app';
 import { app as testOriginApp } from '../test-origin/src/index.js';
 import { validateOriginUrl } from './config';
-import { sanitizeHeaders } from './logger';
+import { sanitizeHeaders, maskSessionId, sanitizePath } from './logger';
 import { SessionRoutingStore } from './sessionRouter';
+import jwt from 'jsonwebtoken';
 
 describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () => {
   let originServer: http.Server;
@@ -334,7 +335,36 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
     let fallbackGatewayApp: any;
     let customSessionStore: SessionRoutingStore;
 
+    const testJwtSecret = 'deception-gateway-operator-secret-key-32chars-min!';
+    let testAdminToken: string;
+    let testAnalystToken: string;
+
     before(async () => {
+      // Create operator test tokens
+      testAdminToken = jwt.sign(
+        {
+          sub: 'op_admin_1',
+          username: 'admin_test',
+          email: 'admin@deception.local',
+          role: 'admin',
+          permissions: ['*'],
+        },
+        testJwtSecret,
+        { expiresIn: '1h' }
+      );
+
+      testAnalystToken = jwt.sign(
+        {
+          sub: 'op_analyst_1',
+          username: 'analyst_test',
+          email: 'analyst@deception.local',
+          role: 'analyst',
+          permissions: ['traffic:read', 'telemetry:read', 'audit:read'],
+        },
+        testJwtSecret,
+        { expiresIn: '1h' }
+      );
+
       // Import and start in-memory deception runtime
       const { createApp: createDeceptionApp } = await import('../../deception/src/app');
       await new Promise<void>((resolve) => {
@@ -361,6 +391,7 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
           routingMode: 'active',
           emergencyDisableDiversion: false,
           deceptionScoreThreshold: 0.70,
+          operatorJwtSecret: testJwtSecret,
         },
         customSessionStore
       );
@@ -377,6 +408,7 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
         routingMode: 'shadow',
         emergencyDisableDiversion: false,
         deceptionScoreThreshold: 0.70,
+        operatorJwtSecret: testJwtSecret,
       });
 
       fallbackGatewayApp = createApp({
@@ -391,6 +423,7 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
         routingMode: 'active',
         emergencyDisableDiversion: false,
         deceptionScoreThreshold: 0.70,
+        operatorJwtSecret: testJwtSecret,
       });
     });
 
@@ -400,10 +433,10 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
       }
     });
 
-    it('Health check exposes Stage 5 routing metadata, mode, and active deception counts', async () => {
+    it('Health check exposes Stage 6 routing metadata, mode, and active deception counts', async () => {
       const res = await request(activeGatewayApp).get('/health');
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.body.stage, 'Stage 5 — Policy-Controlled Traffic Diversion');
+      assert.strictEqual(res.body.stage, 'Stage 6 — Security Hardening and Operator Authentication');
       assert.strictEqual(res.body.routingMode, 'active');
       assert.strictEqual(res.body.emergencyDisableDiversion, false);
       assert.strictEqual(res.body.deceptionService, deceptionUrl);
@@ -460,8 +493,10 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
     });
 
     it('Emergency Killswitch: Halts all diversion immediately and forces traffic to origin', async () => {
-      // 1. Activate emergency disable
-      const disableRes = await request(activeGatewayApp).post('/api/gateway/emergency-disable');
+      // 1. Activate emergency disable with admin credentials
+      const disableRes = await request(activeGatewayApp)
+        .post('/api/gateway/emergency-disable')
+        .set('Authorization', `Bearer ${testAdminToken}`);
       assert.strictEqual(disableRes.status, 200);
       assert.strictEqual(disableRes.body.status, 'emergency_disable_activated');
 
@@ -475,8 +510,10 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
       assert.strictEqual(res.headers['x-routing-reason'], 'EMERGENCY_DISABLE_ACTIVE');
       assert.strictEqual(res.headers['x-origin-id'], 'authorized-test-origin');
 
-      // 3. Reactivate diversion
-      const enableRes = await request(activeGatewayApp).post('/api/gateway/emergency-enable');
+      // 3. Reactivate diversion with admin credentials
+      const enableRes = await request(activeGatewayApp)
+        .post('/api/gateway/emergency-enable')
+        .set('Authorization', `Bearer ${testAdminToken}`);
       assert.strictEqual(enableRes.status, 200);
       assert.strictEqual(enableRes.body.status, 'emergency_disable_deactivated');
     });
@@ -488,6 +525,7 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
 
       const resetRes = await request(activeGatewayApp)
         .post('/api/gateway/sessions/reset')
+        .set('Authorization', `Bearer ${testAdminToken}`)
         .send({ sessionId: resetSessionId });
 
       assert.strictEqual(resetRes.status, 200);
@@ -640,6 +678,272 @@ describe('Stage 2 & Stage 3: Gateway Reverse-Proxy & Detection Integration', () 
       // Expiration check
       await new Promise((r) => setTimeout(r, 60));
       assert.strictEqual(store.isSessionAssignedToDeception('sess_c'), false);
+    });
+  });
+
+  describe('6. Stage 6: Security Hardening, Operator RBAC & Defense in Depth', () => {
+    let deceptionServer: http.Server;
+    let deceptionPort: number;
+    let deceptionUrl: string;
+
+    let stage6Gateway: any;
+    let stage6FallbackGateway: any;
+    let stage6SessionStore: SessionRoutingStore;
+
+    const testJwtSecret = 'deception-gateway-operator-secret-key-32chars-min!';
+    let adminToken: string;
+    let analystToken: string;
+
+    before(async () => {
+      adminToken = jwt.sign(
+        {
+          sub: 'op_admin_stage6',
+          username: 'stage6_admin',
+          email: 'admin@stage6.local',
+          role: 'admin',
+          permissions: ['*'],
+        },
+        testJwtSecret,
+        { expiresIn: '1h' }
+      );
+
+      analystToken = jwt.sign(
+        {
+          sub: 'op_analyst_stage6',
+          username: 'stage6_analyst',
+          email: 'analyst@stage6.local',
+          role: 'analyst',
+          permissions: ['traffic:read', 'telemetry:read', 'audit:read'],
+        },
+        testJwtSecret,
+        { expiresIn: '1h' }
+      );
+
+      const { createApp: createDeceptionApp } = await import('../../deception/src/app');
+      await new Promise<void>((resolve) => {
+        deceptionServer = createDeceptionApp().listen(0, '127.0.0.1', () => {
+          const addr = deceptionServer.address() as any;
+          deceptionPort = addr.port;
+          deceptionUrl = `http://127.0.0.1:${deceptionPort}`;
+          resolve();
+        });
+      });
+
+      stage6SessionStore = new SessionRoutingStore(1800000, 100);
+
+      stage6Gateway = createApp(
+        {
+          originUrl,
+          deceptionServiceUrl: deceptionUrl,
+          allowedOrigins: [originUrl, deceptionUrl, 'http://test-origin:5000', 'http://deception:5050'],
+          proxyTimeoutMs: 1500,
+          maxRequestBodySize: 1048576,
+          detectionServiceUrl: detectionUrl,
+          detectionTimeoutMs: 800,
+          detectionEnabled: true,
+          routingMode: 'active',
+          emergencyDisableDiversion: false,
+          deceptionScoreThreshold: 0.70,
+          operatorJwtSecret: testJwtSecret,
+          deceptionFailurePolicy: 'fallback_origin',
+        },
+        stage6SessionStore
+      );
+
+      stage6FallbackGateway = createApp(
+        {
+          originUrl,
+          deceptionServiceUrl: 'http://127.0.0.1:49996', // Offline deception service
+          allowedOrigins: [originUrl, 'http://127.0.0.1:49996'],
+          proxyTimeoutMs: 1500,
+          maxRequestBodySize: 1048576,
+          detectionServiceUrl: detectionUrl,
+          detectionTimeoutMs: 800,
+          detectionEnabled: true,
+          routingMode: 'active',
+          emergencyDisableDiversion: false,
+          deceptionScoreThreshold: 0.70,
+          operatorJwtSecret: testJwtSecret,
+          deceptionFailurePolicy: 'fallback_origin',
+        },
+        stage6SessionStore
+      );
+    });
+
+    after(async () => {
+      if (deceptionServer) {
+        await new Promise<void>((resolve) => deceptionServer.close(() => resolve()));
+      }
+    });
+
+    it('Operator Auth: Unauthenticated requests to privileged gateway control APIs return 401', async () => {
+      const res1 = await request(stage6Gateway).post('/api/gateway/emergency-disable');
+      assert.strictEqual(res1.status, 401);
+      assert.strictEqual(res1.body.error, 'Unauthorized');
+
+      const res2 = await request(stage6Gateway).post('/api/gateway/emergency-enable');
+      assert.strictEqual(res2.status, 401);
+      assert.strictEqual(res2.body.error, 'Unauthorized');
+
+      const res3 = await request(stage6Gateway).post('/api/gateway/sessions/reset');
+      assert.strictEqual(res3.status, 401);
+      assert.strictEqual(res3.body.error, 'Unauthorized');
+    });
+
+    it('Operator Auth: Requests with invalid or forged tokens return 401 Unauthorized', async () => {
+      const res = await request(stage6Gateway)
+        .post('/api/gateway/emergency-disable')
+        .set('Authorization', 'Bearer forged_invalid_jwt_token_123');
+
+      assert.strictEqual(res.status, 401);
+      assert.strictEqual(res.body.error, 'Unauthorized');
+    });
+
+    it('Operator RBAC: Read-only analyst role receives 403 Forbidden on privileged operations', async () => {
+      const resDisable = await request(stage6Gateway)
+        .post('/api/gateway/emergency-disable')
+        .set('Authorization', `Bearer ${analystToken}`);
+      assert.strictEqual(resDisable.status, 403);
+      assert.strictEqual(resDisable.body.error, 'Forbidden');
+      assert.strictEqual(resDisable.body.requiredPermission, 'routing:control');
+
+      const resEnable = await request(stage6Gateway)
+        .post('/api/gateway/emergency-enable')
+        .set('Authorization', `Bearer ${analystToken}`);
+      assert.strictEqual(resEnable.status, 403);
+      assert.strictEqual(resEnable.body.error, 'Forbidden');
+
+      const resReset = await request(stage6Gateway)
+        .post('/api/gateway/sessions/reset')
+        .set('Authorization', `Bearer ${analystToken}`)
+        .send({ sessionId: 'some-session' });
+      assert.strictEqual(resReset.status, 403);
+      assert.strictEqual(resReset.body.error, 'Forbidden');
+      assert.strictEqual(resReset.body.requiredPermission, 'sessions:reset');
+    });
+
+    it('Operator RBAC: Administrator role succeeds on all privileged operations', async () => {
+      const resDisable = await request(stage6Gateway)
+        .post('/api/gateway/emergency-disable')
+        .set('Authorization', `Bearer ${adminToken}`);
+      assert.strictEqual(resDisable.status, 200);
+      assert.strictEqual(resDisable.body.status, 'emergency_disable_activated');
+
+      const resEnable = await request(stage6Gateway)
+        .post('/api/gateway/emergency-enable')
+        .set('Authorization', `Bearer ${adminToken}`);
+      assert.strictEqual(resEnable.status, 200);
+      assert.strictEqual(resEnable.body.status, 'emergency_disable_deactivated');
+
+      const resReset = await request(stage6Gateway)
+        .post('/api/gateway/sessions/reset')
+        .set('Authorization', `Bearer ${adminToken}`);
+      assert.strictEqual(resReset.status, 200);
+      assert.strictEqual(resReset.body.status, 'all_sessions_cleared');
+    });
+
+    it('Deception Quarantine: Active attacker session NEVER leaks to origin on runtime failure (returns 503 Quarantined)', async () => {
+      const trappedAttackerSession = 'quarantined-attacker-sess-001';
+      stage6SessionStore.assignSessionToDeception(
+        trappedAttackerSession,
+        'PREVIOUS_HIGH_RISK_ATTACK',
+        0.95
+      );
+      assert.strictEqual(stage6SessionStore.isSessionAssignedToDeception(trappedAttackerSession), true);
+
+      // Request through gateway where deception runtime is offline
+      const res = await request(stage6FallbackGateway)
+        .get('/api/admin')
+        .set('X-Session-ID', trappedAttackerSession);
+
+      // MUST NOT leak back to real origin!
+      assert.strictEqual(res.status, 503);
+      assert.strictEqual(res.headers['x-routing-fallback'], 'quarantined');
+      assert.strictEqual(res.headers['x-routing-decision'], 'DECEPTION');
+      assert.strictEqual(res.headers['x-routing-reason'], 'DECEPTION_UNAVAILABLE_QUARANTINED');
+      assert.strictEqual(res.headers['x-origin-id'], undefined);
+      assert.strictEqual(res.body.error, 'Service Unavailable');
+    });
+
+    it('Deception Quarantine: Strict quarantine mode quarantines unassigned malicious request when configured', async () => {
+      const strictQuarantineGateway = createApp({
+        originUrl,
+        deceptionServiceUrl: 'http://127.0.0.1:49995', // Offline
+        allowedOrigins: [originUrl, 'http://127.0.0.1:49995'],
+        proxyTimeoutMs: 1500,
+        maxRequestBodySize: 1048576,
+        detectionServiceUrl: detectionUrl,
+        detectionTimeoutMs: 800,
+        detectionEnabled: true,
+        routingMode: 'active',
+        emergencyDisableDiversion: false,
+        deceptionScoreThreshold: 0.70,
+        deceptionFailurePolicy: 'quarantine',
+      });
+
+      const res = await request(strictQuarantineGateway)
+        .get('/api/admin/probe')
+        .set('X-Session-ID', 'unassigned-malicious-quarantine-test');
+
+      assert.strictEqual(res.status, 503);
+      assert.strictEqual(res.headers['x-routing-fallback'], 'quarantined');
+      assert.strictEqual(res.headers['x-origin-id'], undefined);
+    });
+
+    it('Session Identity Hardening: Attaches HttpOnly SameSite=Lax cookie on responses', async () => {
+      const res = await request(stage6Gateway).get('/api/echo');
+      assert.strictEqual(res.status, 200);
+
+      const cookies = res.headers['set-cookie'];
+      assert.ok(cookies, 'Expected Set-Cookie header to be present');
+      const cookieStr = Array.isArray(cookies) ? cookies.join('; ') : cookies;
+      assert.ok(cookieStr.includes('deception_session='));
+      assert.ok(cookieStr.includes('HttpOnly'));
+      assert.ok(cookieStr.includes('SameSite=Lax'));
+    });
+
+    it('Session Fixation Defense: Rejects dangerous or malformed session IDs and generates fresh random ID', async () => {
+      // 1. Path traversal in session ID
+      const resTraversal = await request(stage6Gateway)
+        .get('/api/echo')
+        .set('X-Session-ID', '../../etc/passwd');
+
+      assert.strictEqual(resTraversal.status, 200);
+      const sessionAfterTraversal = resTraversal.headers['x-session-id'];
+      assert.ok(sessionAfterTraversal);
+      assert.strictEqual(sessionAfterTraversal.includes('..'), false);
+      assert.strictEqual(sessionAfterTraversal.includes('passwd'), false);
+      assert.ok(sessionAfterTraversal.startsWith('sess_'));
+
+      // 2. Script injection in session ID
+      const resXss = await request(stage6Gateway)
+        .get('/api/echo')
+        .set('X-Session-ID', '<script>alert(1)</script>');
+
+      assert.strictEqual(resXss.status, 200);
+      const sessionAfterXss = resXss.headers['x-session-id'];
+      assert.ok(sessionAfterXss);
+      assert.strictEqual(sessionAfterXss.includes('<script>'), false);
+      assert.ok(sessionAfterXss.startsWith('sess_'));
+    });
+
+    it('Sensitive Data Redaction: maskSessionId and sanitizePath protect credentials from routine logs', () => {
+      // Session ID masking
+      const longSession = 'sess_abcdef1234567890abcdef123456';
+      const masked = maskSessionId(longSession);
+      assert.strictEqual(masked, 'sess_a...[REDACTED]');
+      assert.strictEqual(maskSessionId(undefined), undefined);
+      assert.strictEqual(maskSessionId('short'), 'sess_***');
+
+      // Sensitive query params sanitization
+      const urlWithCredentials = '/api/v1/search?query=honey&token=sec_999&password=admin_pass&key=abc&limit=10';
+      const sanitized = sanitizePath(urlWithCredentials);
+      assert.strictEqual(sanitized.includes('sec_999'), false);
+      assert.strictEqual(sanitized.includes('admin_pass'), false);
+      assert.strictEqual(sanitized.includes('token=%5BREDACTED%5D'), true);
+      assert.strictEqual(sanitized.includes('password=%5BREDACTED%5D'), true);
+      assert.strictEqual(sanitized.includes('query=honey'), true);
+      assert.strictEqual(sanitized.includes('limit=10'), true);
     });
   });
 });

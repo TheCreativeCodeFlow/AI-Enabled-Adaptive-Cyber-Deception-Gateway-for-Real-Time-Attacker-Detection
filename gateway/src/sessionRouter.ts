@@ -120,6 +120,14 @@ export class SessionRoutingStore {
     return this.assignments.size;
   }
 
+  /**
+   * Returns true if a session assignment exists in store.
+   */
+  public hasSession(sessionId: string): boolean {
+    if (!sessionId) return false;
+    return this.assignments.has(sessionId);
+  }
+
   public clearAllAssignments(): void {
     this.assignments.clear();
   }
@@ -127,3 +135,4 @@ export class SessionRoutingStore {
 
 // Global default singleton for gateway process
 export const defaultSessionRouter = new SessionRoutingStore();
+

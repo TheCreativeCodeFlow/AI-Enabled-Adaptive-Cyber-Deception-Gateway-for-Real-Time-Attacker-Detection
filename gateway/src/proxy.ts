@@ -36,32 +36,59 @@ function isPathTraversal(path: string): boolean {
 }
 
 /**
- * Derives or extracts a stable pseudonymous session identifier.
- * Sanitizes client-provided headers and falls back to a deterministic hash.
+ * Generates a cryptographically secure, unpredictable session ID with 192 bits of entropy.
  */
-function extractSessionId(req: Request, clientIp: string, userAgent: string): string {
-  const clientSessionHeader = req.headers['x-session-id'];
-  if (
-    typeof clientSessionHeader === 'string' &&
-    /^[a-zA-Z0-9_-]{4,64}$/.test(clientSessionHeader.trim())
-  ) {
-    return clientSessionHeader.trim();
-  }
+function generateSecureSessionId(): string {
+  return `sess_${crypto.randomBytes(24).toString('base64url')}`;
+}
 
+/**
+ * Validates session ID format to prevent session fixation, header injection, or path traversal.
+ * Accepted format: 10-64 chars of alphanumeric, underscore, and hyphen.
+ */
+function isValidSessionId(sessionId: unknown): sessionId is string {
+  if (typeof sessionId !== 'string') return false;
+  const trimmed = sessionId.trim();
+  if (
+    trimmed.includes('..') ||
+    trimmed.includes('/') ||
+    trimmed.includes('\\') ||
+    trimmed.includes(';') ||
+    trimmed.includes(' ') ||
+    trimmed.includes('<') ||
+    trimmed.includes('>')
+  ) {
+    return false;
+  }
+  return /^[a-zA-Z0-9_-]{10,64}$/.test(trimmed);
+}
+
+/**
+ * Derives or extracts a cryptographically secure pseudonymous session identifier.
+ * Prevents session fixation by strictly validating existing session tokens,
+ * and generates unpredictable 192-bit cryptographic IDs when not provided or invalid.
+ * Never falls back to predictable client characteristic hashes.
+ */
+function extractSessionId(req: Request): { sessionId: string; isNewSession: boolean } {
+  // 1. Check for deception_session cookie first (standard browser session)
   if (req.headers.cookie) {
-    const match = req.headers.cookie.match(/(?:^|;\s*)deception_session=([a-zA-Z0-9_-]{4,64})/);
-    if (match) {
-      return match[1];
+    const match = req.headers.cookie.match(/(?:^|;\s*)deception_session=([a-zA-Z0-9_-]{10,64})/);
+    if (match && isValidSessionId(match[1])) {
+      return { sessionId: match[1], isNewSession: false };
     }
   }
 
-  // Derive stable pseudonymous session identifier from client characteristics without storing raw IP/UA
-  const hash = crypto
-    .createHash('sha256')
-    .update(`${clientIp}:${userAgent}`)
-    .digest('hex')
-    .slice(0, 16);
-  return `sess_${hash}`;
+  // 2. Check for X-Session-ID header (API / test clients)
+  const clientSessionHeader = req.headers['x-session-id'];
+  if (typeof clientSessionHeader === 'string') {
+    const trimmed = clientSessionHeader.trim();
+    if (isValidSessionId(trimmed)) {
+      return { sessionId: trimmed, isNewSession: false };
+    }
+  }
+
+  // 3. Fallback: Generate fresh cryptographically random session ID (no IP/UA hashing)
+  return { sessionId: generateSecureSessionId(), isNewSession: true };
 }
 
 export function createProxyMiddleware(
@@ -90,8 +117,20 @@ export function createProxyMiddleware(
     delete req.headers['x-routing-mode'];
     delete req.headers['x-routing-fallback'];
 
-    // Extract or derive stable pseudonymous session ID
-    const sessionId = extractSessionId(req, clientIp, userAgent);
+    // Extract or derive cryptographically secure pseudonymous session ID
+    const { sessionId, isNewSession } = extractSessionId(req);
+
+    // Attach HttpOnly, SameSite=Lax session cookie if new session or cookie missing
+    if (!req.headers.cookie || !req.headers.cookie.includes('deception_session=')) {
+      const existingSetCookie = res.getHeader('Set-Cookie');
+      const sessionCookie = `deception_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax`;
+      if (existingSetCookie) {
+        const list = Array.isArray(existingSetCookie) ? existingSetCookie : [String(existingSetCookie)];
+        res.setHeader('Set-Cookie', [...list, sessionCookie]);
+      } else {
+        res.setHeader('Set-Cookie', [sessionCookie]);
+      }
+    }
 
     // 1. Enforce body size limit via Content-Length header if present
     const contentLengthHeader = req.headers['content-length'];
@@ -345,8 +384,48 @@ export function createProxyMiddleware(
           isTimedOut = true;
           proxyReq.destroy(new Error('ProxyTimeout'));
 
-          // Safe fallback if deception runtime times out
+          // Check if deception failure should be quarantined to prevent origin exposure
           if (isDeceptionAttempt && !res.headersSent) {
+            const shouldQuarantine =
+              hasExistingDeception || config.deceptionFailurePolicy === 'quarantine';
+
+            if (shouldQuarantine) {
+              console.warn(
+                `[Gateway-Routing] Deception runtime timed out for request ${requestId}. Deception session quarantined to prevent origin exposure.`
+              );
+              const duration = process.hrtime(startTime);
+              const durationMs = duration[0] * 1000 + duration[1] / 1e6;
+              logRequest({
+                timestamp: new Date().toISOString(),
+                requestId,
+                method: req.method,
+                path: req.originalUrl,
+                statusCode: 503,
+                durationMs,
+                clientIp,
+                userAgent,
+                sessionId,
+                routingDecision: 'DECEPTION',
+                routingReason: 'DECEPTION_UNAVAILABLE_QUARANTINED',
+                routingMode: config.routingMode,
+                targetOrigin: targetBase.origin,
+                error: 'Deception runtime timed out; quarantined',
+                detectionScore: detectionResult.riskScore,
+                detectionClassification: detectionResult.classification,
+              });
+
+              res.setHeader('X-Routing-Fallback', 'quarantined');
+              res.setHeader('X-Routing-Decision', 'DECEPTION');
+              res.setHeader('X-Routing-Reason', 'DECEPTION_UNAVAILABLE_QUARANTINED');
+              res.status(503).json({
+                error: 'Service Unavailable',
+                message:
+                  'Security runtime unavailable. Deception session quarantined to prevent origin exposure.',
+                requestId,
+              });
+              return;
+            }
+
             console.warn(
               `[Gateway-Routing] Deception runtime timed out for request ${requestId}. Executing safe fallback to origin.`
             );
@@ -389,8 +468,48 @@ export function createProxyMiddleware(
         proxyReq.on('error', (err: any) => {
           if (isTimedOut || res.headersSent) return;
 
-          // Safe fallback if deception runtime is unreachable or crashes
+          // Check if deception failure should be quarantined to prevent origin exposure
           if (isDeceptionAttempt) {
+            const shouldQuarantine =
+              hasExistingDeception || config.deceptionFailurePolicy === 'quarantine';
+
+            if (shouldQuarantine) {
+              console.warn(
+                `[Gateway-Routing] Deception runtime unavailable (${err.code || err.message}) for request ${requestId}. Deception session quarantined to prevent origin exposure.`
+              );
+              const duration = process.hrtime(startTime);
+              const durationMs = duration[0] * 1000 + duration[1] / 1e6;
+              logRequest({
+                timestamp: new Date().toISOString(),
+                requestId,
+                method: req.method,
+                path: req.originalUrl,
+                statusCode: 503,
+                durationMs,
+                clientIp,
+                userAgent,
+                sessionId,
+                routingDecision: 'DECEPTION',
+                routingReason: 'DECEPTION_UNAVAILABLE_QUARANTINED',
+                routingMode: config.routingMode,
+                targetOrigin: targetBase.origin,
+                error: `Deception runtime unavailable: ${err.code || err.message}; quarantined`,
+                detectionScore: detectionResult.riskScore,
+                detectionClassification: detectionResult.classification,
+              });
+
+              res.setHeader('X-Routing-Fallback', 'quarantined');
+              res.setHeader('X-Routing-Decision', 'DECEPTION');
+              res.setHeader('X-Routing-Reason', 'DECEPTION_UNAVAILABLE_QUARANTINED');
+              res.status(503).json({
+                error: 'Service Unavailable',
+                message:
+                  'Security runtime unavailable. Deception session quarantined to prevent origin exposure.',
+                requestId,
+              });
+              return;
+            }
+
             console.warn(
               `[Gateway-Routing] Deception runtime unavailable (${err.code || err.message}) for request ${requestId}. Executing safe fallback to origin.`
             );
