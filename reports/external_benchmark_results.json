@@ -1,0 +1,792 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-19T12:27:33.466439+00:00",
+    "stage": "Stage 11 \u2014 External Benchmark Validation and Routing Semantics Audit",
+    "git_commit": "774ea82c15b988159fe028be0c29e94aa434f6c3",
+    "environment": {
+      "os": "darwin",
+      "python_version": "3.14.6",
+      "executable": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/detection/.venv/bin/python"
+    },
+    "dataset": {
+      "name": "External Public HTTP Security Benchmark (CSIC 2010 & OWASP CRS)",
+      "version": "1.0.0",
+      "path": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/data/scenarios/external_benchmark_v1.json",
+      "content_sha256": "f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3",
+      "total_scenarios": 100,
+      "benign_samples": 50,
+      "attack_samples": 50
+    },
+    "model": {
+      "path": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/detection/model.joblib",
+      "sha256": "4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406"
+    }
+  },
+  "baseline_results": {
+    "B1": {
+      "baseline_id": "B1",
+      "name": "B1: Direct Origin Forwarding",
+      "architecture": "Standard Reverse Proxy (Passthrough)",
+      "routing_policy": "Unconditional Origin Forwarding",
+      "has_detection": false,
+      "has_deception": false,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 50,
+          "fn": 50,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              50,
+              0
+            ]
+          ]
+        },
+        "accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 100,
+        "diverted_to_deception": 0,
+        "origin_leak_count": 50,
+        "origin_leakage_pct": 100.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 50,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 0,
+          "successful_deception_responses": 0,
+          "total_deception_interactions": 0,
+          "unique_decoy_endpoints": 0
+        }
+      },
+      "latency_ms": {
+        "p50": 0.0002,
+        "p95": 0.001,
+        "p99": 0.0027,
+        "mean": 0.0003,
+        "min": 0.0001,
+        "max": 0.0027,
+        "formatted_p50": "0.2 \u00b5s",
+        "formatted_p95": "0.001 ms",
+        "formatted_p99": "0.003 ms"
+      },
+      "detection_latency_ms": {
+        "p50": null,
+        "note": "N/A (Passthrough: no detection phase)"
+      }
+    },
+    "B2": {
+      "baseline_id": "B2",
+      "name": "B2: Static Heuristic Deception",
+      "architecture": "Keyword Substring Matcher + Flat Static Decoy",
+      "routing_policy": "Path Substring Match -> Flat Decoy; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 3,
+          "fp": 0,
+          "tn": 50,
+          "fn": 47,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              47,
+              3
+            ]
+          ]
+        },
+        "accuracy": 0.53,
+        "precision": 1.0,
+        "recall": 0.06,
+        "f1": 0.1132,
+        "fpr": 0.0,
+        "fnr": 0.94,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 97,
+        "diverted_to_deception": 3,
+        "origin_leak_count": 47,
+        "origin_leakage_pct": 94.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 47,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 1,
+          "successful_deception_responses": 3,
+          "total_deception_interactions": 3,
+          "unique_decoy_endpoints": 1
+        }
+      },
+      "latency_ms": {
+        "p50": 0.0004,
+        "p95": 0.0006,
+        "p99": 0.0034,
+        "mean": 0.0005,
+        "min": 0.0003,
+        "max": 0.0034,
+        "formatted_p50": "0.4 \u00b5s",
+        "formatted_p95": "0.6 \u00b5s",
+        "formatted_p99": "0.003 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 0.0003,
+        "p95": 0.0005,
+        "p99": 0.003,
+        "mean": 0.0004,
+        "min": 0.0002,
+        "max": 0.003,
+        "formatted_p50": "0.3 \u00b5s",
+        "formatted_p95": "0.5 \u00b5s",
+        "formatted_p99": "0.003 ms"
+      }
+    },
+    "B3": {
+      "baseline_id": "B3",
+      "name": "B3: Rule-Based Adaptive Routing",
+      "architecture": "Regex Signature Engine + Static Decoy Mocks",
+      "routing_policy": "Comprehensive Regex Match -> Honeypot; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 23,
+          "fp": 0,
+          "tn": 50,
+          "fn": 27,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              27,
+              23
+            ]
+          ]
+        },
+        "accuracy": 0.73,
+        "precision": 1.0,
+        "recall": 0.46,
+        "f1": 0.6301,
+        "fpr": 0.0,
+        "fnr": 0.54,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 77,
+        "diverted_to_deception": 23,
+        "origin_leak_count": 27,
+        "origin_leakage_pct": 54.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 27,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 23,
+          "total_deception_interactions": 23,
+          "unique_decoy_endpoints": 2
+        }
+      },
+      "latency_ms": {
+        "p50": 0.0032,
+        "p95": 0.0092,
+        "p99": 0.1745,
+        "mean": 0.0071,
+        "min": 0.0009,
+        "max": 0.1745,
+        "formatted_p50": "0.003 ms",
+        "formatted_p95": "0.009 ms",
+        "formatted_p99": "0.174 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 0.0031,
+        "p95": 0.0092,
+        "p99": 0.1744,
+        "mean": 0.0071,
+        "min": 0.0008,
+        "max": 0.1744,
+        "formatted_p50": "0.003 ms",
+        "formatted_p95": "0.009 ms",
+        "formatted_p99": "0.174 ms"
+      }
+    },
+    "B4": {
+      "id": "A_FULL",
+      "name": "Variant A: Full Proposed Gateway (B4)",
+      "description": "Multi-Factor ML + Deterministic Controller + Adaptive DSG + Sticky Sessions",
+      "has_detection": true,
+      "has_ml": true,
+      "has_adaptive_dsg": true,
+      "has_session_history": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 37,
+          "fp": 0,
+          "tn": 50,
+          "fn": 13,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              13,
+              37
+            ]
+          ]
+        },
+        "accuracy": 0.87,
+        "precision": 1.0,
+        "recall": 0.74,
+        "f1": 0.8506,
+        "fpr": 0.0,
+        "fnr": 0.26,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 63,
+        "diverted_to_deception": 37,
+        "origin_leak_count": 13,
+        "origin_leakage_pct": 26.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 13,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 37,
+          "total_deception_interactions": 37,
+          "unique_decoy_endpoints": 18
+        }
+      },
+      "latency_ms": {
+        "p50": 13.6501,
+        "p95": 14.1971,
+        "p99": 18.4597,
+        "mean": 13.4012,
+        "min": 11.112,
+        "max": 18.4597,
+        "formatted_p50": "13.650 ms",
+        "formatted_p95": "14.197 ms",
+        "formatted_p99": "18.460 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 13.6493,
+        "p95": 14.1962,
+        "p99": 18.459,
+        "mean": 13.4004,
+        "min": 11.109,
+        "max": 18.459,
+        "formatted_p50": "13.649 ms",
+        "formatted_p95": "14.196 ms",
+        "formatted_p99": "18.459 ms"
+      }
+    }
+  },
+  "ablation_results": {
+    "A_FULL": {
+      "id": "A_FULL",
+      "name": "Variant A: Full Proposed Gateway (B4)",
+      "description": "Multi-Factor ML + Deterministic Controller + Adaptive DSG + Sticky Sessions",
+      "has_detection": true,
+      "has_ml": true,
+      "has_adaptive_dsg": true,
+      "has_session_history": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 37,
+          "fp": 0,
+          "tn": 50,
+          "fn": 13,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              13,
+              37
+            ]
+          ]
+        },
+        "accuracy": 0.87,
+        "precision": 1.0,
+        "recall": 0.74,
+        "f1": 0.8506,
+        "fpr": 0.0,
+        "fnr": 0.26,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 63,
+        "diverted_to_deception": 37,
+        "origin_leak_count": 13,
+        "origin_leakage_pct": 26.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 13,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 37,
+          "total_deception_interactions": 37,
+          "unique_decoy_endpoints": 18
+        }
+      },
+      "latency_ms": {
+        "p50": 13.6501,
+        "p95": 14.1971,
+        "p99": 18.4597,
+        "mean": 13.4012,
+        "min": 11.112,
+        "max": 18.4597,
+        "formatted_p50": "13.650 ms",
+        "formatted_p95": "14.197 ms",
+        "formatted_p99": "18.460 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 13.6493,
+        "p95": 14.1962,
+        "p99": 18.459,
+        "mean": 13.4004,
+        "min": 11.109,
+        "max": 18.459,
+        "formatted_p50": "13.649 ms",
+        "formatted_p95": "14.196 ms",
+        "formatted_p99": "18.459 ms"
+      }
+    },
+    "B_NO_ML": {
+      "id": "B_NO_ML",
+      "name": "Variant B: No-ML Ablation (Rules Only)",
+      "description": "Deterministic rules and policy only; ML model disabled (blended = base_score)",
+      "has_detection": true,
+      "has_ml": false,
+      "has_adaptive_dsg": true,
+      "has_session_history": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 23,
+          "fp": 0,
+          "tn": 50,
+          "fn": 27,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              27,
+              23
+            ]
+          ]
+        },
+        "accuracy": 0.73,
+        "precision": 1.0,
+        "recall": 0.46,
+        "f1": 0.6301,
+        "fpr": 0.0,
+        "fnr": 0.54,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 77,
+        "diverted_to_deception": 23,
+        "origin_leak_count": 27,
+        "origin_leakage_pct": 54.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 27,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 23,
+          "total_deception_interactions": 23,
+          "unique_decoy_endpoints": 13
+        }
+      },
+      "latency_ms": {
+        "p50": 0.016,
+        "p95": 0.0326,
+        "p99": 0.063,
+        "mean": 0.0187,
+        "min": 0.0092,
+        "max": 0.063,
+        "formatted_p50": "0.016 ms",
+        "formatted_p95": "0.033 ms",
+        "formatted_p99": "0.063 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 0.0158,
+        "p95": 0.0324,
+        "p99": 0.0628,
+        "mean": 0.0185,
+        "min": 0.009,
+        "max": 0.0628,
+        "formatted_p50": "0.016 ms",
+        "formatted_p95": "0.032 ms",
+        "formatted_p99": "0.063 ms"
+      }
+    },
+    "C_NO_ADAPT": {
+      "id": "C_NO_ADAPT",
+      "name": "Variant C: No-Adaptation Ablation (Static Deception)",
+      "description": "Full detection enabled, but deception state is static (flat decoy, pinned to DISCOVERY)",
+      "has_detection": true,
+      "has_ml": true,
+      "has_adaptive_dsg": false,
+      "has_session_history": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 37,
+          "fp": 0,
+          "tn": 50,
+          "fn": 13,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              13,
+              37
+            ]
+          ]
+        },
+        "accuracy": 0.87,
+        "precision": 1.0,
+        "recall": 0.74,
+        "f1": 0.8506,
+        "fpr": 0.0,
+        "fnr": 0.26,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 63,
+        "diverted_to_deception": 37,
+        "origin_leak_count": 13,
+        "origin_leakage_pct": 26.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 13,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 1,
+          "successful_deception_responses": 37,
+          "total_deception_interactions": 37,
+          "unique_decoy_endpoints": 1
+        }
+      },
+      "latency_ms": {
+        "p50": 13.6642,
+        "p95": 13.8862,
+        "p99": 14.0609,
+        "mean": 13.4267,
+        "min": 11.3054,
+        "max": 14.0609,
+        "formatted_p50": "13.664 ms",
+        "formatted_p95": "13.886 ms",
+        "formatted_p99": "14.061 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 13.6638,
+        "p95": 13.8855,
+        "p99": 14.0604,
+        "mean": 13.4261,
+        "min": 11.3047,
+        "max": 14.0604,
+        "formatted_p50": "13.664 ms",
+        "formatted_p95": "13.885 ms",
+        "formatted_p99": "14.060 ms"
+      }
+    },
+    "D_NO_HISTORY": {
+      "id": "D_NO_HISTORY",
+      "name": "Variant D: No-Behavioral-History Ablation (Stateless)",
+      "description": "Full detection and adaptive DSG, but stateless routing (no sticky session, neutral context)",
+      "has_detection": true,
+      "has_ml": true,
+      "has_adaptive_dsg": true,
+      "has_session_history": false,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 37,
+          "fp": 0,
+          "tn": 50,
+          "fn": 13,
+          "matrix_2x2": [
+            [
+              50,
+              0
+            ],
+            [
+              13,
+              37
+            ]
+          ]
+        },
+        "accuracy": 0.87,
+        "precision": 1.0,
+        "recall": 0.74,
+        "f1": 0.8506,
+        "fpr": 0.0,
+        "fnr": 0.26,
+        "specificity": 1.0,
+        "total_evaluated": 100
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 63,
+        "diverted_to_deception": 37,
+        "origin_leak_count": 13,
+        "origin_leakage_pct": 26.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 13,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 37,
+          "total_deception_interactions": 37,
+          "unique_decoy_endpoints": 18
+        }
+      },
+      "latency_ms": {
+        "p50": 13.7022,
+        "p95": 13.918,
+        "p99": 14.1979,
+        "mean": 13.5954,
+        "min": 11.1444,
+        "max": 14.1979,
+        "formatted_p50": "13.702 ms",
+        "formatted_p95": "13.918 ms",
+        "formatted_p99": "14.198 ms"
+      },
+      "detection_latency_ms": {
+        "p50": 13.7016,
+        "p95": 13.9172,
+        "p99": 14.197,
+        "mean": 13.5946,
+        "min": 11.1437,
+        "max": 14.197,
+        "formatted_p50": "13.702 ms",
+        "formatted_p95": "13.917 ms",
+        "formatted_p99": "14.197 ms"
+      }
+    }
+  },
+  "category_breakdown": {
+    "BENIGN": {
+      "total_samples": 50,
+      "tp": 0,
+      "fp": 0,
+      "tn": 50,
+      "fn": 0,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "origin_leaks": 0,
+      "origin_leakage_pct": 0.0
+    },
+    "CMDI": {
+      "total_samples": 8,
+      "tp": 6,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "accuracy": 0.75,
+      "precision": 1.0,
+      "recall": 0.75,
+      "f1": 0.8571,
+      "origin_leaks": 2,
+      "origin_leakage_pct": 25.0
+    },
+    "PARAM_TAMPERING": {
+      "total_samples": 6,
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 4,
+      "accuracy": 0.3333,
+      "precision": 1.0,
+      "recall": 0.3333,
+      "f1": 0.5,
+      "origin_leaks": 4,
+      "origin_leakage_pct": 66.7
+    },
+    "RECON": {
+      "total_samples": 6,
+      "tp": 5,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "accuracy": 0.8333,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "f1": 0.9091,
+      "origin_leaks": 1,
+      "origin_leakage_pct": 16.7
+    },
+    "SQLI": {
+      "total_samples": 12,
+      "tp": 11,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "accuracy": 0.9167,
+      "precision": 1.0,
+      "recall": 0.9167,
+      "f1": 0.9565,
+      "origin_leaks": 1,
+      "origin_leakage_pct": 8.3
+    },
+    "TRAVERSAL": {
+      "total_samples": 10,
+      "tp": 9,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "accuracy": 0.9,
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1": 0.9474,
+      "origin_leaks": 1,
+      "origin_leakage_pct": 10.0
+    },
+    "XSS": {
+      "total_samples": 8,
+      "tp": 4,
+      "fp": 0,
+      "tn": 0,
+      "fn": 4,
+      "accuracy": 0.5,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "origin_leaks": 4,
+      "origin_leakage_pct": 50.0
+    }
+  }
+}

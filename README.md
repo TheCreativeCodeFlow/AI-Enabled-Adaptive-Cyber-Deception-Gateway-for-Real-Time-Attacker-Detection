@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 10.1 — Results Integrity and Metric Reconciliation**
+> **Current Status: Stage 11 — External Benchmark Validation and Routing Semantics Audit**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -377,9 +377,9 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (132 Tests Total)
+### 5.7 Automated Test Suites across All Services (151 Tests Total)
 ```bash
-# 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & E2E Tests (56 tests)
+# 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & Stage 11 Routing Tests (70 tests)
 cd gateway && npm test
 
 # 2. Backend Health, Operator Auth, Multi-Tenant Models, DNS TXT, Stage 8 Event Pipeline & SSRF Tests (32 tests)
@@ -388,13 +388,16 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Service Pytest Suite & Stage 9/10/10.1 Audit, Ablation & Reconciliation Tests (26 tests)
+# 4. Detection Service Pytest Suite & Stage 9/10/10.1/11 Audit, Ablation & Routing Semantics Tests (31 tests)
 cd detection && .venv/bin/pytest
 
 # 5. Independent Research Benchmark & Ablation Study Runner
 python3 scripts/evaluation_runner.py
 
-# 6. Frontend Production Build Verification
+# 6. External Public HTTP Benchmark Evaluation Runner (CSIC 2010 & OWASP CRS)
+python3 scripts/run_external_evaluation.py
+
+# 7. Frontend Production Build Verification
 cd frontend && npm run build
 ```
 
@@ -412,7 +415,18 @@ The evaluation framework evaluates 4 baseline architectures and 4 architectural 
 | **Variant C** | No-Adaptation Ablation (Flat Decoy Mock) | 1.000 | 100.0% | 100.0% | 0 (0.0%) | **0.662** | 54.3% | 40.5% | 51.5% | 13.533 ms |
 | **Variant D** | No-Behavioral-History (Stateless Routing) | 0.889 | 90.0% | 80.0% | 6 (20.0%) | 0.000 | 55.7% | 37.8% | 51.5% | 13.614 ms |
 
-*All results generated dynamically by `python3 scripts/evaluation_runner.py` with full reproducibility metadata saved in `reports/evaluation_results.json`, `reports/ablation_and_robustness_results.json`, and documented in `reports/robustness_and_ablation_study.md`.*
+### 5.9 Stage 11 External Public HTTP Benchmark Evaluation Results (CSIC 2010 & OWASP CRS)
+Evaluated against 100 standardized real HTTP requests from the published CSIC 2010 HTTP dataset and OWASP CRS benchmark (`data/scenarios/external_benchmark_v1.json`, SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`):
+
+| Configuration | Architecture | Precision | Recall (Containment) | F1 Score | Accuracy | Origin Leaks (FNR) | False Positives (FPR) | p50 Latency |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **B1: Direct Passthrough** | Reverse Proxy (No Sec) | 0.0% | 0.0% | 0.000 | 50.0% | 50/50 (100.0%) | 0/50 (0.0%) | 0.2 µs |
+| **B2: Static Heuristic** | Substring Matching | 100.0% | 6.0% | 0.113 | 53.0% | 47/50 (94.0%) | 0/50 (0.0%) | 0.4 µs |
+| **B3: Rule-Based Adaptive**| Regex Heuristics | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.003 ms |
+| **B4: Proposed Gateway (A)**| Full Proposed ML+DSG | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | 13.650 ms |
+| **Variant B (Rules Only)** | Rules Only (No ML) | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.016 ms** |
+
+*All results generated dynamically by `python3 scripts/run_external_evaluation.py` with artifacts saved in `reports/external_benchmark_results.json` and documented in `reports/external_benchmark_evaluation.md`.*
 
 ---
 

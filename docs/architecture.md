@@ -499,11 +499,11 @@ The test suite validates the following security invariants under adversarial str
 
 ## 10. Operational Status & Test Coverage
 
-- **Total Automated Unit & Integration Tests:** **132 passing tests** across 4 microservices + evaluation runner:
-  - Gateway: 56 tests (`gateway/src/stage8.test.ts`, `index.test.ts`)
+- **Total Automated Unit & Integration Tests:** **151 passing tests** across 4 microservices + evaluation runner:
+  - Gateway: 70 tests (`gateway/src/stage11.test.ts`, `stage8.test.ts`, `index.test.ts`)
   - Backend: 32 tests (`backend/src/stage8.test.ts`, `stage7.test.ts`, `index.test.ts`)
   - Deception Runtime: 18 tests (`deception/src/index.test.ts`)
-  - ML Detection Service: 26 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`)
+  - ML Detection Service: 31 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`, `test_routing_semantics.py`)
   - Reproducible Evaluation Runner: `python3 scripts/evaluation_runner.py` (120 empirical benchmark trials)
 - **Unified Pipeline:** Live security event persistence (`security_events`), queryable and filtered by routing decision with query-credential redaction.
 - **Percentile Observability:** p50/p95 operational latencies tracked continuously for proxy, detector, and deception containers.
@@ -675,6 +675,76 @@ $$\text{DES} = \mathbb{I}[L_{\text{leak}} = 0] \cdot \left( 0.30 \cdot D_{\text{
 - **Origin Leakage Verification:** Origin leaks are recorded exclusively from the observed physical routing destination `routed_to_origin` when `ground_truth["is_attack"] == True`. In all baselines and variants, $L_{\text{leak}} \equiv FN$.
 
 Machine-readable artifacts: `reports/evaluation_results.json`, `reports/ablation_and_robustness_results.json`, and `reports/robustness_and_ablation_study.md`.
+
+---
+
+## 14. Stage 11 — External Benchmark Validation and Routing Semantics Audit
+
+### 14.1 Resolved Routing and Session Semantics
+
+To establish rigorous scientific foundations for the research evaluation, all routing and session mechanisms were audited and disambiguated:
+
+1. **Session Identifiers (`sessionId`):**
+   - Cryptographically random or client-supplied pseudonymous tokens (`sess_<base64url>`) extracted from the `deception_session` HTTP cookie or `X-Session-ID` header.
+   - Functions strictly as a lookup key for session state; does not inherently alter routing decisions or contain historical scores.
+2. **Session Stickiness:**
+   - Enforced at the gateway routing layer via `SessionRoutingStore`.
+   - Once a session is assigned to deception in active mode, subsequent requests with the same `sessionId` are pinned to `target: 'DECEPTION'` with reason `'STICKY_SESSION_ASSIGNMENT'`.
+   - Maintains continuous honeypot interaction and prevents multi-turn attackers from slipping back to origin on subtle follow-up probes.
+3. **Session Behavioral History:**
+   - Accumulated at the detection / feature extraction layer (`context_features`).
+   - Rolling behavioral metrics: `auth_failure_count` (credential velocity), `request_frequency` (burst rates), `decoy_interactions`.
+   - Informs ML inference and heuristic thresholds for velocity/burst detection.
+4. **Variant D Dual-Ablation Semantics:**
+   - Disables **both** session stickiness (`has_existing = False`) and behavioral history (`context = neutral`).
+   - Evaluates each incoming request statelessly from zero context, causing multi-step attacker probes to leak to the origin.
+5. **Physical Upstream Destination of `OBSERVE_ONLY`:**
+   - When the controller outputs `OBSERVE_ONLY` (e.g., suspicious score or uncorroborated single signal), the gateway proxy forwards the request to the **legitimate upstream origin** (`config.originUrl`).
+   - **Accounting Invariant:** If an incoming request is an actual attack (`is_attack == True`), but receives `OBSERVE_ONLY`, it physically hits the origin server. Therefore, **any attack receiving `OBSERVE_ONLY` is an Origin Leak (False Negative)**.
+6. **Disentanglement of Core Security Metrics:**
+   - **Detection:** Model classification of malicious intent ($score \ge 0.70$ or label $\in \{\text{SUSPICIOUS}, \text{MALICIOUS}\}$).
+   - **Diversion:** Decision controller routing traffic away from origin toward deception runtime (`target == 'DECEPTION'`).
+   - **Containment:** Active isolation of malicious requests inside the honeypot without reaching production origin ($L_{\text{leak}} = 0$).
+   - **Origin Leakage:** Physical arrival of attack payload at legitimate origin service ($FN$).
+
+### 14.2 Public Benchmark Candidate Assessment
+
+| Candidate Dataset | Source & Provenance | License | Fields Available | Feature Compatibility | Limitations & Verdict |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CSIC 2010 HTTP Dataset** | CSIC (Spanish Research Council) / ISCX UNB | Open Academic Research | Full HTTP Request (Method, URI, Headers, Body) | **Direct (100% compatible)**: Evaluates L7 URI paths, headers, query, POST bodies | Dated (2010), synthetic e-commerce app ("tienda1"), independent request traces. **SELECTED (Primary)** |
+| **OWASP Core Rule Set (CRS) / Benchmark** | OWASP Foundation | Apache 2.0 / CC | Raw HTTP requests (.yaml/.raw test cases) | **Direct (100% compatible)**: Real HTTP methods, paths, headers, bodies | Curated unit test payloads rather than natural traffic traces. **SELECTED (Complementary)** |
+| **ECML/PKDD 2007 Discovery Challenge** | ECML/PKDD Workshop (2007) | Open Academic | HTTP GET/POST queries | Partial: Simple URLs/queries, limited header variety | Older (2007), small feature diversity. Subsumed by CSIC 2010. |
+| **CIC-IDS2017 / CSE-CIC-IDS2018 (Flow CSVs)** | Canadian Institute for Cybersecurity (UNB) | Academic / Research | NetFlow / IPFIX flow summaries (durations, packet sizes) | **MISMATCH (Incompatible)**: Zero HTTP paths, headers, or request bodies | Flow-level statistics cannot evaluate reverse-proxy L7 token/entropy rules. **REJECTED** |
+
+### 14.3 Empirical External Benchmark Results (100 Scenarios)
+
+Evaluated against `data/scenarios/external_benchmark_v1.json` (50 Benign CSIC 2010 requests, 50 Attacks across SQLi, Traversal, CMDi, XSS, Parameter Tampering, Recon; Content SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`):
+
+| Configuration | Architecture | TP | FP | TN | FN | Precision | Recall (Containment) | F1 Score | Accuracy | Origin Leaks (FNR) | False Positives (FPR) | p50 Latency |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **B1: Direct Passthrough** | Reverse Proxy (No Sec) | 0 | 0 | 50 | 50 | 0.0% | 0.0% | 0.000 | 50.0% | 50/50 (100.0%) | 0/50 (0.0%) | 0.2 µs |
+| **B2: Static Heuristic** | Substring Matching | 3 | 0 | 50 | 47 | 100.0% | 6.0% | 0.113 | 53.0% | 47/50 (94.0%) | 0/50 (0.0%) | 0.4 µs |
+| **B3: Rule-Based Adaptive**| Regex Heuristics | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.003 ms |
+| **B4: Proposed Gateway (A)**| Full Proposed ML+DSG | **37** | **0** | **50** | **13** | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | 13.650 ms |
+| **Variant B (Rules Only)** | Rules Only (No ML) | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.016 ms** |
+| **Variant C (No-Adaptation)**| Flat Mock (No Adaptive DSG)| 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.664 ms |
+| **Variant D (Stateless)**   | Stateless Request Evaluation | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.702 ms |
+
+#### Attack Category Containment Breakdown:
+- **SQL Injection (SQLI):** 11/12 diverted (91.7% Recall, 1 origin leak)
+- **Path Traversal (TRAVERSAL):** 9/10 diverted (90.0% Recall, 1 origin leak)
+- **Command Injection (CMDI):** 6/8 diverted (75.0% Recall, 2 origin leaks)
+- **Reconnaissance Probes (RECON):** 5/6 diverted (83.3% Recall, 1 origin leak)
+- **Cross-Site Scripting (XSS):** 4/8 diverted (50.0% Recall, 4 origin leaks)
+- **Parameter Tampering (PARAM_TAMPERING):** 2/6 diverted (33.3% Recall, 4 origin leaks)
+- **Benign Requests (BENIGN):** 50/50 routed to origin (0.0% FPR, 100.0% Specificity)
+
+### 14.4 Scientific Validity & Dataset Adaptation Limits
+1. **Single-Turn Limitation:** Public datasets are collections of independent HTTP request samples. They lack multi-turn attacker sessions targeting decoy endpoints. Consequently, Variant C and Variant D evaluate identically to B4 on single-turn requests because session stickiness and DSG progression require multi-request traces.
+2. **Generalization Claim:** The external evaluation confirms that B4's anomaly model successfully generalizes to unseen e-commerce HTTP requests and modern OWASP payloads (74.0% recall, 0.0% FPR), outperforming static rules (+28.0% absolute gain). However, it does not constitute proof of universal real-world efficacy across complex multi-stage attack campaigns.
+
+Machine-readable artifacts: `reports/external_benchmark_results.json` and `reports/external_benchmark_evaluation.md`.
+
 
 
 
