@@ -1,8 +1,8 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 9 — Independent Research Benchmark Validation**
+> **Current Status: Stage 10 — Adversarial Robustness and Ablation Study**
 
-A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, and a formally validated research benchmark framework.
+A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
 ---
 
@@ -15,9 +15,9 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── test-origin/       # Authorized internal test origin (unexposed to host)
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts (56 unit, controller, RBAC & Stage 8 tests)
-├── detection/             # [Stage 3, 9 — Active] Python FastAPI ML anomaly detection service
+├── detection/             # [Stage 3, 9, 10 — Active] Python FastAPI ML anomaly detection service
 │   ├── src/               # Code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
-│   ├── tests/             # Pytest test suite (13 tests: test_detection.py, test_benchmark_audit.py)
+│   ├── tests/             # Pytest test suite (20 tests: test_detection.py, test_benchmark_audit.py, test_robustness_ablation.py)
 │   ├── train.py           # Reproducible model training pipeline
 │   ├── model.joblib       # Serialized StandardScaler + RandomForest pipeline
 │   ├── requirements.txt   # Python dependencies
@@ -34,21 +34,24 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 ├── frontend/              # [Stage 1-8 — Active] React Vite console with multi-tenant workspace, app onboarding, events pipeline & metrics
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
-│   ├── vite.config.js     # Vite configuration
-│   └── package.json       # Dependencies & build scripts
-├── data/                  # [Stage 9] Versioned benchmark datasets
-│   └── scenarios/         # Standardized 120-scenario dataset with SHA-256 verification
-│       └── benchmark_scenarios_v1.json # 60 Dev + 60 Held-Out Test scenarios across 5 attack classes
-├── scripts/               # [Stage 8, 9] Benchmark dataset generator & reproducible evaluation runner
-│   ├── generate_scenarios.py # Generator for versioned 120-scenario benchmark dataset
-│   └── evaluation_runner.py  # Empirical evaluation runner comparing B1, B2, B3, B4 architectures
-├── reports/               # [Stage 8, 9] Benchmark output artifacts and reproducibility records
-│   └── evaluation_results.json # Verified 120-scenario comparative benchmark results and metadata
+│   └── vite.config.js     # Vite configuration
+├── data/                  # [Stage 9, 10] Versioned benchmark and robustness datasets
+│   └── scenarios/         # Standardized datasets with SHA-256 verification
+│       ├── benchmark_scenarios_v1.json   # 120 scenarios (60 Dev + 60 Held-Out Test)
+│       └── robustness_scenarios_v1.json  # 70 scenarios (false positive probes, evasions, unseen templates)
+├── scripts/               # [Stage 8, 9, 10] Generators and empirical evaluation runner
+│   ├── generate_scenarios.py             # 120-scenario benchmark generator
+│   ├── generate_robustness_scenarios.py  # 70-scenario adversarial robustness generator
+│   └── evaluation_runner.py              # Comparative benchmark, ablation & robustness evaluation runner
+├── reports/               # [Stage 8, 9, 10] Reproducibility records and empirical research reports
+│   ├── evaluation_results.json           # 120-scenario baseline comparison results
+│   ├── ablation_and_robustness_results.json # Full multi-variant ablation & robustness outcomes
+│   └── robustness_and_ablation_study.md  # Comprehensive Stage 10 empirical research report
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
-│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, DES math & Stage 9 benchmark audit
+│   └── architecture.md    # System architecture, trust boundaries, DES math, benchmark & ablation analysis
 ├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks, isolated deception)
-├── .env.example           # Environment template with Stage 8/9 variables
+├── .env.example           # Environment template with Stage 8/9/10 variables
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
 
@@ -385,29 +388,31 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Service Pytest Suite & Stage 9 Benchmark Audit Tests (13 tests)
+# 4. Detection Service Pytest Suite & Stage 9/10 Audit & Ablation Tests (20 tests)
 cd detection && .venv/bin/pytest
 
-# 5. Independent Research Benchmark Runner (120 Empirical Scenarios, Dev/Held-Out Splits, Real Inference)
+# 5. Independent Research Benchmark & Ablation Study Runner
 python3 scripts/evaluation_runner.py
 
 # 6. Frontend Production Build Verification
 cd frontend && npm run build
 ```
 
-### 5.8 Stage 9 Empirical Research Benchmark Results
-The benchmark compares 4 baseline architectures against 120 standardized, versioned HTTP scenarios (`data/scenarios/benchmark_scenarios_v1.json`, SHA-256: `958fa723ca691d9fbbd6cdc885cbc8509e80e4332bc4e9313ca98e7e2c0a0746`):
-- **Development Calibration Split (60 samples):** Threshold calibrated at 0.70 with zero origin leakage and zero false positives.
-- **Held-Out Test Split (60 samples — zero exposure during tuning):**
+### 5.8 Stage 9 & 10 Empirical Research Benchmark & Ablation Study Results
+The evaluation framework evaluates 4 baseline architectures and 4 architectural ablation variants across two versioned datasets:
+1. **Benchmark v1.0.0 (120 samples):** Standard attacks & benign traffic (`data/scenarios/benchmark_scenarios_v1.json`).
+2. **Adversarial Robustness v1.0.0 (70 samples):** False positive probes, double-encoded evasions, and unseen injection templates (`data/scenarios/robustness_scenarios_v1.json`).
 
-| Configuration | Precision | Recall (TPR) | F1 Score | Accuracy | Origin Leakage | DES (0–1) | Latency p50 |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **B1: Direct Passthrough** | 0.0% | 0.0% | 0.000 | 50.0% | 30/30 (100.0%) | **0.000** | 0.000 ms |
-| **B2: Static Heuristic** | 100.0% | 10.0% | 0.182 | 55.0% | 27/30 (90.0%) | **0.000** | 0.000 ms |
-| **B3: Rule-Based Adaptive** | 100.0% | 53.3% | 0.696 | 76.7% | 14/30 (46.7%) | **0.000** | 0.002 ms |
-| **B4: Proposed Adaptive Gateway** | **100.0%** | **100.0%** | **1.000** | **100.0%** | **0/30 (0.0%)** | **0.925** | **13.632 ms** |
+#### Multi-Variant Ablation Comparison (Held-Out Test vs. Adversarial Robustness):
 
-*All results generated dynamically by `python3 scripts/evaluation_runner.py` with full reproducibility metadata saved in `reports/evaluation_results.json`.*
+| Variant | Architecture | Test F1 | Test Acc | Test DES | Robustness Acc | Robustness FPR | Robustness FNR | p50 Gateway Latency |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Variant A (B4)** | Full System (ML + Rules + Adaptive DSG + Sticky) | **1.000** | **100.0%** | **0.925** | 54.3% | 40.5% | 51.5% | 15.912 ms |
+| **Variant B** | No-ML Ablation (Rules-Only Policy) | 0.909 | 91.7% | 0.000 | **71.4%** | **8.1%** | 51.5% | **0.015 ms** |
+| **Variant C** | No-Adaptation Ablation (Flat Decoy Mock) | 1.000 | 100.0% | **0.662** | 54.3% | 40.5% | 51.5% | 12.855 ms |
+| **Variant D** | No-Behavioral-History (Stateless Routing) | 0.889 | 90.0% | 0.000 | 55.7% | 37.8% | 51.5% | 12.828 ms |
+
+*All results generated dynamically by `python3 scripts/evaluation_runner.py` with full reproducibility metadata saved in `reports/evaluation_results.json`, `reports/ablation_and_robustness_results.json`, and documented in `reports/robustness_and_ablation_study.md`.*
 
 ---
 

@@ -581,5 +581,54 @@ Four distinct baseline architectures were evaluated under identical 120-scenario
    ```
    Artifact output: `reports/evaluation_results.json`
 
+---
+
+## 12. Stage 10 — Adversarial Robustness and Architectural Ablation Study
+
+Stage 10 subjects the AI-Enabled Adaptive Cyber Deception Gateway to controlled adversarial robustness testing, multi-variant ablation analysis, and microsecond-level latency profiling.
+
+### 12.1 Empirical Robustness Evaluation (70 Held-Out Attack Probes)
+
+To test the hypothesis that the Stage 9 100% held-out test score represented true adversarial generalization, a versioned 70-scenario adversarial robustness dataset (`data/scenarios/robustness_scenarios_v1.json`, SHA-256: `03a7cb3aa97dcf6f459b5029c7c5bc9483c840abe24d108282459f8ef71e6e08`) was constructed without model retraining:
+
+- **Benign Requests with Suspicious Tokens:** 16 probes with security keywords in queries or paths.
+- **Obfuscated Evasion Attacks:** 20 evasions using double-encoding, non-standard separators (`%0A`), and header payloads.
+- **Unseen Attack Grammars:** 12 zero-day-style templates (SSTI, NoSQLi, XXE, LDAP, Log4j).
+- **Threshold Boundary & Malformed Inputs:** 22 edge cases validating gateway fail-safe resilience.
+
+#### Empirical Generalization Outcome:
+- **Generalization Degradation:** B4's overall accuracy dropped from **100.0% to 54.3%** on the adversarial robustness suite.
+- **False Positive Rate (40.5% FPR):** 15/37 benign requests containing security terminology were falsely diverted into deception because naive bag-of-words token extraction lacks semantic context.
+- **False Negative Rate (51.5% FNR):** 17/33 attack variants bypassed both deterministic heuristics and ML anomaly scoring, leaking to the production origin.
+
+### 12.2 Multi-Variant Architectural Ablation
+
+Four architectural variants were evaluated to determine the exact contribution of each subsystem:
+
+| Variant | ML Anomaly Model | Decision Controller | Adaptive DSG Runtime | Sticky Session Routing | Test Accuracy | Test F1 | Test DES | Robustness Accuracy |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Variant A (Full Proposed - B4)** | Active | Active | Active | Active | **100.0%** | **1.000** | **0.925** | 54.3% |
+| **Variant B (No-ML Ablation)** | Disabled | Active (Rules) | Active | Active | 91.7% | 0.909 | 0.000 (5 leaks) | **71.4%** |
+| **Variant C (No-Adaptation)** | Active | Active | Disabled (Flat) | Active | 100.0% | 1.000 | **0.662** | 54.3% |
+| **Variant D (No-Behavioral-History)**| Active | Active | Active | Disabled (Stateless) | 90.0% | 0.889 | 0.000 (6 leaks) | 55.7% |
+
+#### Key Ablation Takeaways:
+1. **ML vs. Deterministic Latency Trade-Off:** Disabling ML (Variant B) reduces p50 decision latency by **99.9%** (from $15.91\text{ ms}$ to $0.015\text{ ms}$). On adversarial data, Variant B achieved higher accuracy (71.4% vs 54.3%) and far fewer false positives (3 vs 15) than Variant A because it was not misled by benign keywords.
+2. **Deception State Graph (DSG) Efficacy:** Removing dynamic state adaptation (Variant C) drops DES from 0.925 to 0.662, demonstrating that stateful progression significantly improves attacker containment depth.
+3. **Session Stickiness Necessity:** Removing session memory (Variant D) allows multi-step attackers to leak subsequent requests to the origin, confirming the necessity of sticky routing.
+
+### 12.3 Microsecond Latency Decomposition & Stability
+
+Microsecond-precision profiling (`time.perf_counter_ns()`) confirms:
+- **Direct Passthrough (B1):** 0.2 µs
+- **Static Substring Heuristic (B2):** 0.4 µs (0.3 µs detection)
+- **Regex Adaptive Routing (B3):** 0.003 ms (3.0 µs)
+- **Rules-Only Policy (Variant B):** 0.015 ms (15.2 µs)
+- **Full Proposed Gateway (Variant A):** 15.912 ms (15.911 ms detection)
+- **Multi-Seed Stability:** 5 runs across seeds `[42, 101, 202, 303, 404]` observed $14.325\text{ ms} \pm 1.136\text{ ms}$.
+
+Machine-readable artifacts: `reports/ablation_and_robustness_results.json` and `reports/robustness_and_ablation_study.md`.
+
+
 
 
