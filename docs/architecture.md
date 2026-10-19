@@ -499,11 +499,11 @@ The test suite validates the following security invariants under adversarial str
 
 ## 10. Operational Status & Test Coverage
 
-- **Total Automated Unit & Integration Tests:** **151 passing tests** across 4 microservices + evaluation runner:
+- **Total Automated Unit & Integration Tests:** **155 passing tests** across 4 microservices + evaluation runner:
   - Gateway: 70 tests (`gateway/src/stage11.test.ts`, `stage8.test.ts`, `index.test.ts`)
   - Backend: 32 tests (`backend/src/stage8.test.ts`, `stage7.test.ts`, `index.test.ts`)
   - Deception Runtime: 18 tests (`deception/src/index.test.ts`)
-  - ML Detection Service: 31 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`, `test_routing_semantics.py`)
+  - ML Detection Service: 35 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`, `test_routing_semantics.py`, `test_provenance_and_integrity.py`)
   - Reproducible Evaluation Runner: `python3 scripts/evaluation_runner.py` (120 empirical benchmark trials)
 - **Unified Pipeline:** Live security event persistence (`security_events`), queryable and filtered by routing decision with query-credential redaction.
 - **Percentile Observability:** p50/p95 operational latencies tracked continuously for proxy, detector, and deception containers.
@@ -744,6 +744,58 @@ Evaluated against `data/scenarios/external_benchmark_v1.json` (50 Benign CSIC 20
 2. **Generalization Claim:** The external evaluation confirms that B4's anomaly model successfully generalizes to unseen e-commerce HTTP requests and modern OWASP payloads (74.0% recall, 0.0% FPR), outperforming static rules (+28.0% absolute gain). However, it does not constitute proof of universal real-world efficacy across complex multi-stage attack campaigns.
 
 Machine-readable artifacts: `reports/external_benchmark_results.json` and `reports/external_benchmark_evaluation.md`.
+
+---
+
+## 15. Stage 11.1 — Dataset and Model Provenance Integrity Audit
+
+### 15.1 Artifact Digests: File vs. Content SHA-256 Reconciliation
+
+A rigorous cryptographic audit resolves discrepancies between reported digests across commits:
+
+| Artifact | File Path | Raw File SHA-256 (Byte-level `hashlib.sha256(open(f, 'rb').read())`) | Scenario Content SHA-256 (`json.dumps(scenarios, sort_keys=True)`) | Commit Introduced | Last Modified Commit | Frozen Status |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: |
+| **Standard Benchmark v1** | `data/scenarios/benchmark_scenarios_v1.json` | `2ecae8b3eb25342470dc803b04506b007f9a59501b0c98a404603c402842f1fc` | `958fa723ca691d9fbbd6cdc885cbc8509e80e4332bc4e9313ca98e7e2c0a0746` | `757f598` (Stage 9) | `757f598` | **Bit-for-bit unchanged** |
+| **Adversarial Robustness v1** | `data/scenarios/robustness_scenarios_v1.json` | `7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d` | `03a7cb3aa97dcf6f459b5029c7c5bc9483c840abe24d108282459f8ef71e6e08` | `b63ba15` (Stage 10) | `b63ba15` | **Bit-for-bit unchanged** |
+| **External Benchmark v1** | `data/scenarios/external_benchmark_v1.json` | `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc` | `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3` | `39bab2c` (Stage 11) | `39bab2c` | **Bit-for-bit unchanged** |
+| **ML Model Artifact** | `detection/model.joblib` | `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406` | N/A (Binary Joblib Serialization) | `757f598` (Stage 9) | `757f598` | **Bit-for-bit frozen** |
+
+**Root Cause of Reported Hash Variation:**
+- Git tree inspection between `774ea82` (Stage 10.1) and `39bab2c` (Stage 11) confirms that neither `benchmark_scenarios_v1.json`, `robustness_scenarios_v1.json`, nor `detection/model.joblib` underwent any modifications (`git diff 774ea82..39bab2c -- [files]` returns empty).
+- The hash discrepancy was caused entirely by a text hallucination in the conversational completion summary where the hex prefix was completed with incorrect characters. In the actual git-tracked files (`reports/evaluation_results.json`, `reports/external_benchmark_evaluation.md`, `README.md`), all hashes match the verified values.
+
+### 15.2 External Benchmark Provenance Audit (CSIC 2010 & OWASP CRS)
+
+- **Source Provenance:**
+  - **CSIC 2010 HTTP Dataset:** Developed by the Information Security Group at the Spanish National Research Council (CSIC). Generated within an automated testbed against an e-commerce web application ("tienda1").
+  - **Generation Methodology:** Generated using automated web vulnerability scanners (Paros, Nessus), penetration testing tools, and web spiders/crawlers.
+  - **Accuracy Correction:** These requests are **automated testbed traffic**, not captured real-world production attacks from live human adversaries.
+  - **License & Terms:** Distributed freely by the University of New Brunswick (UNB ISCX dataset repository) and CSIC mirrors for open academic and non-commercial research without proprietary licensing restrictions.
+  - **OWASP Core Rule Set (CRS) Test Cases:** Published by the OWASP CRS project under Apache 2.0 / Creative Commons for web application firewall rule validation.
+- **Selection & Mapping Methodology:**
+  - 50 Benign Requests: Extracted from CSIC 2010 normal browsing, cart additions, profile edits, checkout flows, and modern REST API health/product endpoints.
+  - 50 Attack Requests: Extracted from CSIC 2010 anomalous traffic and OWASP CRS unit tests across 6 vulnerability classes:
+    - SQLi: 12 requests (verbatim `tienda1` injection and OWASP Rule 942100/942140 payloads)
+    - Path Traversal: 10 requests (`/etc/passwd`, `win.ini`, encoded traversal patterns)
+    - Command Injection: 8 requests (OS command separators `;`, `|`, `&&`)
+    - XSS: 8 requests (script tags, event handlers, javascript URIs)
+    - Recon: 6 requests (administrative paths, environment files, security scanners)
+    - Parameter Tampering: 6 requests (negative quantities, extreme lengths, cookie injections)
+  - No request transformations were performed other than standardizing client headers (`Host: localhost:8080`) and embedding within the standardized scenario schema.
+
+### 15.3 Empirical Reproduction and Invariance Verification
+
+1. **Confusion Matrix Reproduction ($N=100$):**
+   - True Positives (`TP`): 37
+   - False Positives (`FP`): 0
+   - True Negatives (`TN`): 50
+   - False Negatives (`FN`): 13 (all 13 attack requests received `OBSERVE_ONLY` or `ORIGIN` and reached upstream origin, counting as origin leaks)
+   - Accuracy: 87.0% | Precision: 100.0% | Recall: 74.0% | F1 Score: 0.8506 | Leakage Rate: 26.0% (13/50)
+2. **Ground-Truth Label Isolation:**
+   - Regression test `test_ground_truth_isolation_invariance` proves that inverting, mutating, or completely stripping the `ground_truth` object leaves feature extraction vectors and model predictions 100% bit-for-bit invariant.
+3. **Equivalence of Evaluation Conditions:**
+   - B4 and Variant B (Rules Only) evaluate on the exact identical set of 100 scenario objects with identical requests and ground-truth labels.
+   - Variant B achieves 23 TP, 0 FP, 50 TN, 27 FN (46.0% Recall, 54.0% Origin Leaks). The ML anomaly model in B4 detects 14 additional attacks (+28.0% absolute gain).
 
 
 

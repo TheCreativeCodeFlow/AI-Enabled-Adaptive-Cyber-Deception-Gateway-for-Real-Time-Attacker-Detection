@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 11 — External Benchmark Validation and Routing Semantics Audit**
+> **Current Status: Stage 11.1 — Dataset and Model Provenance Integrity Audit**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -377,7 +377,7 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (151 Tests Total)
+### 5.7 Automated Test Suites across All Services (155 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & Stage 11 Routing Tests (70 tests)
 cd gateway && npm test
@@ -388,7 +388,7 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Service Pytest Suite & Stage 9/10/10.1/11 Audit, Ablation & Routing Semantics Tests (31 tests)
+# 4. Detection Pytest Suite: Benchmark, Ablation, Routing Semantics & Provenance Integrity Tests (35 tests)
 cd detection && .venv/bin/pytest
 
 # 5. Independent Research Benchmark & Ablation Study Runner
@@ -416,7 +416,7 @@ The evaluation framework evaluates 4 baseline architectures and 4 architectural 
 | **Variant D** | No-Behavioral-History (Stateless Routing) | 0.889 | 90.0% | 80.0% | 6 (20.0%) | 0.000 | 55.7% | 37.8% | 51.5% | 13.614 ms |
 
 ### 5.9 Stage 11 External Public HTTP Benchmark Evaluation Results (CSIC 2010 & OWASP CRS)
-Evaluated against 100 standardized real HTTP requests from the published CSIC 2010 HTTP dataset and OWASP CRS benchmark (`data/scenarios/external_benchmark_v1.json`, SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`):
+Evaluated against 100 standardized synthetic HTTP requests from the published CSIC 2010 HTTP testbed dataset and OWASP CRS benchmark (`data/scenarios/external_benchmark_v1.json`, Content SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`):
 
 | Configuration | Architecture | Precision | Recall (Containment) | F1 Score | Accuracy | Origin Leaks (FNR) | False Positives (FPR) | p50 Latency |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -427,6 +427,15 @@ Evaluated against 100 standardized real HTTP requests from the published CSIC 20
 | **Variant B (Rules Only)** | Rules Only (No ML) | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.016 ms** |
 
 *All results generated dynamically by `python3 scripts/run_external_evaluation.py` with artifacts saved in `reports/external_benchmark_results.json` and documented in `reports/external_benchmark_evaluation.md`.*
+
+### 5.10 Stage 11.1 Dataset & Model Provenance Integrity Audit
+- **Artifact Digests Reconciliation:**
+  - `data/scenarios/benchmark_scenarios_v1.json`: Raw File SHA-256 = `2ecae8b3eb25342470dc803b04506b007f9a59501b0c98a404603c402842f1fc`, Content SHA-256 = `958fa723ca691d9fbbd6cdc885cbc8509e80e4332bc4e9313ca98e7e2c0a0746` (Unchanged since Stage 9 commit `757f598`).
+  - `data/scenarios/robustness_scenarios_v1.json`: Raw File SHA-256 = `7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d`, Content SHA-256 = `03a7cb3aa97dcf6f459b5029c7c5bc9483c840abe24d108282459f8ef71e6e08` (Unchanged since Stage 10 commit `b63ba15`).
+  - `detection/model.joblib`: Raw Binary SHA-256 = `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406` (Frozen artifact since Stage 9 commit `757f598`).
+  - `data/scenarios/external_benchmark_v1.json`: Raw File SHA-256 = `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc`, Content SHA-256 = `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`.
+- **CSIC 2010 Provenance:** Generated in a controlled testbed against an e-commerce web application ("tienda1") using automated web vulnerability scanners and crawlers. Documented as automated testbed HTTP traffic, not captured real-world production attack traces.
+- **Label Isolation Invariance:** Verified that features and inference results are strictly invariant to ground-truth tampering or removal.
 
 ---
 

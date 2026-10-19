@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "timestamp": "2026-10-19T12:27:33.466439+00:00",
+    "timestamp": "2026-10-19T12:52:51.748189+00:00",
     "stage": "Stage 11 \u2014 External Benchmark Validation and Routing Semantics Audit",
-    "git_commit": "774ea82c15b988159fe028be0c29e94aa434f6c3",
+    "git_commit": "39bab2cc90011d86d382ae2f4fc9b6ef9a1912a1",
     "environment": {
       "os": "darwin",
       "python_version": "3.14.6",
@@ -86,14 +86,14 @@
       },
       "latency_ms": {
         "p50": 0.0002,
-        "p95": 0.001,
-        "p99": 0.0027,
+        "p95": 0.0013,
+        "p99": 0.0053,
         "mean": 0.0003,
         "min": 0.0001,
-        "max": 0.0027,
+        "max": 0.0053,
         "formatted_p50": "0.2 \u00b5s",
         "formatted_p95": "0.001 ms",
-        "formatted_p99": "0.003 ms"
+        "formatted_p99": "0.005 ms"
       },
       "detection_latency_ms": {
         "p50": null,
@@ -163,25 +163,25 @@
       },
       "latency_ms": {
         "p50": 0.0004,
-        "p95": 0.0006,
-        "p99": 0.0034,
-        "mean": 0.0005,
+        "p95": 0.0007,
+        "p99": 0.0472,
+        "mean": 0.0009,
         "min": 0.0003,
-        "max": 0.0034,
+        "max": 0.0472,
         "formatted_p50": "0.4 \u00b5s",
-        "formatted_p95": "0.6 \u00b5s",
-        "formatted_p99": "0.003 ms"
+        "formatted_p95": "0.7 \u00b5s",
+        "formatted_p99": "0.047 ms"
       },
       "detection_latency_ms": {
         "p50": 0.0003,
         "p95": 0.0005,
-        "p99": 0.003,
+        "p99": 0.002,
         "mean": 0.0004,
         "min": 0.0002,
-        "max": 0.003,
+        "max": 0.002,
         "formatted_p50": "0.3 \u00b5s",
         "formatted_p95": "0.5 \u00b5s",
-        "formatted_p99": "0.003 ms"
+        "formatted_p99": "0.002 ms"
       }
     },
     "B3": {
@@ -246,26 +246,26 @@
         }
       },
       "latency_ms": {
-        "p50": 0.0032,
-        "p95": 0.0092,
-        "p99": 0.1745,
-        "mean": 0.0071,
-        "min": 0.0009,
-        "max": 0.1745,
-        "formatted_p50": "0.003 ms",
-        "formatted_p95": "0.009 ms",
-        "formatted_p99": "0.174 ms"
+        "p50": 0.0036,
+        "p95": 0.027,
+        "p99": 0.1726,
+        "mean": 0.0079,
+        "min": 0.001,
+        "max": 0.1726,
+        "formatted_p50": "0.004 ms",
+        "formatted_p95": "0.027 ms",
+        "formatted_p99": "0.173 ms"
       },
       "detection_latency_ms": {
-        "p50": 0.0031,
-        "p95": 0.0092,
-        "p99": 0.1744,
-        "mean": 0.0071,
-        "min": 0.0008,
-        "max": 0.1744,
-        "formatted_p50": "0.003 ms",
-        "formatted_p95": "0.009 ms",
-        "formatted_p99": "0.174 ms"
+        "p50": 0.0035,
+        "p95": 0.0266,
+        "p99": 0.1725,
+        "mean": 0.0078,
+        "min": 0.0009,
+        "max": 0.1725,
+        "formatted_p50": "0.004 ms",
+        "formatted_p95": "0.027 ms",
+        "formatted_p99": "0.172 ms"
       }
     },
     "B4": {
@@ -331,26 +331,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.6501,
-        "p95": 14.1971,
-        "p99": 18.4597,
-        "mean": 13.4012,
-        "min": 11.112,
-        "max": 18.4597,
-        "formatted_p50": "13.650 ms",
-        "formatted_p95": "14.197 ms",
-        "formatted_p99": "18.460 ms"
+        "p50": 13.5838,
+        "p95": 13.7628,
+        "p99": 20.9047,
+        "mean": 13.2217,
+        "min": 11.0504,
+        "max": 20.9047,
+        "formatted_p50": "13.584 ms",
+        "formatted_p95": "13.763 ms",
+        "formatted_p99": "20.905 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.6493,
-        "p95": 14.1962,
-        "p99": 18.459,
-        "mean": 13.4004,
-        "min": 11.109,
-        "max": 18.459,
-        "formatted_p50": "13.649 ms",
-        "formatted_p95": "14.196 ms",
-        "formatted_p99": "18.459 ms"
+        "p50": 13.5831,
+        "p95": 13.7621,
+        "p99": 20.9038,
+        "mean": 13.221,
+        "min": 11.05,
+        "max": 20.9038,
+        "formatted_p50": "13.583 ms",
+        "formatted_p95": "13.762 ms",
+        "formatted_p99": "20.904 ms"
       }
     }
   },
@@ -418,26 +418,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.6501,
-        "p95": 14.1971,
-        "p99": 18.4597,
-        "mean": 13.4012,
-        "min": 11.112,
-        "max": 18.4597,
-        "formatted_p50": "13.650 ms",
-        "formatted_p95": "14.197 ms",
-        "formatted_p99": "18.460 ms"
+        "p50": 13.5838,
+        "p95": 13.7628,
+        "p99": 20.9047,
+        "mean": 13.2217,
+        "min": 11.0504,
+        "max": 20.9047,
+        "formatted_p50": "13.584 ms",
+        "formatted_p95": "13.763 ms",
+        "formatted_p99": "20.905 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.6493,
-        "p95": 14.1962,
-        "p99": 18.459,
-        "mean": 13.4004,
-        "min": 11.109,
-        "max": 18.459,
-        "formatted_p50": "13.649 ms",
-        "formatted_p95": "14.196 ms",
-        "formatted_p99": "18.459 ms"
+        "p50": 13.5831,
+        "p95": 13.7621,
+        "p99": 20.9038,
+        "mean": 13.221,
+        "min": 11.05,
+        "max": 20.9038,
+        "formatted_p50": "13.583 ms",
+        "formatted_p95": "13.762 ms",
+        "formatted_p99": "20.904 ms"
       }
     },
     "B_NO_ML": {
@@ -503,26 +503,26 @@
         }
       },
       "latency_ms": {
-        "p50": 0.016,
-        "p95": 0.0326,
-        "p99": 0.063,
-        "mean": 0.0187,
-        "min": 0.0092,
-        "max": 0.063,
-        "formatted_p50": "0.016 ms",
-        "formatted_p95": "0.033 ms",
-        "formatted_p99": "0.063 ms"
+        "p50": 0.0173,
+        "p95": 0.035,
+        "p99": 0.0563,
+        "mean": 0.02,
+        "min": 0.0103,
+        "max": 0.0563,
+        "formatted_p50": "0.017 ms",
+        "formatted_p95": "0.035 ms",
+        "formatted_p99": "0.056 ms"
       },
       "detection_latency_ms": {
-        "p50": 0.0158,
-        "p95": 0.0324,
-        "p99": 0.0628,
-        "mean": 0.0185,
-        "min": 0.009,
-        "max": 0.0628,
-        "formatted_p50": "0.016 ms",
-        "formatted_p95": "0.032 ms",
-        "formatted_p99": "0.063 ms"
+        "p50": 0.0171,
+        "p95": 0.0348,
+        "p99": 0.0561,
+        "mean": 0.0197,
+        "min": 0.01,
+        "max": 0.0561,
+        "formatted_p50": "0.017 ms",
+        "formatted_p95": "0.035 ms",
+        "formatted_p99": "0.056 ms"
       }
     },
     "C_NO_ADAPT": {
@@ -588,26 +588,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.6642,
-        "p95": 13.8862,
-        "p99": 14.0609,
-        "mean": 13.4267,
-        "min": 11.3054,
-        "max": 14.0609,
-        "formatted_p50": "13.664 ms",
-        "formatted_p95": "13.886 ms",
-        "formatted_p99": "14.061 ms"
+        "p50": 13.5312,
+        "p95": 13.6756,
+        "p99": 13.8004,
+        "mean": 13.1829,
+        "min": 11.1157,
+        "max": 13.8004,
+        "formatted_p50": "13.531 ms",
+        "formatted_p95": "13.676 ms",
+        "formatted_p99": "13.800 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.6638,
-        "p95": 13.8855,
-        "p99": 14.0604,
-        "mean": 13.4261,
-        "min": 11.3047,
-        "max": 14.0604,
-        "formatted_p50": "13.664 ms",
-        "formatted_p95": "13.885 ms",
-        "formatted_p99": "14.060 ms"
+        "p50": 13.5306,
+        "p95": 13.6747,
+        "p99": 13.7997,
+        "mean": 13.1823,
+        "min": 11.1152,
+        "max": 13.7997,
+        "formatted_p50": "13.531 ms",
+        "formatted_p95": "13.675 ms",
+        "formatted_p99": "13.800 ms"
       }
     },
     "D_NO_HISTORY": {
@@ -673,26 +673,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.7022,
-        "p95": 13.918,
-        "p99": 14.1979,
-        "mean": 13.5954,
-        "min": 11.1444,
-        "max": 14.1979,
-        "formatted_p50": "13.702 ms",
-        "formatted_p95": "13.918 ms",
-        "formatted_p99": "14.198 ms"
+        "p50": 13.4912,
+        "p95": 14.0258,
+        "p99": 14.6317,
+        "mean": 13.2599,
+        "min": 10.9792,
+        "max": 14.6317,
+        "formatted_p50": "13.491 ms",
+        "formatted_p95": "14.026 ms",
+        "formatted_p99": "14.632 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.7016,
-        "p95": 13.9172,
-        "p99": 14.197,
-        "mean": 13.5946,
-        "min": 11.1437,
-        "max": 14.197,
-        "formatted_p50": "13.702 ms",
-        "formatted_p95": "13.917 ms",
-        "formatted_p99": "14.197 ms"
+        "p50": 13.4905,
+        "p95": 14.0246,
+        "p99": 14.6304,
+        "mean": 13.2592,
+        "min": 10.9786,
+        "max": 14.6304,
+        "formatted_p50": "13.491 ms",
+        "formatted_p95": "14.025 ms",
+        "formatted_p99": "14.630 ms"
       }
     }
   },

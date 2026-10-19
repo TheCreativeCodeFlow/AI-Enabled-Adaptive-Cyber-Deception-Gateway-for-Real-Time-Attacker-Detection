@@ -1,8 +1,8 @@
 # External Benchmark Validation and Routing Semantics Evaluation (Stage 11)
 
 **Document Reference:** `reports/external_benchmark_evaluation.md`  
-**Execution Timestamp:** `2026-10-19T12:27:33.466439+00:00`  
-**Git Commit Reference:** `774ea82c15b988159fe028be0c29e94aa434f6c3`  
+**Execution Timestamp:** `2026-10-19T12:52:51.748189+00:00`  
+**Git Commit Reference:** `39bab2cc90011d86d382ae2f4fc9b6ef9a1912a1`  
 **Machine-Readable Report (JSON):** `reports/external_benchmark_results.json`  
 **Dataset Reference:** `data/scenarios/external_benchmark_v1.json`  
 **Dataset SHA-256:** `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`  
@@ -30,7 +30,7 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
      - **Recall: 46.0%**
      - **FPR: 0.0% (0/50)**
      - **FNR: 54.0% (27/50)**
-     - **p50 Latency: 0.016 ms vs. 13.650 ms**
+     - **p50 Latency: 0.017 ms vs. 13.584 ms**
 3. **Disentanglement of Detection vs. Containment:**
    - **Model Classification vs. Physical Routing:** Public HTTP benchmarks consist of independent request traces without continuous attacker session state. In single-turn requests, diversion rate equals containment rate.
    - **OBSERVE_ONLY Semantics:** Requests assigned `OBSERVE_ONLY` physically execute against the upstream origin. Any attack receiving `OBSERVE_ONLY` constitutes an **origin leak (False Negative)**.
@@ -44,7 +44,7 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
 | Candidate Dataset | Origin & Provenance | License / Permitted Use | Available Fields | Applicability to Gateway L7 Features | Limitations & Verdict |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **CSIC 2010 HTTP Dataset** | CSIC (Spanish Research Council) / ISCX UNB | Open Academic Research | Full HTTP Request (Method, URI, Headers, Cookie, Body) | **Direct (100% compatible)**: Evaluates paths, headers, query, and POST bodies | Dated (2010), synthetic e-commerce app ("tienda1"), independent requests. **SELECTED (Primary)** |
-| **OWASP Core Rule Set (CRS) / Benchmark** | OWASP Foundation | Apache 2.0 / CC | Raw HTTP requests (.yaml/.raw test cases) | **Direct (100% compatible)**: Real HTTP methods, paths, headers, bodies | Curated unit test payloads rather than natural traffic traces. **SELECTED (Complementary)** |
+| **OWASP Core Rule Set (CRS) / Benchmark** | OWASP Foundation | Apache 2.0 / CC | Raw HTTP requests (.yaml/.raw test cases) | **Direct (100% compatible)**: Authentic HTTP methods, paths, headers, bodies | Curated synthetic test payloads rather than natural traffic traces. **SELECTED (Complementary)** |
 | **ECML/PKDD 2007 Discovery Challenge** | ECML/PKDD Workshop (2007) | Open Academic | HTTP GET/POST queries | Partial: Simple URLs/queries, limited header variety | Older (2007), small feature diversity. Subsumed by CSIC 2010. |
 | **CIC-IDS2017 / CSE-CIC-IDS2018 (Flow CSVs)** | Canadian Institute for Cybersecurity (UNB) | Academic / Research | NetFlow / IPFIX flow summaries (durations, packet sizes) | **MISMATCH (Incompatible)**: Zero HTTP paths, headers, or request bodies | Flow-level statistics cannot evaluate reverse-proxy L7 token/entropy rules. **REJECTED** |
 
@@ -58,17 +58,17 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **B1: Direct Passthrough** | Reverse Proxy (No Sec) | 0 | 0 | 50 | 50 | 0.0% | 0.0% | 0.000 | 50.0% | 50/50 (100.0%) | 0/50 (0.0%) | 0.2 µs | N/A (passthrough) |
 | **B2: Static Heuristic** | Substring Matching | 3 | 0 | 50 | 47 | 100.0% | 6.0% | 0.113 | 53.0% | 47/50 (94.0%) | 0/50 (0.0%) | 0.4 µs | 0.3 µs |
-| **B3: Rule-Based Adaptive**| Regex Heuristics | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.003 ms | 0.003 ms |
-| **B4: Proposed Gateway** | ML + Heuristics + DSG | **37** | **0** | **50** | **13** | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | **13.650 ms** | **13.649 ms** |
+| **B3: Rule-Based Adaptive**| Regex Heuristics | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.004 ms | 0.004 ms |
+| **B4: Proposed Gateway** | ML + Heuristics + DSG | **37** | **0** | **50** | **13** | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | **13.584 ms** | **13.583 ms** |
 
 ### 3.2 Architectural Ablation Variants
 
 | Configuration | Description | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | Leaks (FNR) | False Pos (FPR) | p50 Gateway Latency |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Variant A (Full Proposed - B4)** | Full ML + Rules + Controller | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.650 ms |
-| **Variant B (No-ML Ablation)** | Rules Only (ML Disabled) | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.016 ms** |
-| **Variant C (No-Adaptation)** | Flat Mock (No Adaptive DSG) | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.664 ms |
-| **Variant D (No-History)** | Stateless Request Evaluation | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.702 ms |
+| **Variant A (Full Proposed - B4)** | Full ML + Rules + Controller | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.584 ms |
+| **Variant B (No-ML Ablation)** | Rules Only (ML Disabled) | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.017 ms** |
+| **Variant C (No-Adaptation)** | Flat Mock (No Adaptive DSG) | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.531 ms |
+| **Variant D (No-History)** | Stateless Request Evaluation | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.491 ms |
 
 ---
 
@@ -111,7 +111,22 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
 
 ---
 
-## 6. Reproducibility & Commands
+## 6. Dataset Provenance, Generation Methodology & Scope
+
+1. **CSIC 2010 Dataset Characterization:**
+   - Generated by the Information Security Group at the Spanish National Research Council (CSIC) in a testbed environment ("tienda1" e-commerce application).
+   - Benign traffic was generated by automated web spiders and simulated browsing scripts.
+   - Attack traffic was generated using automated web vulnerability scanners (e.g. Paros proxy, Nessus) and penetration testing scripts.
+   - **Provenance Finding:** These requests represent **automated testbed traffic**, NOT captured real-world attack traffic from live human adversaries.
+   - **License:** Open academic research distribution (University of New Brunswick ISCX repository).
+2. **OWASP Core Rule Set (CRS) Test Cases:**
+   - Curated synthetic test payloads published under Apache 2.0 / Creative Commons for WAF rule validation.
+3. **Generalization Scope:**
+   - The 100-request external benchmark represents **limited external benchmark evidence** on un-tuned synthetic HTTP records. It confirms cross-dataset robustness, but does NOT constitute proof of universal generalization in live production environments.
+
+---
+
+## 7. Reproducibility & Commands
 
 To independently reproduce the external benchmark results:
 ```bash
