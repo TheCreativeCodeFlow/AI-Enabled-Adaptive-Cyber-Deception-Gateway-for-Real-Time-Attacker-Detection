@@ -1,141 +1,761 @@
 {
-  "timestamp": "2026-10-18T17:33:04Z",
-  "datasetSummary": {
-    "totalSamples": 120,
-    "benignSamples": 60,
-    "attackSamples": 60,
-    "attackCategories": [
-      "SQLI",
-      "TRAVERSAL",
-      "RECON",
-      "CMDI"
+  "metadata": {
+    "timestamp": "2026-10-18T18:40:53.373104+00:00",
+    "environment": {
+      "os": "darwin",
+      "python_version": "3.14.6",
+      "executable": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/detection/.venv/bin/python"
+    },
+    "dataset": {
+      "version": "1.0.0",
+      "file_path": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/data/scenarios/benchmark_scenarios_v1.json",
+      "content_sha256": "958fa723ca691d9fbbd6cdc885cbc8509e80e4332bc4e9313ca98e7e2c0a0746",
+      "total_scenarios": 120,
+      "development_split_count": 60,
+      "held_out_test_split_count": 60
+    },
+    "model": {
+      "version": "0.3.0-synthetic-baseline",
+      "model_path": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/detection/model.joblib",
+      "model_sha256": "4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406"
+    },
+    "routing_policy": {
+      "controller_version": "1.0.0-decision-controller",
+      "routing_mode": "active",
+      "score_threshold": 0.7,
+      "failure_policy": "quarantine"
+    },
+    "random_seeds": {
+      "primary": 42,
+      "repetitions": [
+        42,
+        101,
+        202,
+        303,
+        404
+      ]
+    }
+  },
+  "audit_findings": {
+    "stage_8_audit": "Stage 8 simulated B4 via hardcoded sample ID checks and gaussian noise latencies. Stage 9 replaces all simulations with real feature extraction, model inference, controller policy evaluation, and microsecond timed operations.",
+    "leakage_verification": "Origin leakage is measured from actual observed routing targets; any attack not diverted to DECEPTION is recorded as an origin leak.",
+    "des_derivation": "DES components are calculated strictly from observed DSG node transitions, decoy endpoint touches, and response status codes rather than static constants."
+  },
+  "development_calibration": {
+    "sweep": [
+      {
+        "threshold": 0.2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      },
+      {
+        "threshold": 0.3,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      },
+      {
+        "threshold": 0.4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      },
+      {
+        "threshold": 0.5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      },
+      {
+        "threshold": 0.6,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      },
+      {
+        "threshold": 0.7,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "origin_leakage_pct": 0.0
+      }
     ]
   },
-  "configurations": [
-    {
+  "held_out_test_split_results": {
+    "b1_direct_origin": {
+      "baseline_id": "B1",
       "name": "B1: Direct Origin Forwarding",
-      "description": "Direct pass-through without ML detection or deception environment.",
-      "tp": 0,
-      "fp": 0,
-      "tn": 60,
-      "fn": 60,
-      "diverted_count": 0,
-      "origin_leak_count": 60,
-      "origin_leakage_rate_pct": 100.0,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": 0.0,
-      "accuracy": 0.5,
-      "fpr": 0.0,
-      "fnr": 1.0,
+      "architecture": "Standard Reverse Proxy (Passthrough)",
+      "routing_policy": "Unconditional Origin Forwarding",
+      "has_detection": false,
+      "has_deception": false,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 30,
+          "fn": 30,
+          "matrix_2x2": [
+            [
+              30,
+              0
+            ],
+            [
+              30,
+              0
+            ]
+          ]
+        },
+        "accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "specificity": 1.0,
+        "total_evaluated": 60
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 60,
+        "diverted_to_deception": 0,
+        "origin_leak_count": 30,
+        "origin_leakage_pct": 100.0
+      },
       "des": 0.0,
       "des_details": {
         "score": 0.0,
         "origin_leakage": true,
+        "origin_leak_count": 30,
         "depth_score": 0.0,
         "consistency_score": 0.0,
         "dwell_score": 0.0,
-        "engagement_score": 0.0
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 0,
+          "successful_deception_responses": 0,
+          "total_deception_interactions": 0,
+          "unique_decoy_endpoints": 0
+        }
       },
-      "latency_p50_ms": 0.82,
-      "latency_p95_ms": 1.01,
-      "latency_mean_ms": 0.81,
-      "overhead_pct": 0.0
+      "latency_ms": {
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
     },
-    {
+    "b2_static_deception": {
+      "baseline_id": "B2",
       "name": "B2: Static Heuristic Deception",
-      "description": "Simple keyword matching with static unstateful decoy response.",
-      "tp": 7,
-      "fp": 0,
-      "tn": 60,
-      "fn": 53,
-      "diverted_count": 7,
-      "origin_leak_count": 53,
-      "origin_leakage_rate_pct": 88.3,
-      "precision": 1.0,
-      "recall": 0.1167,
-      "f1": 0.209,
-      "accuracy": 0.5583,
-      "fpr": 0.0,
-      "fnr": 0.8833,
+      "architecture": "Static Keyword Filter + Canned Decoy Page",
+      "routing_policy": "Naive Keyword Match -> Flat Decoy; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 3,
+          "fp": 0,
+          "tn": 30,
+          "fn": 27,
+          "matrix_2x2": [
+            [
+              30,
+              0
+            ],
+            [
+              27,
+              3
+            ]
+          ]
+        },
+        "accuracy": 0.55,
+        "precision": 1.0,
+        "recall": 0.1,
+        "f1": 0.1818,
+        "fpr": 0.0,
+        "fnr": 0.9,
+        "specificity": 1.0,
+        "total_evaluated": 60
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 57,
+        "diverted_to_deception": 3,
+        "origin_leak_count": 27,
+        "origin_leakage_pct": 90.0
+      },
       "des": 0.0,
       "des_details": {
         "score": 0.0,
         "origin_leakage": true,
+        "origin_leak_count": 27,
         "depth_score": 0.0,
         "consistency_score": 0.0,
         "dwell_score": 0.0,
-        "engagement_score": 0.0
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 1,
+          "successful_deception_responses": 3,
+          "total_deception_interactions": 3,
+          "unique_decoy_endpoints": 1
+        }
       },
-      "latency_p50_ms": 1.45,
-      "latency_p95_ms": 1.93,
-      "latency_mean_ms": 1.44,
-      "overhead_pct": 76.8
+      "latency_ms": {
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.001,
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.001,
+        "overhead_vs_b1_pct": 0.0
+      }
     },
-    {
+    "b3_rule_based_adaptive": {
+      "baseline_id": "B3",
       "name": "B3: Rule-Based Adaptive Routing",
-      "description": "Signature regex filters with basic routing, without ML anomaly scoring.",
-      "tp": 33,
-      "fp": 0,
-      "tn": 60,
-      "fn": 27,
-      "diverted_count": 33,
-      "origin_leak_count": 27,
-      "origin_leakage_rate_pct": 45.0,
-      "precision": 1.0,
-      "recall": 0.55,
-      "f1": 0.7097,
-      "accuracy": 0.775,
-      "fpr": 0.0,
-      "fnr": 0.45,
+      "architecture": "Regex Signature Engine + Static Decoy Mocks",
+      "routing_policy": "Comprehensive Regex Match -> Honeypot; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 16,
+          "fp": 0,
+          "tn": 30,
+          "fn": 14,
+          "matrix_2x2": [
+            [
+              30,
+              0
+            ],
+            [
+              14,
+              16
+            ]
+          ]
+        },
+        "accuracy": 0.7667,
+        "precision": 1.0,
+        "recall": 0.5333,
+        "f1": 0.6956,
+        "fpr": 0.0,
+        "fnr": 0.4667,
+        "specificity": 1.0,
+        "total_evaluated": 60
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 44,
+        "diverted_to_deception": 16,
+        "origin_leak_count": 14,
+        "origin_leakage_pct": 46.7
+      },
       "des": 0.0,
       "des_details": {
         "score": 0.0,
         "origin_leakage": true,
+        "origin_leak_count": 14,
         "depth_score": 0.0,
         "consistency_score": 0.0,
         "dwell_score": 0.0,
-        "engagement_score": 0.0
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 16,
+          "total_deception_interactions": 16,
+          "unique_decoy_endpoints": 2
+        }
       },
-      "latency_p50_ms": 2.14,
-      "latency_p95_ms": 2.75,
-      "latency_mean_ms": 2.12,
-      "overhead_pct": 161.0
+      "latency_ms": {
+        "p50": 0.002,
+        "p90": 0.004,
+        "p95": 0.007,
+        "p99": 0.009,
+        "mean": 0.003,
+        "min": 0.001,
+        "max": 0.009,
+        "overhead_vs_b1_pct": 200.0
+      }
     },
-    {
+    "b4_proposed_gateway": {
+      "baseline_id": "B4",
       "name": "B4: Proposed Adaptive Cyber Deception Gateway",
-      "description": "ML Anomaly Detector + Deterministic Policy Controller + Stateful DSG Runtime + Strict Quarantine.",
-      "tp": 57,
-      "fp": 2,
-      "tn": 58,
-      "fn": 3,
-      "diverted_count": 59,
-      "origin_leak_count": 0,
-      "origin_leakage_rate_pct": 0.0,
-      "precision": 0.9661,
-      "recall": 0.95,
-      "f1": 0.958,
-      "accuracy": 0.9583,
-      "fpr": 0.0333,
-      "fnr": 0.05,
+      "architecture": "ML Anomaly Detector + Deterministic Controller + Stateful DSG Runtime",
+      "routing_policy": "Multi-Factor Scoring -> Policy Controller -> Dynamic DSG Diversion",
+      "has_detection": true,
+      "has_deception": true,
+      "calibrated_threshold": 0.7,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 30,
+          "fp": 0,
+          "tn": 30,
+          "fn": 0,
+          "matrix_2x2": [
+            [
+              30,
+              0
+            ],
+            [
+              0,
+              30
+            ]
+          ]
+        },
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "fnr": 0.0,
+        "specificity": 1.0,
+        "total_evaluated": 60
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 30,
+        "diverted_to_deception": 30,
+        "origin_leak_count": 0,
+        "origin_leakage_pct": 0.0
+      },
+      "des": 0.925,
+      "des_details": {
+        "score": 0.925,
+        "origin_leakage": false,
+        "origin_leak_count": 0,
+        "depth_score": 0.75,
+        "consistency_score": 1.0,
+        "dwell_score": 1.0,
+        "engagement_score": 1.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 3,
+          "successful_deception_responses": 30,
+          "total_deception_interactions": 30,
+          "unique_decoy_endpoints": 20
+        }
+      },
+      "latency_ms": {
+        "p50": 13.632,
+        "p90": 13.902,
+        "p95": 14.232,
+        "p99": 14.473,
+        "mean": 13.332,
+        "min": 11.187,
+        "max": 14.473,
+        "overhead_vs_b1_pct": 1363200.0
+      }
+    }
+  },
+  "overall_benchmark_results": {
+    "b1_direct_origin": {
+      "baseline_id": "B1",
+      "name": "B1: Direct Origin Forwarding",
+      "architecture": "Standard Reverse Proxy (Passthrough)",
+      "routing_policy": "Unconditional Origin Forwarding",
+      "has_detection": false,
+      "has_deception": false,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 0,
+          "fp": 0,
+          "tn": 60,
+          "fn": 60,
+          "matrix_2x2": [
+            [
+              60,
+              0
+            ],
+            [
+              60,
+              0
+            ]
+          ]
+        },
+        "accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0,
+        "specificity": 1.0,
+        "total_evaluated": 120
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 120,
+        "diverted_to_deception": 0,
+        "origin_leak_count": 60,
+        "origin_leakage_pct": 100.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 60,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 0,
+          "successful_deception_responses": 0,
+          "total_deception_interactions": 0,
+          "unique_decoy_endpoints": 0
+        }
+      },
+      "latency_ms": {
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.001,
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.002
+      }
+    },
+    "b2_static_deception": {
+      "baseline_id": "B2",
+      "name": "B2: Static Heuristic Deception",
+      "architecture": "Static Keyword Filter + Canned Decoy Page",
+      "routing_policy": "Naive Keyword Match -> Flat Decoy; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 7,
+          "fp": 0,
+          "tn": 60,
+          "fn": 53,
+          "matrix_2x2": [
+            [
+              60,
+              0
+            ],
+            [
+              53,
+              7
+            ]
+          ]
+        },
+        "accuracy": 0.5583,
+        "precision": 1.0,
+        "recall": 0.1167,
+        "f1": 0.209,
+        "fpr": 0.0,
+        "fnr": 0.8833,
+        "specificity": 1.0,
+        "total_evaluated": 120
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 113,
+        "diverted_to_deception": 7,
+        "origin_leak_count": 53,
+        "origin_leakage_pct": 88.3
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 53,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 1,
+          "successful_deception_responses": 7,
+          "total_deception_interactions": 7,
+          "unique_decoy_endpoints": 1
+        }
+      },
+      "latency_ms": {
+        "p50": 0.0,
+        "p90": 0.001,
+        "p95": 0.001,
+        "p99": 0.001,
+        "mean": 0.001,
+        "min": 0.0,
+        "max": 0.011,
+        "overhead_vs_b1_pct": 0.0
+      }
+    },
+    "b3_rule_based_adaptive": {
+      "baseline_id": "B3",
+      "name": "B3: Rule-Based Adaptive Routing",
+      "architecture": "Regex Signature Engine + Static Decoy Mocks",
+      "routing_policy": "Comprehensive Regex Match -> Honeypot; Else Origin",
+      "has_detection": true,
+      "has_deception": true,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 39,
+          "fp": 0,
+          "tn": 60,
+          "fn": 21,
+          "matrix_2x2": [
+            [
+              60,
+              0
+            ],
+            [
+              21,
+              39
+            ]
+          ]
+        },
+        "accuracy": 0.825,
+        "precision": 1.0,
+        "recall": 0.65,
+        "f1": 0.7879,
+        "fpr": 0.0,
+        "fnr": 0.35,
+        "specificity": 1.0,
+        "total_evaluated": 120
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 81,
+        "diverted_to_deception": 39,
+        "origin_leak_count": 21,
+        "origin_leakage_pct": 35.0
+      },
+      "des": 0.0,
+      "des_details": {
+        "score": 0.0,
+        "origin_leakage": true,
+        "origin_leak_count": 21,
+        "depth_score": 0.0,
+        "consistency_score": 0.0,
+        "dwell_score": 0.0,
+        "engagement_score": 0.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 2,
+          "successful_deception_responses": 39,
+          "total_deception_interactions": 39,
+          "unique_decoy_endpoints": 2
+        }
+      },
+      "latency_ms": {
+        "p50": 0.003,
+        "p90": 0.005,
+        "p95": 0.006,
+        "p99": 0.035,
+        "mean": 0.004,
+        "min": 0.001,
+        "max": 0.035,
+        "overhead_vs_b1_pct": 300.0
+      }
+    },
+    "b4_proposed_gateway": {
+      "baseline_id": "B4",
+      "name": "B4: Proposed Adaptive Cyber Deception Gateway",
+      "architecture": "ML Anomaly Detector + Deterministic Controller + Stateful DSG Runtime",
+      "routing_policy": "Multi-Factor Scoring -> Policy Controller -> Dynamic DSG Diversion",
+      "has_detection": true,
+      "has_deception": true,
+      "calibrated_threshold": 0.7,
+      "metrics": {
+        "confusion_matrix": {
+          "tp": 60,
+          "fp": 0,
+          "tn": 60,
+          "fn": 0,
+          "matrix_2x2": [
+            [
+              60,
+              0
+            ],
+            [
+              0,
+              60
+            ]
+          ]
+        },
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "fnr": 0.0,
+        "specificity": 1.0,
+        "total_evaluated": 120
+      },
+      "routing_outcomes": {
+        "routed_to_origin": 60,
+        "diverted_to_deception": 60,
+        "origin_leak_count": 0,
+        "origin_leakage_pct": 0.0
+      },
       "des": 1.0,
       "des_details": {
         "score": 1.0,
         "origin_leakage": false,
+        "origin_leak_count": 0,
         "depth_score": 1.0,
         "consistency_score": 1.0,
         "dwell_score": 1.0,
-        "engagement_score": 1.0
+        "engagement_score": 1.0,
+        "weights": {
+          "depth": 0.3,
+          "consistency": 0.3,
+          "dwell": 0.25,
+          "engagement": 0.15
+        },
+        "evidence": {
+          "unique_dsg_nodes_visited": 4,
+          "successful_deception_responses": 60,
+          "total_deception_interactions": 60,
+          "unique_decoy_endpoints": 38
+        }
       },
-      "latency_p50_ms": 3.16,
-      "latency_p95_ms": 3.89,
-      "latency_mean_ms": 3.16,
-      "overhead_pct": 285.4
+      "latency_ms": {
+        "p50": 13.631,
+        "p90": 13.893,
+        "p95": 14.002,
+        "p99": 14.605,
+        "mean": 13.227,
+        "min": 11.154,
+        "max": 14.921,
+        "overhead_vs_b1_pct": 1363100.0
+      }
     }
-  ],
-  "methodologicalLimitations": [
-    "Evaluated on synthetic benchmark workloads; synthetic performance metrics do not imply real-world detection or deception accuracy against zero-day or adaptive human adversaries.",
-    "Dwell time normalization uses a finite interaction threshold (K=10 interactions) calibrated for short-lived benchmark trials rather than multi-day persistent threats.",
-    "Deception Effectiveness Score measures immersion, state continuity, and containment; it does not replace origin least-privilege or host-based security hardening."
+  },
+  "category_breakdown_b4": {
+    "SQLI": {
+      "total_samples": 12,
+      "tp": 12,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "TRAVERSAL": {
+      "total_samples": 12,
+      "tp": 12,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "CMDI": {
+      "total_samples": 12,
+      "tp": 12,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "RECON": {
+      "total_samples": 12,
+      "tp": 12,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "CRED_STUFF": {
+      "total_samples": 12,
+      "tp": 12,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "BENIGN": {
+      "total_samples": 60,
+      "tp": 0,
+      "fp": 0,
+      "tn": 60,
+      "fn": 0,
+      "accuracy": 1.0,
+      "recall": 1.0,
+      "precision": 1.0
+    }
+  },
+  "latency_stability": {
+    "seeds": [
+      42,
+      101,
+      202,
+      303,
+      404
+    ],
+    "p50_latencies_ms": [
+      13.596,
+      13.585,
+      13.573,
+      13.565,
+      13.593
+    ],
+    "mean_p50_ms": 13.582,
+    "std_p50_ms": 0.012
+  },
+  "methodological_limitations": [
+    "Evaluated on synthetic benchmark workloads; synthetic performance metrics do not imply claimed real-world detection or deception efficacy against novel zero-days or skilled human adversaries.",
+    "Dwell interaction normalization is calibrated for local benchmark scenarios (K=10 interactions) rather than long-term persistent human campaigns.",
+    "Deception Effectiveness Score measures synthetic fidelity, state continuity, and containment; it does not substitute for origin-level least-privilege or host-based security defenses."
   ]
 }

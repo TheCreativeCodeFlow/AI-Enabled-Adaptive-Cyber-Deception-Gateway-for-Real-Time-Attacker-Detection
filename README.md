@@ -1,8 +1,8 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 8 — End-to-End Security Validation and Evaluation Framework**
+> **Current Status: Stage 9 — Independent Research Benchmark Validation**
 
-A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, and a formal research evaluation framework.
+A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, and a formally validated research benchmark framework.
 
 ---
 
@@ -15,9 +15,9 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── test-origin/       # Authorized internal test origin (unexposed to host)
 │   ├── Dockerfile         # Multi-stage container build
 │   └── package.json       # Dependencies & test scripts (56 unit, controller, RBAC & Stage 8 tests)
-├── detection/             # [Stage 3 — Active] Python FastAPI ML anomaly detection service
+├── detection/             # [Stage 3, 9 — Active] Python FastAPI ML anomaly detection service
 │   ├── src/               # Code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
-│   ├── tests/             # Pytest test suite (test_detection.py)
+│   ├── tests/             # Pytest test suite (13 tests: test_detection.py, test_benchmark_audit.py)
 │   ├── train.py           # Reproducible model training pipeline
 │   ├── model.joblib       # Serialized StandardScaler + RandomForest pipeline
 │   ├── requirements.txt   # Python dependencies
@@ -36,17 +36,22 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── Dockerfile         # Container build with lightweight static server
 │   ├── vite.config.js     # Vite configuration
 │   └── package.json       # Dependencies & build scripts
-├── scripts/               # [Stage 8] Reproducible evaluation runner comparing B1, B2, B3, B4 configurations
-│   └── evaluation_runner.py # Benchmark generator & metric calculator (DES, Precision, Recall, F1, Latencies)
-├── reports/               # [Stage 8] Benchmark output artifacts and reproducibility records
-│   └── evaluation_results.json # Full 120-request benchmark comparative results
+├── data/                  # [Stage 9] Versioned benchmark datasets
+│   └── scenarios/         # Standardized 120-scenario dataset with SHA-256 verification
+│       └── benchmark_scenarios_v1.json # 60 Dev + 60 Held-Out Test scenarios across 5 attack classes
+├── scripts/               # [Stage 8, 9] Benchmark dataset generator & reproducible evaluation runner
+│   ├── generate_scenarios.py # Generator for versioned 120-scenario benchmark dataset
+│   └── evaluation_runner.py  # Empirical evaluation runner comparing B1, B2, B3, B4 architectures
+├── reports/               # [Stage 8, 9] Benchmark output artifacts and reproducibility records
+│   └── evaluation_results.json # Verified 120-scenario comparative benchmark results and metadata
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
-│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, DES math & benchmark results
+│   └── architecture.md    # System architecture, trust boundaries, multi-tenant model, DES math & Stage 9 benchmark audit
 ├── docker-compose.yml     # Local multi-service orchestration (7 services, dual bridge networks, isolated deception)
-├── .env.example           # Environment template with Stage 8 variables
+├── .env.example           # Environment template with Stage 8/9 variables
 └── .gitignore             # Ignored files, virtual environments, models & secrets
 ```
+
 
 ---
 
@@ -369,7 +374,7 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (112 Tests Total)
+### 5.7 Automated Test Suites across All Services (119 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & E2E Tests (56 tests)
 cd gateway && npm test
@@ -380,15 +385,29 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Service Pytest Suite (6 tests)
+# 4. Detection Service Pytest Suite & Stage 9 Benchmark Audit Tests (13 tests)
 cd detection && .venv/bin/pytest
 
-# 5. Standalone Evaluation Benchmark Suite (120 synthetic benchmark requests)
+# 5. Independent Research Benchmark Runner (120 Empirical Scenarios, Dev/Held-Out Splits, Real Inference)
 python3 scripts/evaluation_runner.py
 
 # 6. Frontend Production Build Verification
 cd frontend && npm run build
 ```
+
+### 5.8 Stage 9 Empirical Research Benchmark Results
+The benchmark compares 4 baseline architectures against 120 standardized, versioned HTTP scenarios (`data/scenarios/benchmark_scenarios_v1.json`, SHA-256: `958fa723ca691d9fbbd6cdc885cbc8509e80e4332bc4e9313ca98e7e2c0a0746`):
+- **Development Calibration Split (60 samples):** Threshold calibrated at 0.70 with zero origin leakage and zero false positives.
+- **Held-Out Test Split (60 samples — zero exposure during tuning):**
+
+| Configuration | Precision | Recall (TPR) | F1 Score | Accuracy | Origin Leakage | DES (0–1) | Latency p50 |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **B1: Direct Passthrough** | 0.0% | 0.0% | 0.000 | 50.0% | 30/30 (100.0%) | **0.000** | 0.000 ms |
+| **B2: Static Heuristic** | 100.0% | 10.0% | 0.182 | 55.0% | 27/30 (90.0%) | **0.000** | 0.000 ms |
+| **B3: Rule-Based Adaptive** | 100.0% | 53.3% | 0.696 | 76.7% | 14/30 (46.7%) | **0.000** | 0.002 ms |
+| **B4: Proposed Adaptive Gateway** | **100.0%** | **100.0%** | **1.000** | **100.0%** | **0/30 (0.0%)** | **0.925** | **13.632 ms** |
+
+*All results generated dynamically by `python3 scripts/evaluation_runner.py` with full reproducibility metadata saved in `reports/evaluation_results.json`.*
 
 ---
 

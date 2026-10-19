@@ -70,8 +70,17 @@ async def score_request(features: RequestFeatures):
     if ml_pipeline is not None:
         ml_score, ml_conf = predict_anomaly_score(ml_pipeline, features)
 
-    # 3. Blended risk score (strictly bounded in [0.0, 1.0])
-    blended_score = round(max(0.0, min(1.0, (0.5 * base_score) + (0.5 * ml_score))), 4)
+    # 3. Explainable multi-factor risk fusion (strictly bounded in [0.0, 1.0])
+    # When deterministic rules detect high-confidence attack signatures (base_score >= 0.70),
+    # preserve the high-confidence signal without statistical dilution.
+    if base_score >= 0.70 or ml_score >= 0.75:
+        blended_score = round(max(base_score, ml_score), 4)
+    elif base_score >= 0.35 or ml_score >= 0.50:
+        blended_score = round(max(0.6 * base_score + 0.4 * ml_score, 0.6 * ml_score + 0.4 * base_score), 4)
+    else:
+        blended_score = round(0.5 * base_score + 0.5 * ml_score, 4)
+    blended_score = min(1.0, max(0.0, blended_score))
+
 
     # 4. Multi-factor classification
     if blended_score >= 0.70:

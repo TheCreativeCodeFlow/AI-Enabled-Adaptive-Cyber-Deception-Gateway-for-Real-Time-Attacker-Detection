@@ -1,17 +1,31 @@
 import re
+import urllib.parse
 from typing import Tuple, List
 from .schemas import RequestFeatures
 
 SENSITIVE_PATH_PATTERNS = [
     re.compile(r'/\.env', re.IGNORECASE),
     re.compile(r'/\.git', re.IGNORECASE),
-    re.compile(r'/etc/passwd', re.IGNORECASE),
+    re.compile(r'/\.aws', re.IGNORECASE),
+    re.compile(r'/etc/(passwd|shadow|group)', re.IGNORECASE),
     re.compile(r'/proc/', re.IGNORECASE),
-    re.compile(r'/wp-admin', re.IGNORECASE),
-    re.compile(r'/wp-login', re.IGNORECASE),
+    re.compile(r'/wp-(admin|login|config)', re.IGNORECASE),
     re.compile(r'/phpmyadmin', re.IGNORECASE),
     re.compile(r'/actuator', re.IGNORECASE),
     re.compile(r'/aws/', re.IGNORECASE),
+    re.compile(r'/(root|cgi-bin)/', re.IGNORECASE),
+    re.compile(r'/admin(/|\b)', re.IGNORECASE),
+    re.compile(r'/server-status', re.IGNORECASE),
+    re.compile(r'/solr/', re.IGNORECASE),
+    re.compile(r'/swagger-ui', re.IGNORECASE),
+    re.compile(r'/api-docs', re.IGNORECASE),
+    re.compile(r'/console/', re.IGNORECASE),
+]
+
+ATTACK_SIGNATURE_PATTERNS = [
+    (re.compile(r"(\bor\b\s+['\"\d]|\band\b\s+['\"\d]|\bunion\b\s+(all\s+)?select|\bdrop\b\s+table|;\s*--|sleep\s*\(\d+\)|'\s*--|--|having\s+1=1|case\s+when|\bselect\b\s+.*\bfrom\b)", re.IGNORECASE), "SQL injection attack signature detected"),
+    (re.compile(r"(\.\./|\.\.\\|%2e%2e%2f|%2e%2e/|\.\.%2f|/etc/(passwd|shadow|group)|/proc/self|/boot/|/sys/|\\windows\\)", re.IGNORECASE), "Path traversal directory escape sequence detected"),
+    (re.compile(r"((;|\||&&)\s*(cat|id|whoami|uname|rm|nc|sleep|bash|sh|curl|wget)\b|\$\((id|whoami)\)|`id`|cmd=\s*(whoami|cat|id|uname)|/shell\b)", re.IGNORECASE), "OS command injection execution pattern detected"),
 ]
 
 
@@ -24,6 +38,7 @@ def evaluate_deterministic_baseline(features: RequestFeatures) -> Tuple[float, L
     """
     score = 0.0
     evidence: List[str] = []
+    decoded_path = urllib.parse.unquote(features.path)
 
     # 1. Suspicious keywords in path
     if features.has_suspicious_keywords or features.suspicious_keyword_count > 0:
@@ -34,10 +49,18 @@ def evaluate_deterministic_baseline(features: RequestFeatures) -> Tuple[float, L
 
     # 2. Sensitive target endpoints
     for pattern in SENSITIVE_PATH_PATTERNS:
-        if pattern.search(features.path):
-            score += 0.35
+        if pattern.search(decoded_path):
+            score += 0.75
             evidence.append(f"Path matches sensitive target pattern: {pattern.pattern}")
             break
+
+    # 2b. Exploit payload signatures
+    for pattern, desc in ATTACK_SIGNATURE_PATTERNS:
+        if pattern.search(decoded_path):
+            score += 0.75
+            evidence.append(desc)
+            break
+
 
     # 3. Scanner / tool signatures in headers
     if features.suspicious_header_patterns:
@@ -75,16 +98,17 @@ def evaluate_deterministic_baseline(features: RequestFeatures) -> Tuple[float, L
         )
 
     # 7. Consecutive auth failures
-    if features.auth_failure_count >= 5:
-        score += 0.30
+    if features.auth_failure_count >= 3:
+        score += 0.35
         evidence.append(
-            f"High authentication failure count ({features.auth_failure_count})"
+            f"Repeated authentication failures ({features.auth_failure_count})"
         )
-    elif features.auth_failure_count >= 2:
+    elif features.auth_failure_count >= 1:
         score += 0.15
         evidence.append(
-            f"Multiple authentication failures ({features.auth_failure_count})"
+            f"Authentication failure recorded ({features.auth_failure_count})"
         )
+
 
     # 8. Decoy interactions
     if features.decoy_interactions > 0:

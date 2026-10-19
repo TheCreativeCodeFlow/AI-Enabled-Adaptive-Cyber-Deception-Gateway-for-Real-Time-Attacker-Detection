@@ -62,36 +62,101 @@ def generate_synthetic_dataset(
     ])
     y_benign = np.zeros(n_benign, dtype=int)
 
-    # 2. Anomaly Samples (label 1)
-    a_path_depth = rng.randint(2, 9, size=n_anomaly)
-    a_path_length = rng.randint(25, 120, size=n_anomaly)
-    a_path_entropy = rng.normal(4.2, 0.5, size=n_anomaly).clip(3.5, 5.5)
-    a_suspicious_keywords = rng.randint(1, 5, size=n_anomaly)
-    a_query_param_count = rng.randint(1, 10, size=n_anomaly)
-    a_query_entropy = rng.normal(3.8, 0.6, size=n_anomaly).clip(2.5, 5.0)
-    a_header_count = rng.randint(1, 7, size=n_anomaly)
-    a_missing_headers = rng.randint(1, 4, size=n_anomaly)
-    a_suspicious_headers = rng.randint(1, 3, size=n_anomaly)
-    a_body_size = rng.exponential(scale=1500, size=n_anomaly).clip(0, 100000)
-    a_request_freq = rng.uniform(8.0, 40.0, size=n_anomaly)
-    a_auth_failures = rng.randint(0, 8, size=n_anomaly)
-    a_decoy_interactions = rng.binomial(1, 0.3, size=n_anomaly)
+    # 2. Anomaly Samples (label 1) across diverse attack modalities
+    anomaly_samples = []
+    n_per_mod = n_anomaly // 5
 
-    X_anomaly = np.column_stack([
-        a_path_depth,
-        a_path_length,
-        a_path_entropy,
-        a_suspicious_keywords,
-        a_query_param_count,
-        a_query_entropy,
-        a_header_count,
-        a_missing_headers,
-        a_suspicious_headers,
-        a_body_size,
-        a_request_freq,
-        a_auth_failures,
-        a_decoy_interactions,
-    ])
+    # 2.1 Web Exploit Probes (keywords, path/query entropy, normal frequency)
+    for _ in range(n_per_mod):
+        anomaly_samples.append([
+            rng.randint(2, 6),
+            rng.randint(20, 90),
+            rng.normal(3.8, 0.4),
+            rng.randint(1, 5),
+            rng.randint(1, 8),
+            rng.normal(3.5, 0.5),
+            rng.randint(6, 14),
+            0,
+            0,
+            rng.exponential(300),
+            rng.uniform(1.0, 5.0),
+            0,
+            0,
+        ])
+
+    # 2.2 Scanner & Reconnaissance Tools (suspicious/missing headers, elevated frequency)
+    for _ in range(n_per_mod):
+        anomaly_samples.append([
+            rng.randint(1, 5),
+            rng.randint(10, 50),
+            rng.normal(3.0, 0.4),
+            rng.randint(0, 2),
+            rng.randint(0, 3),
+            rng.normal(2.0, 0.4),
+            rng.randint(1, 6),
+            rng.randint(1, 4),
+            rng.randint(1, 3),
+            0,
+            rng.uniform(10.0, 40.0),
+            0,
+            0,
+        ])
+
+    # 2.3 Credential Stuffing & Auth Abuse (auth failures, high frequency)
+    for _ in range(n_per_mod):
+        anomaly_samples.append([
+            2,
+            15,
+            2.5,
+            rng.randint(0, 1),
+            0,
+            0.0,
+            rng.randint(6, 12),
+            0,
+            0,
+            rng.randint(50, 300),
+            rng.uniform(10.0, 35.0),
+            rng.randint(3, 10),
+            0,
+        ])
+
+    # 2.4 Decoy & Honeypot Probing (decoy interactions recorded)
+    for _ in range(n_per_mod):
+        anomaly_samples.append([
+            rng.randint(2, 5),
+            rng.randint(15, 60),
+            rng.normal(3.2, 0.4),
+            rng.randint(0, 2),
+            rng.randint(0, 3),
+            rng.normal(2.0, 0.5),
+            rng.randint(5, 12),
+            0,
+            0,
+            rng.exponential(200),
+            rng.uniform(1.0, 10.0),
+            0,
+            rng.randint(1, 4),
+        ])
+
+    # 2.5 Composite & Obfuscated Attacks
+    for _ in range(n_anomaly - len(anomaly_samples)):
+        anomaly_samples.append([
+            rng.randint(3, 8),
+            rng.randint(40, 120),
+            rng.normal(4.2, 0.5),
+            rng.randint(2, 6),
+            rng.randint(2, 8),
+            rng.normal(4.0, 0.5),
+            rng.randint(2, 7),
+            rng.randint(1, 3),
+            rng.randint(1, 3),
+            rng.exponential(2000),
+            rng.uniform(12.0, 45.0),
+            rng.randint(1, 5),
+            rng.binomial(1, 0.5),
+        ])
+
+    X_anomaly = np.array(anomaly_samples)
     y_anomaly = np.ones(n_anomaly, dtype=int)
 
     X = np.vstack([X_benign, X_anomaly])

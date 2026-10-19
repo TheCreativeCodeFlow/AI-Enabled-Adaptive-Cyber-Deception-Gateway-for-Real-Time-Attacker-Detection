@@ -117,11 +117,17 @@ export function extractFeatures(
   const pathLength = cleanPath.length;
   const pathEntropy = calculateEntropy(cleanPath);
 
-  // 2. Suspicious keywords
-  const lowerPath = cleanPath.toLowerCase();
+  // 2. Suspicious keywords across decoded path and query string
+  const rawTarget = (req.originalUrl || req.url || cleanPath).toLowerCase();
+  let decodedTarget = rawTarget;
+  try {
+    decodedTarget = decodeURIComponent(rawTarget);
+  } catch {
+    // Keep raw if invalid encoding
+  }
   let keywordCount = 0;
   for (const kw of SUSPICIOUS_PATH_KEYWORDS) {
-    if (lowerPath.includes(kw)) {
+    if (decodedTarget.includes(kw) || rawTarget.includes(kw)) {
       keywordCount++;
     }
   }
@@ -154,7 +160,7 @@ export function extractFeatures(
   return {
     request_id: requestId,
     method: req.method.toUpperCase(),
-    path: cleanPath,
+    path: req.originalUrl || req.url || cleanPath,
     path_depth: pathDepth,
     path_length: pathLength,
     path_entropy: pathEntropy,
