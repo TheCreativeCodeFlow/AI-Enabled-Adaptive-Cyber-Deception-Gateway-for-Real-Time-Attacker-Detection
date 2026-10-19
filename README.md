@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 11.3 — Verify Source-to-Scenario Provenance and Dataset Rights**
+> **Current Status: Stage 12 — Research Literature Review and Patent Prior-Art Investigation**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -14,10 +14,10 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── src/               # Code (app.ts, proxy.ts, auth.ts, controller.ts, sessionRouter.ts, metrics.ts, eventRecorder.ts, des.ts, features.ts)
 │   ├── test-origin/       # Authorized internal test origin (unexposed to host)
 │   ├── Dockerfile         # Multi-stage container build
-│   └── package.json       # Dependencies & test scripts (56 unit, controller, RBAC & Stage 8 tests)
-├── detection/             # [Stage 3, 9, 10 — Active] Python FastAPI ML anomaly detection service
+│   └── package.json       # Dependencies & test scripts (70 unit, controller, RBAC & Stage 8 tests)
+├── detection/             # [Stage 3, 9, 10, 11 — Active] Python FastAPI ML anomaly detection service
 │   ├── src/               # Code (main.py, schemas.py, deterministic.py, ml_model.py, dataset.py)
-│   ├── tests/             # Pytest test suite (20 tests: test_detection.py, test_benchmark_audit.py, test_robustness_ablation.py)
+│   ├── tests/             # Pytest test suite (37 tests: detection, benchmark audit, robustness, routing, provenance)
 │   ├── train.py           # Reproducible model training pipeline
 │   ├── model.joblib       # Serialized StandardScaler + RandomForest pipeline
 │   ├── requirements.txt   # Python dependencies
@@ -35,18 +35,29 @@ A modular, adaptive cyber deception platform that identifies malicious network t
 │   ├── src/               # React components (App.jsx, main.jsx, index.css)
 │   ├── Dockerfile         # Container build with lightweight static server
 │   └── vite.config.js     # Vite configuration
-├── data/                  # [Stage 9, 10] Versioned benchmark and robustness datasets
+├── research/              # [Stage 12 — Active] Scholarly literature review, patent prior-art matrix & research gap
+│   ├── literature_review.md              # State-of-the-art review across 10 canonical scholarly sources
+│   ├── patent_prior_art_matrix.md        # Deep-dive patent claim mapping and disclosure timeline
+│   ├── research_gap_and_contributions.md # Defensible research gap, contributions & hypotheses
+│   └── source_register.json              # Machine-readable register of verified literature and patents
+├── data/                  # [Stage 9, 10, 11] Versioned benchmark, robustness, and external datasets
 │   └── scenarios/         # Standardized datasets with SHA-256 verification
 │       ├── benchmark_scenarios_v1.json   # 120 scenarios (60 Dev + 60 Held-Out Test)
-│       └── robustness_scenarios_v1.json  # 70 scenarios (false positive probes, evasions, unseen templates)
-├── scripts/               # [Stage 8, 9, 10] Generators and empirical evaluation runner
+│       ├── robustness_scenarios_v1.json  # 70 scenarios (false positive probes, evasions, unseen templates)
+│       ├── external_benchmark_v1.json    # 100 scenarios (CSIC 2010 + OWASP CRS + Project controls)
+│       └── external_benchmark_v1_provenance.json # 1-to-1 provenance metadata and legal terms mapping
+├── scripts/               # [Stage 8-11] Generators and empirical evaluation runners
 │   ├── generate_scenarios.py             # 120-scenario benchmark generator
 │   ├── generate_robustness_scenarios.py  # 70-scenario adversarial robustness generator
-│   └── evaluation_runner.py              # Comparative benchmark, ablation & robustness evaluation runner
-├── reports/               # [Stage 8, 9, 10] Reproducibility records and empirical research reports
+│   ├── generate_provenance_metadata.py   # Machine-readable provenance generator
+│   ├── evaluation_runner.py              # Comparative benchmark, ablation & robustness evaluation runner
+│   └── run_external_evaluation.py        # External benchmark runner
+├── reports/               # [Stage 8-11] Reproducibility records and empirical research reports
 │   ├── evaluation_results.json           # 120-scenario baseline comparison results
 │   ├── ablation_and_robustness_results.json # Full multi-variant ablation & robustness outcomes
-│   └── robustness_and_ablation_study.md  # Comprehensive Stage 10 empirical research report
+│   ├── robustness_and_ablation_study.md  # Comprehensive Stage 10 empirical research report
+│   ├── external_benchmark_results.json   # External benchmark empirical results
+│   └── external_benchmark_evaluation.md  # Comprehensive Stage 11 external research report
 ├── infra/                 # Docker Compose & local infrastructure configuration
 ├── docs/                  # Architecture specifications and documentation
 │   └── architecture.md    # System architecture, trust boundaries, DES math, benchmark & ablation analysis
@@ -459,6 +470,24 @@ Evaluated against 100 standardized synthetic HTTP requests from the published CS
   - `robustness_scenarios_v1.json`: `7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d`
   - `external_benchmark_v1.json`: `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc` (Content SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`)
   - `detection/model.joblib`: `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406`
+
+### 5.13 Stage 12 Research Literature Review and Patent Prior-Art Investigation
+- **Traceable Scholarly Literature Review (`research/literature_review.md`):**
+  - Synthesized 10 canonical peer-reviewed publications across 6 core thematic domains: Selective Honeytoken Diversion (*Anagnostakis et al., 2005*), HTTP Anomaly Detection (*Kruegel & Vigna, 2003*; *Torrano-Giménez et al., 2010*), Game-Theoretic Cyber Deception (*Pawlick et al., 2019*; *Sengupta et al., 2020*), Empirical Dwell-Time Metrics (*Ferguson-Walter et al., 2021*; *Han et al., 2018*), Moving Target Defense & Dynamic Shuffling (*Cho et al., 2020*), and Web Honeypots / Sandboxes (*Vetterl & Clayton, 2019*; *Robertson et al., 2006*).
+  - Constructed an 8-dimensional scholarly comparison matrix evaluating OSI layer, inspection granularity, redirection triggers, routing statefulness, decoy realism, containment enforcement, evaluation benchmarks, and reported metrics.
+- **Preliminary Patent Prior-Art Matrix (`research/patent_prior_art_matrix.md`):**
+  - Mapped 8 granted patent assets and published applications across Acalvio, Attivo Networks / SentinelOne, Illusive Networks / Proofpoint, TrapX, NSA, and Argonne: `US10193924B2`, `US9979750B2`, `US10348763B2`, `US10375110B2`, `US10333977B1`, `US11934948B2`, `US20170134423A1`, and `US11876833B2`.
+  - Formulated a 7-element technical claim mapping matrix. Identified high prior-art density in dynamic honeypot diversion and threat scoring, establishing that the gateway's novel differentiator lies in the synergistic combination of L7 session-cookie affinity, 4-node DSG finite state automata, and a binary zero-leak gated metric ($\mathbb{I}[L_{\text{leak}} = 0]$).
+- **Public Disclosure Timeline & Jurisdictional Novelty Impact:**
+  - Audited Git commit history identifying the earliest public disclosure commit on **October 17, 2026, 22:40:18 +0530** (`5520d59`).
+  - Evaluated jurisdictional impacts: India (absolute novelty under Sections 29–34 compromised; Section 3(k) computer program bar), United States (35 U.S.C. 102(b)(1) 1-year inventor grace period expiring October 17, 2027; 35 U.S.C. 103 obviousness risks), and Europe (Article 54 EPC absolute novelty bar).
+  - Formulated 5 advisory consultation questions for registered patent counsel and recommended defensive open-source publication.
+- **Defensible Research Gap & Empirical Contributions (`research/research_gap_and_contributions.md`):**
+  - Defined the core research gap across semantic diversion failure, state fragmentation, containment leakage under failure, and metric gaming in literature.
+  - Formulated 6 defensible technical contributions, 3 research questions ($RQ_1, RQ_2, RQ_3$), and confirmed empirical hypotheses ($H_1, H_2, H_3$).
+  - Explicitly separated verified empirical achievements (100% held-out test recall, 74.0% external benchmark recall with 26.0% origin leakage, 13.62 ms median latency) from unproven claims (live enterprise generalization, real human attacker dwell time, adversarial evasion robustness under unseen attacks).
+- **Machine-Readable Provenance Register (`research/source_register.json`):**
+  - Fully cataloged DOIs, patent document numbers, assignees, URLs, and publication metadata for all 18 analyzed works.
 
 ---
 

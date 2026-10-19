@@ -875,6 +875,90 @@ A thorough request-by-request audit of all 100 entries in `data/scenarios/extern
   - $\text{Origin Leaks} = 13/50$ ($26.0\%$)
 - **Automated Verification:** 156 automated regression tests pass across the gateway, backend, deception runtime, and detection service.
 
+---
+
+## 18. Stage 12 — Research Literature Review and Patent Prior-Art Investigation
+
+### 18.1 Literature Positioning Across 6 Thematic Areas
+
+The architecture of the AI-Enabled Adaptive Cyber Deception Gateway addresses critical practical limitations identified across 10 canonical scholarly works spanning 6 thematic domains:
+
+1. **Selective Diversion & Shadow Honeypots:**
+   - *Foundational Work:* Anagnostakis et al. (2005, *Shadow Honeypots*).
+   - *Architectural Difference:* Operates at network layers (L3/L4) using packet-level anomaly detectors, copy-on-write execution, and memory rollbacks. In contrast, this gateway operates strictly at **Layer 7 (HTTP/HTTPS)** as a reverse proxy, inspecting structured application headers, JSON bodies, and URI parameters, performing session-level redirection via persistent application cookies (`sessionId`) rather than TCP packet divergence.
+2. **HTTP Anomaly Detection & Web Threat Scoring:**
+   - *Foundational Works:* Kruegel & Vigna (2003); Torrano-Giménez et al. (2010).
+   - *Architectural Difference:* Prior systems rely on statistical character distributions and parameter length profiles or XML/WSDL models that are susceptible to evasion. This gateway implements a **hybrid two-stage inspection engine**: Stage 1 deterministic high-severity pattern matching (SQLi, path traversal, command injection) combined with Stage 2 multi-feature statistical inference (12 lexical and entropy features evaluated via an empirical Random Forest classifier), achieving sub-20ms latency.
+3. **Game-Theoretic Cyber Deception & Dynamic Control:**
+   - *Foundational Works:* Pawlick et al. (2019, *IEEE CST*); Sengupta et al. (2020, *Game Theory for Cyber Deception*).
+   - *Architectural Difference:* Academic literature largely investigates formal signaling games and Bayesian Stackelberg equilibria under simplified payoff matrices. This gateway implements an **empirical, deterministic 4-node Deception State Graph (DSG)** (`SCANNING` $\rightarrow$ `PROBING` $\rightarrow$ `EXPLOITING` $\rightarrow$ `CONTAINED`) governed by a strict Protected Policy Layer, preventing unbounded theoretical states and eliminating state fragmentation.
+4. **Empirical Attacker Dwell-Time & Engagement Metrics:**
+   - *Foundational Works:* Ferguson-Walter et al. (2021); Han et al. (2018).
+   - *Architectural Difference:* Prior research evaluates human cognitive friction in red-team trials or calculates engagement through unnormalized interaction counters. This gateway codifies an evidence-based, reproducible **Deception Effectiveness Score (DES)** equipped with a binary zero-leakage gate ($\mathbb{I}[L_{\text{leak}} = 0]$), preventing metric gaming where systems claim high deception while leaking attacks to production origins.
+5. **Moving Target Defense (MTD) & Dynamic Shuffling:**
+   - *Foundational Work:* Cho et al. (2020, *ACM Computing Surveys*).
+   - *Architectural Difference:* Network MTD focuses on IP/port hopping and virtual machine migration, which disrupts established client TCP connections. This gateway implements **application-layer dynamic masking**: generating realistic synthetic credentials, simulated schema structures, and masked database records at L7 without breaking external client sessions.
+6. **Web Honeypots & Decoy Sandboxes:**
+   - *Foundational Works:* Vetterl & Clayton (2019, *Honware*); Robertson et al. (2006, *Web-based Honeypots*).
+   - *Architectural Difference:* Traditional web honeypots either emulate static vulnerabilities (low interaction) or expose full uncontained OS containers (high interaction risk). This gateway deploys an **isolated, stateful Node.js containerized deception runtime** in a strictly segregated DMZ, executing mock workflows without real filesystem, database, or outbound network access.
+
+### 18.2 Preliminary Patent Prior-Art Claim Mapping
+
+A rigorous investigation of 8 relevant patent assets was conducted across Google Patents, WIPO Patentscope, and Espacenet:
+
+| Document ID | Assignee / Innovator | Core Disclosed Technology | Gateway Architectural Relationship & Distinction |
+| :--- | :--- | :--- | :--- |
+| **US 10,193,924 B2** | Acalvio Technologies | Dynamic traffic redirection to honeypots based on threat scores | Operates via SDN/L3-L4 switch rules. Gateway operates strictly at **Layer 7** with session cookie tracking, DSG states, and zero-leak gated metrics. |
+| **US 9,979,750 B2** | Attivo Networks (SentinelOne) | Deception network with dynamic decoy deployment and deceptive responses | Network-wide host and credential decoy injection. Gateway operates as an **inline reverse-proxy** focusing on HTTP anomaly detection and stateful session pinning. |
+| **US 10,348,763 B2** | Illusive Networks (Proofpoint) | Endpoint breadcrumb and credential injection deceptive pathways | Endpoint memory manipulation and credential seeding. Gateway performs **in-flight HTTP payload inspection and server-side response synthesis**. |
+| **US 10,375,110 B2** | TrapX Security | Multi-tier cyber deception system using emulated decoy services | Emulated network service traps across enterprise subnets. Gateway operates as an **L7 gateway with deterministic policy transitions (DSG) and multi-tenant isolation**. |
+| **US 10,333,977 B1** | National Security Agency (NSA) | Adaptive Moving Target Defense via dynamic network address shuffling | Network address and DNS IP rotation. Gateway maintains **static public VIPs while mutating internal L7 response payloads and synthetic databases**. |
+| **US 11,934,948 B2** | Acalvio Technologies | Threat level determination and automated deception adaptation | Host anomaly scoring driving decoy placement. Gateway couples **ML confidence with deterministic override rules, fail-safe quarantine, and mathematical DES gating**. |
+| **US 2017/0134423 A1** | Argonne National Laboratory | Dynamic game-theoretic Moving Target Defense framework | Theoretical game equilibrium optimization. Gateway implements **deterministic 4-state finite automata with strict fail-safe quarantine boundaries**. |
+| **US 11,876,833 B2** | Attivo Networks (SentinelOne) | Layer-7 application deception and decoy application routing | Application-level decoy routing. Gateway distinguishes via **cookie-level session affinity (`sessionId`), multi-tenant workspace partitioning, and zero-leak mathematical metrics**. |
+
+> **Legal Disclaimer:** This preliminary prior-art search is conducted strictly for technical and academic characterization. It does **not** constitute a formal legal opinion, an endorsement of patentability, or an exhaustive freedom-to-operate (FTO) clearance.
+
+### 18.3 Public Disclosure Timeline and Jurisdictional Novelty Impact
+
+The project's Git version control history establishes an indisputable, timestamped public disclosure record on GitHub:
+
+- **Earliest Public Commit:** **October 17, 2026, 22:40:18 +0530** (Commit `5520d59828551a8eb543fdfb8245e3f7f0607da1`, *"feat: initial project structure, documentation, and licensing"*).
+- **Public Gateway & Deception Commits:** October 18, 2026 (Stages 2–5 establishing reverse proxy, ML detection service, deception runtime, and DSG state transitions).
+- **Public Evaluation & Provenance Commits:** October 19, 2026 (Stages 8–11 establishing reproducible benchmarks, ablation tests, and external provenance mapping).
+
+#### Jurisdictional Novelty Implications:
+1. **India (The Patents Act, 1970):**
+   - *Absolute Novelty Standard:* Section 29–34 requires absolute novelty. Limited exceptions under Section 31 (public display at notified industrial exhibitions or reading before learned societies) do **not** apply to open-source public Git repository releases. Novelty is compromised in India.
+   - *Section 3(k) Statutory Bar:* "A computer programme per se other than its technical effect" and "a mathematical method or algorithm" are statutorily non-patentable unless tied to novel hardware architecture.
+2. **United States (35 U.S.C. 102):**
+   - *Inventor Grace Period:* 35 U.S.C. 102(b)(1) provides a **one-year grace period** for disclosures made by the inventor. A US non-provisional application would need to be filed on or before **October 17, 2027**.
+   - *Prior Art Obviousness (35 U.S.C. 103):* Combining an L7 reverse proxy, ML anomaly model, and mock container environment may be rejected as obvious in view of Acalvio (`US10193924B2`) and Attivo (`US11876833B2`).
+3. **Europe (European Patent Convention — EPC):**
+   - *Absolute Novelty (Article 54 EPC):* The EPC recognizes no general grace period. Public availability prior to filing date is fatal to patentability.
+
+**Strategic IP Recommendation:** Maintain the codebase under defensive open-source publication, establishing prior art to preempt patent claims by commercial entities on L7 cookie-pinned deception gateways.
+
+### 18.4 Defensible Research Gap and Validated Empirical Scope
+
+#### Defensible Research Gap
+Existing web security and cyber deception systems suffer from four fundamental operational gaps:
+1. **Semantic Diversion Failure:** Traditional firewalls/WAFs drop malicious requests, immediately alerting the attacker and terminating intelligence gathering.
+2. **State Fragmentation in Deception:** Existing decoy systems lack L7 session affinity, causing subsequent attacker requests to flip between real origin and honeypot.
+3. **Containment Leakage Under Failure:** Honeypot or detector crashes frequently default to upstream origin forwarding, exposing production infrastructure to compromised payloads.
+4. **Metric Gaming in Literature:** Deception benchmarks evaluate engagement duration without penalizing origin leakage, creating skewed effectiveness figures.
+
+#### Validated Empirical Contributions vs. Unproven Scope Boundaries
+
+| Dimension | Experimentally Validated (Code & Data Grounded) | Explicitly Unproven / Out of Scope |
+| :--- | :--- | :--- |
+| **Detection Quality** | 100% recall on 60 held-out test scenarios; 74.0% recall on external benchmark (CSIC 2010 + OWASP CRS). | Generalization across unobserved zero-day web vulnerability classes. |
+| **Origin Containment** | Zero origin leakage (0/30) in sticky deception mode on standard benchmark; fail-safe quarantine on crash. | Zero origin leakage across open-ended multi-step evasion attacks (26% leak observed on external benchmark). |
+| **Adversarial Robustness** | +28.0% detection recall gain over static regex rules; 0.0% false positive rate on legitimate parameter probes. | Robustness against novel obfuscation/evasion templates (51.5% false negative rate observed in ablation). |
+| **Runtime Overhead** | Median request processing latency of **13.62 ms** (gateway + ML inspection + session lookup). | Ultra-high throughput line-rate performance under millions of requests per second. |
+| **Attacker Engagement** | Stateful 4-node DSG transitions across automated synthetic test scenarios; zero-leak gated DES metric. | Real-world human attacker dwell-time, psychological friction, or cognitive fatigue in live engagements. |
+
+
 
 
 
