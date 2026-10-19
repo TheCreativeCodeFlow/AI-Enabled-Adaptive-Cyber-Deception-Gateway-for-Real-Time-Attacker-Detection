@@ -832,6 +832,49 @@ A rigorous cryptographic audit resolves discrepancies between reported digests a
 - Each scenario records `scenario_id`, `original_dataset`, `original_record_identifier`, `original_label`, `assigned_category`, `transformations_applied`, and `source_citation`.
 - Preserves the existing benchmark content SHA-256 (`f11d6894...`), raw file SHA-256 (`b4dc4cb5...`), and frozen model SHA-256 (`4d76bac3...`).
 
+---
+
+## 17. Stage 11.3 — Source-to-Scenario Provenance and Dataset Rights Verification
+
+### 17.1 Source-to-Scenario Audit & Provenance Reclassification
+
+A thorough request-by-request audit of all 100 entries in `data/scenarios/external_benchmark_v1.json` and `data/scenarios/external_benchmark_v1_provenance.json` established a strict 3-way origin taxonomy:
+
+| Origin Classification | Count | Dataset ID | Content & Characterization | Upstream Locator / Attribution |
+| :--- | :---: | :--- | :--- | :--- |
+| **`ORIGINAL_UPSTREAM_CSIC_2010`** | **69** | `CSIC_2010` | 35 Benign, 34 Attacks targeting e-commerce app `tienda1`. Generated via automated spiders and scanners (Paros, Nessus). | Verbatim requests from CSIC 2010 `normalTrafficTest.txt` and `anomalousTrafficTest.txt`. (Includes `EXT-BEN-050`). |
+| **`TRANSFORMED_OWASP_CRS_DERIVED`**| **16** | `OWASP_CRS` | 0 Benign, 16 Attacks across SQLi, Traversal, CMDi, XSS, and Recon rules. | Derived from OWASP CRS regression test vectors (rules 913100, 930100, 932100, 941100, 942100); adapted into REST parameters and JSON bodies. |
+| **`PROJECT_CREATED_BENIGN_CONTROL`**| **15** | `PROJECT_CREATED` | 15 Benign, 0 Attacks (`EXT-BEN-035` through `EXT-BEN-049`) representing modern REST API routes (`/api/v1/products`, `/api/v1/health`, etc.). | **Project-Created Control**: Authored in Stage 11 to benchmark modern HTTP paths alongside 2010 JSP routes. *Never attributed to upstream OWASP.* |
+
+#### Detailed Reclassification of Benign Scenarios:
+- **`EXT-BEN-035` through `EXT-BEN-049` (15 scenarios):** Audited and confirmed to be project-created REST API endpoints and static resources. Previously misattributed in metadata to "OWASP Web Controls", they are now correctly labeled as `PROJECT_CREATED_BENIGN_CONTROL` with `dataset_id: PROJECT_CREATED`.
+- **`EXT-BEN-050` (1 scenario):** Verified as an authentic CSIC 2010 record (`GET /tienda1/publico/confirmacion.jsp?pedido=10492 HTTP/1.1`) from `normalTrafficTest.txt`. Correctly categorized as `ORIGINAL_UPSTREAM_CSIC_2010`.
+
+### 17.2 Legal Analysis and Independent Licensing Boundaries
+
+#### 1. CSIC 2010 Legal Status & Terms:
+- **Original Publisher Investigation:** Original host domains (`http://www.isi.csic.es/dataset/` and `http://www.tic.itefi.csic.es/dataset/`) published the HTTP Dataset CSIC 2010 for scientific research into intrusion detection. No formal open-source license (such as MIT, Apache-2.0, or CC-BY) was granted.
+- **Third-Party Catalogue Distinction:** Third-party hosting sites (such as Kaggle and UNB ISCX) informally tag the dataset as "Public" or "Open Academic". These represent repository cataloguing choices, not a binding legal grant from CSIC.
+- **Redistribution Assessment:** Local research execution and benchmark replication are standard academic fair use. However, commercial redistribution rights remain **unresolved and legally ambiguous**. Rather than asserting that commercial distribution is unconditionally prohibited or academic use unconditionally authorised, the project notes this legal ambiguity and recommends obtaining explicit permission from CSIC or replacing the dataset before commercial deployment.
+
+#### 2. OWASP Core Rule Set (CRS) License Boundaries:
+- **Licensing:** OWASP CRS test cases are licensed under the **Apache License 2.0 (ASL 2.0)** (release `v3.3.x / v4.0.0`).
+- **Redistribution Conditions:** Requires preserving the copyright notice (`Copyright (c) 2006-2024 OWASP ModSecurity Core Rule Set Project`), including the Apache 2.0 license text, and prominently stating modifications.
+- **Strict Scope Limitation:** The Apache 2.0 license applies **exclusively to the 16 CRS-derived attack payloads**. It does **not** extend to CSIC 2010 records or project-created control scenarios.
+
+### 17.3 Scientific Preservation & Performance Invariance
+
+- **Dataset & Model Hashes:** All frozen artifact hashes are strictly preserved:
+  - Benchmark Scenarios v1: `2ecae8b3eb25342470dc803b04506b007f9a59501b0c98a404603c402842f1fc`
+  - Adversarial Robustness v1: `7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d`
+  - External Benchmark v1: `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc` (Content SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`)
+  - ML Model Artifact: `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406`
+- **Confusion Matrix & Metrics:** The external benchmark evaluation replicates exactly:
+  - $TP = 37, FP = 0, TN = 50, FN = 13$
+  - $\text{Accuracy} = 87.0\%$, $\text{Precision} = 100.0\%$, $\text{Recall} = 74.0\%$, $\text{F1 Score} = 0.8506$
+  - $\text{Origin Leaks} = 13/50$ ($26.0\%$)
+- **Automated Verification:** 156 automated regression tests pass across the gateway, backend, deception runtime, and detection service.
+
 
 
 

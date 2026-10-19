@@ -209,12 +209,20 @@ def test_identical_scenarios_and_labels_between_b4_and_variant_b():
 
 def test_provenance_mapping_completeness_and_terms():
     """
-    Stage 11.2 Tasks 1-5:
+    Stage 11.2 & 11.3:
     Verifies that:
       1. Machine-readable provenance metadata exists and maps all 100 scenarios.
-      2. CSIC 2010 and OWASP CRS citations and independent licenses are verified.
-      3. Scenarios are characterized as synthetic testbeds / regression tests, not captured live traffic.
-      4. Distinction between local research evaluation vs redistribution is explicitly documented.
+      2. 3-way origin taxonomy: 69 CSIC 2010, 16 OWASP CRS, 15 Project Created.
+      3. Scenarios EXT-BEN-035 through EXT-BEN-049 are attributed to PROJECT_CREATED,
+         never misattributed to upstream OWASP CRS.
+      4. EXT-BEN-050 is verified as authentic CSIC 2010 traffic.
+      5. CSIC 2010 licensing terms are marked as unresolved/ambiguous, distinguishing
+         third-party catalogue claims (Kaggle/UNB) from publisher terms, and recommending
+         authorization or replacement prior to commercial distribution.
+      6. OWASP CRS Apache-2.0 license scope is limited to CRS test cases and does NOT
+         extend to CSIC 2010 or project-created data.
+      7. All 100 scenarios are characterized as a constructed evaluation subset using
+         testbeds, regression tests, and synthetic controls, not captured live traffic.
     """
     prov_path = os.path.join(REPO_ROOT, "data", "scenarios", "external_benchmark_v1_provenance.json")
     assert os.path.exists(prov_path), f"Provenance metadata file missing: {prov_path}"
@@ -229,6 +237,12 @@ def test_provenance_mapping_completeness_and_terms():
     assert len(prov["scenario_provenance"]) == 100
     assert prov["benchmark_file_content_sha256"] == bench["content_sha256"]
 
+    # Verify origin taxonomy breakdown
+    breakdown = prov["origin_breakdown"]
+    assert breakdown["ORIGINAL_UPSTREAM_CSIC_2010"] == 69
+    assert breakdown["TRANSFORMED_OWASP_CRS_DERIVED"] == 16
+    assert breakdown["PROJECT_CREATED_BENIGN_CONTROL"] == 15
+
     # Verify 1-to-1 mapping
     bench_scenarios_by_id = {s["scenario_id"]: s for s in bench["scenarios"]}
     for entry in prov["scenario_provenance"]:
@@ -241,27 +255,103 @@ def test_provenance_mapping_completeness_and_terms():
         assert "transformations_applied" in entry
         assert "source_citation" in entry
 
+        # Verify Stage 11.3 benign scenario attributions
+        if sid.startswith("EXT-BEN-"):
+            num = int(sid.split("-")[-1])
+            if 35 <= num <= 49:
+                assert entry["origin_classification"] == "PROJECT_CREATED_BENIGN_CONTROL"
+                assert entry["dataset_id"] == "PROJECT_CREATED"
+                assert "NOT derived from upstream OWASP" in entry["transformations_applied"]
+            elif num == 50 or (1 <= num <= 34):
+                assert entry["origin_classification"] == "ORIGINAL_UPSTREAM_CSIC_2010"
+                assert entry["dataset_id"] == "CSIC_2010"
+
     # Verify Sources & Terms
     sources = {s["source_id"]: s for s in prov["primary_sources"]}
     assert "CSIC_2010" in sources
     assert "OWASP_CRS" in sources
+    assert "PROJECT_CREATED" in sources
 
     # CSIC 2010 checks
     csic = sources["CSIC_2010"]
     assert "Torrano-Giménez" in csic["authors"][0]
     assert "isi.csic.es" in csic["canonical_url"]
     assert "NOT captured real-world" in csic["traffic_characterization"]
-    assert csic["permissions"]["local_research_evaluation_permitted"] is True
-    assert csic["permissions"]["commercial_redistribution_permitted"] is False
+    assert "Unresolved" in csic["license_status"]
+    assert "third-party portals" in csic["license_terms_analysis"].lower() or "kaggle" in csic["license_terms_analysis"].lower()
+    assert "Unresolved and legally ambiguous" in csic["permissions"]["commercial_redistribution_status"]
+    assert "Obtain explicit written authorization from CSIC or replace" in csic["permissions"]["recommendation"]
 
     # OWASP CRS checks
     owasp = sources["OWASP_CRS"]
     assert "Apache License 2.0" in owasp["license_status"]
-    assert owasp["permissions"]["commercial_redistribution_permitted"] is True
+    assert "v3.3.x / v4.0.0" in owasp["release_reference"]
+    assert "does NOT extend to CSIC 2010" in owasp["scope_limitation"]
+    assert len(owasp["redistribution_requirements"]) >= 3
+
+    # Project Created Controls checks
+    proj = sources["PROJECT_CREATED"]
+    assert "Previously misattributed in metadata" in proj["upstream_attribution_correction"]
 
     # Usage and redistribution notice
     notice = prov["usage_terms_and_redistribution_notice"]
     assert "Fully permitted" in notice["local_evaluation_status"]
     assert "CONSTRUCTED EVALUATION SUBSET" in notice["benchmark_characterization"]
-    assert "NOT represent captured live-production" in notice["benchmark_characterization"]
+    assert "NONE of the scenarios represent captured live-production" in notice["benchmark_characterization"]
+    assert "Commercial redistribution or proprietary licensing of the CSIC 2010 records carries legal ambiguity" in notice["redistribution_status"]
+
+
+def test_stage_11_3_source_to_scenario_verification_and_licensing_integrity():
+    """
+    Stage 11.3 explicit verification:
+      1. Verifies that all 100 scenarios have explicit, verified source-to-scenario attribution.
+      2. Confirms that EXT-BEN-035 through EXT-BEN-049 are classified as PROJECT_CREATED controls
+         and never attributed to upstream OWASP CRS.
+      3. Confirms that EXT-BEN-050 is verified authentic CSIC 2010 traffic.
+      4. Confirms CSIC 2010 license is not marked as open-source or strictly prohibited,
+         but correctly identified as legally ambiguous and unresolved for commercial redistribution.
+      5. Confirms OWASP CRS Apache-2.0 license is strictly quarantined to CRS-derived attack vectors
+         and not extended to other datasets.
+      6. Confirms all frozen dataset and model artifact SHA-256 hashes are preserved.
+    """
+    prov_path = os.path.join(REPO_ROOT, "data", "scenarios", "external_benchmark_v1_provenance.json")
+    with open(prov_path, "r", encoding="utf-8") as f:
+        prov = json.load(f)
+
+    # 1. Exact count checks
+    csic_count = 0
+    owasp_count = 0
+    project_count = 0
+
+    for entry in prov["scenario_provenance"]:
+        orig_class = entry["origin_classification"]
+        if orig_class == "ORIGINAL_UPSTREAM_CSIC_2010":
+            csic_count += 1
+            assert entry["dataset_id"] == "CSIC_2010"
+        elif orig_class == "TRANSFORMED_OWASP_CRS_DERIVED":
+            owasp_count += 1
+            assert entry["dataset_id"] == "OWASP_CRS"
+        elif orig_class == "PROJECT_CREATED_BENIGN_CONTROL":
+            project_count += 1
+            assert entry["dataset_id"] == "PROJECT_CREATED"
+        else:
+            pytest.fail(f"Unexpected origin classification: {orig_class}")
+
+    assert csic_count == 69
+    assert owasp_count == 16
+    assert project_count == 15
+    assert csic_count + owasp_count + project_count == 100
+
+    # 2. Benchmark & model hash preservation
+    expected_hashes = {
+        os.path.join(REPO_ROOT, "data", "scenarios", "benchmark_scenarios_v1.json"): "2ecae8b3eb25342470dc803b04506b007f9a59501b0c98a404603c402842f1fc",
+        os.path.join(REPO_ROOT, "data", "scenarios", "robustness_scenarios_v1.json"): "7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d",
+        os.path.join(REPO_ROOT, "data", "scenarios", "external_benchmark_v1.json"): "b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc",
+        DEFAULT_MODEL_PATH: "4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406",
+    }
+
+    for path, expected_hash in expected_hashes.items():
+        with open(path, "rb") as f:
+            actual_hash = hashlib.sha256(f.read()).hexdigest()
+        assert actual_hash == expected_hash, f"Hash mismatch for {path}: expected {expected_hash}, got {actual_hash}"
 

@@ -1,7 +1,7 @@
 # Adversarial Robustness and Architectural Ablation Study (Stage 10)
 
 **Document Reference:** `reports/robustness_and_ablation_study.md`  
-**Execution Timestamp:** `2026-10-19T09:53:40.330204+00:00`  
+**Execution Timestamp:** `2026-10-19T13:27:15.278738+00:00`  
 **Git Commit Reference:** `b63ba15`  
 **Machine-Readable Report (JSON):** `reports/ablation_and_robustness_results.json`  
 **Target Architecture:** AI-Enabled Adaptive Cyber Deception Gateway  
@@ -22,7 +22,7 @@ Stage 9 reported perfect performance (100.0% Precision, 100.0% Recall, 1.000 F1,
 3. **Evasion & Zero-Day Origin Leakage (FNR = 51.5%):**  
    17 out of 33 attack variants (including double-encoded path traversals `%252e%252e%252f`, newline command injection `%0Aid`, Server-Side Template Injection `{{7*7}}`, NoSQL injections, and LDAP/Log4j patterns) completely bypassed both rule heuristics and ML anomaly scoring, leaking directly to the production origin.
 4. **Architectural Ablation Insights:**
-   - **No-ML (Variant B):** Disabling ML reduced latency by **99.9%** (from 13.593 ms to 0.015 ms), with a modest recall drop on standard attacks (100% to 83.3%). On the adversarial dataset, Variant B actually outperformed B4 in accuracy (**71.4% vs 54.3%**) and had far fewer false positives (3 vs 15) because it was immune to benign keyword false positives.
+   - **No-ML (Variant B):** Disabling ML reduced latency by **99.9%** (from 13.619 ms to 0.014 ms), with a modest recall drop on standard attacks (100% to 83.3%). On the adversarial dataset, Variant B actually outperformed B4 in accuracy (**71.4% vs 54.3%**) and had far fewer false positives (3 vs 15) because it was immune to benign keyword false positives.
    - **No-Adaptation (Variant C):** Disabling adaptive Deception State Graph (DSG) transitions degraded the Deception Effectiveness Score (DES) from **0.925 to 0.662** (a 39.7% drop in active containment quality).
    - **No-Behavioral-History (Variant D):** Disabling session stickiness caused multi-probe attacker sequences to leak to origin (6 leaks), reducing test recall to **80.0%** (with **90.0% accuracy** and **F1 = 0.889**) and collapsing DES to **0.000**.
 5. **DES Mathematical Reconciliation:**  
@@ -77,19 +77,19 @@ To isolate the individual contribution of each system component, we formulated f
 | **B1: Direct Origin** | 0 | 0 | 30 | 30 | 0.0% | 0.0% | 0.000 | 50.0% | 30 (100.0%) | **0.000** | 0.2 µs | N/A (passthrough) |
 | **B2: Static Heuristic** | 3 | 0 | 30 | 27 | 100.0% | 10.0% | 0.182 | 55.0% | 27 (90.0%) | **0.000** | 0.4 µs | 0.3 µs |
 | **B3: Rule-Based Adaptive** | 16 | 0 | 30 | 14 | 100.0% | 53.3% | 0.696 | 76.7% | 14 (46.7%) | **0.000** | 0.002 ms | 0.002 ms |
-| **Variant A: Full Proposed** | **30** | **0** | **30** | **0** | **100.0%** | **100.0%** | **1.000** | **100.0%** | **0 (0.0%)** | **0.925** | **13.593 ms** | **13.592 ms** |
-| **Variant B: No-ML Ablation** | 25 | 0 | 30 | 5 | 100.0% | 83.3% | 0.909 | 91.7% | 5 (16.7%) | **0.000** | **0.015 ms** | **0.015 ms** |
-| **Variant C: No-Adaptation** | 30 | 0 | 30 | 0 | 100.0% | 100.0% | 1.000 | 100.0% | 0 (0.0%) | **0.662** | 13.533 ms | 13.533 ms |
-| **Variant D: No-History** | 24 | 0 | 30 | 6 | 100.0% | 80.0% | 0.889 | 90.0% | 6 (20.0%) | **0.000** | 13.614 ms | 13.613 ms |
+| **Variant A: Full Proposed** | **30** | **0** | **30** | **0** | **100.0%** | **100.0%** | **1.000** | **100.0%** | **0 (0.0%)** | **0.925** | **13.619 ms** | **13.618 ms** |
+| **Variant B: No-ML Ablation** | 25 | 0 | 30 | 5 | 100.0% | 83.3% | 0.909 | 91.7% | 5 (16.7%) | **0.000** | **0.014 ms** | **0.014 ms** |
+| **Variant C: No-Adaptation** | 30 | 0 | 30 | 0 | 100.0% | 100.0% | 1.000 | 100.0% | 0 (0.0%) | **0.662** | 13.700 ms | 13.700 ms |
+| **Variant D: No-History** | 24 | 0 | 30 | 6 | 100.0% | 80.0% | 0.889 | 90.0% | 6 (20.0%) | **0.000** | 13.596 ms | 13.595 ms |
 
 ### 3.2 Results on Adversarial Robustness Set (70 Scenarios: 37 Benign, 33 Attacks)
 
 | Configuration | TP | FP | TN | FN | Precision | Recall (TPR) | F1 Score | Accuracy | False Positives (FPR) | Origin Leaks (FNR) | DES (0–1) | Gateway Latency (p50) | Detection Latency (p50) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Variant A: Full Proposed** | 16 | 15 | 22 | 17 | 51.6% | 48.5% | 0.500 | 54.3% | 15/37 (40.5%) | 17/33 (51.5%) | **0.000** | 13.568 ms | 13.567 ms |
-| **Variant B: No-ML Ablation** | 16 | 3 | 34 | 17 | **84.2%** | 48.5% | **0.615** | **71.4%** | **3/37 (8.1%)** | 17/33 (51.5%) | **0.000** | **0.017 ms** | **0.016 ms** |
-| **Variant C: No-Adaptation** | 16 | 15 | 22 | 17 | 51.6% | 48.5% | 0.500 | 54.3% | 15/37 (40.5%) | 17/33 (51.5%) | **0.000** | 13.613 ms | 13.613 ms |
-| **Variant D: No-History** | 16 | 14 | 23 | 17 | 53.3% | 48.5% | 0.508 | 55.7% | 14/37 (37.8%) | 17/33 (51.5%) | **0.000** | 13.590 ms | 13.589 ms |
+| **Variant A: Full Proposed** | 16 | 15 | 22 | 17 | 51.6% | 48.5% | 0.500 | 54.3% | 15/37 (40.5%) | 17/33 (51.5%) | **0.000** | 13.738 ms | 13.736 ms |
+| **Variant B: No-ML Ablation** | 16 | 3 | 34 | 17 | **84.2%** | 48.5% | **0.615** | **71.4%** | **3/37 (8.1%)** | 17/33 (51.5%) | **0.000** | **0.013 ms** | **0.012 ms** |
+| **Variant C: No-Adaptation** | 16 | 15 | 22 | 17 | 51.6% | 48.5% | 0.500 | 54.3% | 15/37 (40.5%) | 17/33 (51.5%) | **0.000** | 13.778 ms | 13.778 ms |
+| **Variant D: No-History** | 16 | 14 | 23 | 17 | 53.3% | 48.5% | 0.508 | 55.7% | 14/37 (37.8%) | 17/33 (51.5%) | **0.000** | 13.584 ms | 13.583 ms |
 
 ---
 
@@ -184,15 +184,15 @@ $$\text{DES} = \mathbb{I}[L_{\text{leak}} = 0] \cdot \left( 0.30 \cdot D_{\text{
 
 | Variant | Architecture | p50 Gateway Latency | p95 Gateway Latency | p50 Detection Latency |
 | :--- | :--- | :---: | :---: | :---: |
-| **B1** | Direct Passthrough | 0.2 µs | 0.3 µs | N/A |
-| **B2** | Static Substring Heuristic | 0.4 µs | 0.5 µs | 0.3 µs |
+| **B1** | Direct Passthrough | 0.2 µs | 0.4 µs | N/A |
+| **B2** | Static Substring Heuristic | 0.4 µs | 0.6 µs | 0.3 µs |
 | **B3** | Regex Adaptive Routing | 0.002 ms | 0.007 ms | 0.002 ms |
-| **Variant B** | Rules-Only Policy (No ML) | **0.015 ms** | 0.027 ms | **0.015 ms** |
-| **Variant A** | Full Proposed Gateway (B4) | **13.593 ms** | 13.702 ms | **13.592 ms** |
+| **Variant B** | Rules-Only Policy (No ML) | **0.014 ms** | 0.027 ms | **0.014 ms** |
+| **Variant A** | Full Proposed Gateway (B4) | **13.619 ms** | 13.779 ms | **13.618 ms** |
 
 ### Multi-Run Stability (5 Random Seeds)
 Across seeds `[42, 101, 202, 303, 404]`, p50 gateway latency was:
-$$\text{Latency (p50)} = 13.584\text{ ms} \pm 0.022\text{ ms} \quad (\text{Min: } 13.559\text{ ms}, \text{ Max: } 13.610\text{ ms})$$
+$$\text{Latency (p50)} = 13.620\text{ ms} \pm 0.030\text{ ms} \quad (\text{Min: } 13.577\text{ ms}, \text{ Max: } 13.661\text{ ms})$$
 
 ---
 

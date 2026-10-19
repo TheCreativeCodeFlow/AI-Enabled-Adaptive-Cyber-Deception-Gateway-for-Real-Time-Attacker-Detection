@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 11.2 — External Dataset Citation and Usage-Terms Verification**
+> **Current Status: Stage 11.3 — Verify Source-to-Scenario Provenance and Dataset Rights**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -377,7 +377,7 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (156 Tests Total)
+### 5.7 Automated Test Suites across All Services (157 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & Stage 11 Routing Tests (70 tests)
 cd gateway && npm test
@@ -388,7 +388,7 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Pytest Suite: Benchmark, Ablation, Routing Semantics, Provenance & Terms Tests (36 tests)
+# 4. Detection Pytest Suite: Benchmark, Ablation, Routing Semantics, Provenance & Terms Tests (37 tests)
 cd detection && .venv/bin/pytest
 
 # 5. Independent Research Benchmark & Ablation Study Runner
@@ -445,6 +445,20 @@ Evaluated against 100 standardized synthetic HTTP requests from the published CS
   - **Local Research Evaluation:** Fully authorized for local execution and benchmark replication across both datasets under academic research fair use and Apache 2.0.
   - **Redistribution Rights:** OWASP CRS permits modification and redistribution with attribution under Apache 2.0. CSIC 2010 was distributed freely for academic research without a formal OSI or Creative Commons license; standalone commercial redistribution or re-licensing carries legal ambiguity and is restricted.
 - **Machine-Readable Metadata:** Complete 1-to-1 scenario mapping for all 100 benchmark items published at `data/scenarios/external_benchmark_v1_provenance.json`.
+
+### 5.12 Stage 11.3 Source-to-Scenario Provenance & Rights Verification
+- **3-Way Origin Taxonomy & Attribution:**
+  - **CSIC 2010 (69 scenarios: 35 Benign, 34 Attacks):** Verbatim requests from CSIC 2010 `normalTrafficTest.txt` and `anomalousTrafficTest.txt` targeting `tienda1`. Includes `EXT-BEN-050` (verified authentic CSIC 2010 e-commerce request `confirmacion.jsp`).
+  - **OWASP CRS (16 scenarios: 0 Benign, 16 Attacks):** Derived from OWASP ModSecurity Core Rule Set regression tests (rules 913100, 930100, 932100, 941100, 942100), adapted into REST parameters and JSON schemas.
+  - **Project-Created Benign Baseline Controls (15 scenarios: 15 Benign, 0 Attacks):** Scenarios `EXT-BEN-035` through `EXT-BEN-049` were authored directly by the project in Stage 11 to benchmark modern REST API paths (`/api/v1/products`, `/api/v1/health`, etc.) alongside 2010 JSP routes. *Attribution Correction:* Previously misattributed in metadata to "OWASP Web Controls", these are explicitly classified as project-created controls.
+- **Corrected Licensing & Legal Terms:**
+  - **CSIC 2010:** Original publisher website (`isi.csic.es` / `tic.itefi.csic.es`) published the dataset for research without a formal open-source license. Third-party catalogue tags (e.g. Kaggle/UNB "Public" or "Academic") are portal classifications, not formal legal grants from CSIC. Local research evaluation is standard academic fair use; commercial redistribution rights remain **unresolved and legally ambiguous**, recommending permission or dataset replacement prior to commercial bundling.
+  - **OWASP CRS:** Licensed under Apache-2.0 (`v3.3.x / v4.0.0`). The ASL 2.0 license applies **strictly to the 16 CRS-derived attack payloads** and does **not** extend to CSIC 2010 records or project-created controls.
+- **Preserved Cryptographic Invariance:**
+  - `benchmark_scenarios_v1.json`: `2ecae8b3eb25342470dc803b04506b007f9a59501b0c98a404603c402842f1fc`
+  - `robustness_scenarios_v1.json`: `7dde7ba551ec2d2e8565169fc23f71c3413f42812cf842f4e638e1b9b9bcf99d`
+  - `external_benchmark_v1.json`: `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc` (Content SHA-256: `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`)
+  - `detection/model.joblib`: `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406`
 
 ---
 
