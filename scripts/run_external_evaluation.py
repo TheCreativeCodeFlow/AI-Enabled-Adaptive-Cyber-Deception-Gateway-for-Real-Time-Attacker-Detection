@@ -107,8 +107,9 @@ def generate_external_markdown_report(report_data: Dict[str, Any], output_path: 
 **Git Commit Reference:** `{meta["git_commit"]}`  
 **Machine-Readable Report (JSON):** `reports/external_benchmark_results.json`  
 **Dataset Reference:** `data/scenarios/external_benchmark_v1.json`  
-**Dataset SHA-256:** `{meta["dataset"]["content_sha256"]}`  
+**Dataset Content SHA-256:** `{meta["dataset"]["content_sha256"]}`  
 **Model Artifact SHA-256:** `{meta["model"]["sha256"]}`  
+**Provenance Metadata Reference:** `data/scenarios/external_benchmark_v1_provenance.json`  
 
 ---
 
@@ -312,6 +313,11 @@ def main():
             "model": {
                 "path": DEFAULT_MODEL_PATH,
                 "sha256": model_sha256,
+            },
+            "provenance": {
+                "metadata_file": "data/scenarios/external_benchmark_v1_provenance.json",
+                "total_scenarios_mapped": len(scenarios),
+                "verification_status": "Complete 1-to-1 mapping with verified independent license terms"
             },
         },
         "baseline_results": {

@@ -499,11 +499,11 @@ The test suite validates the following security invariants under adversarial str
 
 ## 10. Operational Status & Test Coverage
 
-- **Total Automated Unit & Integration Tests:** **155 passing tests** across 4 microservices + evaluation runner:
+- **Total Automated Unit & Integration Tests:** **156 passing tests** across 4 microservices + evaluation runner:
   - Gateway: 70 tests (`gateway/src/stage11.test.ts`, `stage8.test.ts`, `index.test.ts`)
   - Backend: 32 tests (`backend/src/stage8.test.ts`, `stage7.test.ts`, `index.test.ts`)
   - Deception Runtime: 18 tests (`deception/src/index.test.ts`)
-  - ML Detection Service: 35 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`, `test_routing_semantics.py`, `test_provenance_and_integrity.py`)
+  - ML Detection Service: 36 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`, `test_routing_semantics.py`, `test_provenance_and_integrity.py`)
   - Reproducible Evaluation Runner: `python3 scripts/evaluation_runner.py` (120 empirical benchmark trials)
 - **Unified Pipeline:** Live security event persistence (`security_events`), queryable and filtered by routing decision with query-credential redaction.
 - **Percentile Observability:** p50/p95 operational latencies tracked continuously for proxy, detector, and deception containers.
@@ -796,6 +796,42 @@ A rigorous cryptographic audit resolves discrepancies between reported digests a
 3. **Equivalence of Evaluation Conditions:**
    - B4 and Variant B (Rules Only) evaluate on the exact identical set of 100 scenario objects with identical requests and ground-truth labels.
    - Variant B achieves 23 TP, 0 FP, 50 TN, 27 FN (46.0% Recall, 54.0% Origin Leaks). The ML anomaly model in B4 detects 14 additional attacks (+28.0% absolute gain).
+
+---
+
+## 16. Stage 11.2 — External Dataset Citation and Usage-Terms Verification
+
+### 16.1 Source Attribution and Formal Citations
+1. **HTTP Dataset CSIC 2010:**
+   - **Publisher / Research Institute:** Information Security Institute (ISI), Consejo Superior de Investigaciones Científicas (CSIC - Spanish National Research Council), Madrid, Spain.
+   - **Authors:** Carmen Torrano-Giménez, Alejandro Pérez-Villegas, and Gonzalo Álvarez Marañón.
+   - **Canonical Location:** `http://www.isi.csic.es/dataset/` (mirrored at `http://www.tic.itefi.csic.es/dataset/`, University of New Brunswick ISCX repository `https://www.unb.ca/cic/datasets/`, and Kaggle).
+   - **Release / Version:** 2010 HTTP Dataset (`normalTrafficTest.txt`, `normalTrafficTraining.txt`, `anomalousTrafficTest.txt`).
+   - **Primary Academic Citations:**
+     - Torrano-Giménez, C., Pérez-Villegas, A., & Álvarez Marañón, G. (2010). *An anomaly-based approach for intrusion detection in web traffic*. Journal of Information Assurance and Security, 5(4), 446–454.
+     - Torrano-Giménez, C., Pérez-Villegas, A., & Álvarez, G. (2010). *HTTP Dataset CSIC 2010*. Information Security Institute, Spanish National Research Council (CSIC). Available at: `http://www.isi.csic.es/dataset/`.
+2. **OWASP ModSecurity Core Rule Set (CRS) Test Cases:**
+   - **Publisher:** OWASP Foundation / OWASP Core Rule Set Project (`coreruleset/coreruleset`).
+   - **Repository:** `https://github.com/coreruleset/coreruleset` (`tests/regression/tests/`).
+   - **Version / Framework:** CRS v3.3.x / v4.0.0 (executed via `go-ftw` / `ftw`).
+   - **Citation:**
+     - OWASP Foundation. (2020–2024). *OWASP ModSecurity Core Rule Set (CRS)*. GitHub repository: `https://github.com/coreruleset/coreruleset`.
+
+### 16.2 Independent License Terms and Redistribution Permissions
+- **Independent License Separation:**
+  - **OWASP CRS:** Distributed under the **Apache License 2.0 (ASL 2.0)**. Permits commercial and academic use, modification, distribution, sublicensing, and private use, conditioned on preserving the copyright notice and Apache 2.0 license declaration.
+  - **CSIC 2010:** Released under **Custom Open Academic Research Use**. No formal modern open-source license (such as MIT, Apache 2.0, or CC-BY) was attached by CSIC.
+- **Local Use vs. Redistribution Distinction:**
+  - **Local Research Evaluation:** Fully permitted. Using the dataset locally to evaluate, benchmark, and test web anomaly detection models falls squarely within the author's release intent and scientific fair use.
+  - **Redistribution Rights:** Distributing the derived evaluation subset (`data/scenarios/external_benchmark_v1.json`) within this research repository is conducted strictly for peer review and non-commercial scientific reproducibility. Standalone commercial redistribution, commercial packaging, or sublicensing of the CSIC 2010 records is legally uncertain without explicit CSIC authorization and is not claimed.
+- **Traffic Nature Invariant:**
+  - The dataset is explicitly documented as a **constructed evaluation subset** of synthetic automated testbed traffic and security regression tests, **not captured live-production traffic from human adversaries**.
+
+### 16.3 Machine-Readable Provenance Mapping
+- Complete 1-to-1 mapping for all 100 scenarios is codified in `data/scenarios/external_benchmark_v1_provenance.json`.
+- Each scenario records `scenario_id`, `original_dataset`, `original_record_identifier`, `original_label`, `assigned_category`, `transformations_applied`, and `source_citation`.
+- Preserves the existing benchmark content SHA-256 (`f11d6894...`), raw file SHA-256 (`b4dc4cb5...`), and frozen model SHA-256 (`4d76bac3...`).
+
 
 
 

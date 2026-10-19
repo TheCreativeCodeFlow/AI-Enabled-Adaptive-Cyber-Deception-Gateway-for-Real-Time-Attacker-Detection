@@ -1,12 +1,13 @@
 # External Benchmark Validation and Routing Semantics Evaluation (Stage 11)
 
 **Document Reference:** `reports/external_benchmark_evaluation.md`  
-**Execution Timestamp:** `2026-10-19T12:52:51.748189+00:00`  
-**Git Commit Reference:** `39bab2cc90011d86d382ae2f4fc9b6ef9a1912a1`  
+**Execution Timestamp:** `2026-10-19T12:59:55.038536+00:00`  
+**Git Commit Reference:** `b7c442ead09aae367af8c00f9856d2341ab1a401`  
 **Machine-Readable Report (JSON):** `reports/external_benchmark_results.json`  
 **Dataset Reference:** `data/scenarios/external_benchmark_v1.json`  
-**Dataset SHA-256:** `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`  
+**Dataset Content SHA-256:** `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`  
 **Model Artifact SHA-256:** `4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406`  
+**Provenance Metadata Reference:** `data/scenarios/external_benchmark_v1_provenance.json`  
 
 ---
 
@@ -30,7 +31,7 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
      - **Recall: 46.0%**
      - **FPR: 0.0% (0/50)**
      - **FNR: 54.0% (27/50)**
-     - **p50 Latency: 0.017 ms vs. 13.584 ms**
+     - **p50 Latency: 0.020 ms vs. 13.606 ms**
 3. **Disentanglement of Detection vs. Containment:**
    - **Model Classification vs. Physical Routing:** Public HTTP benchmarks consist of independent request traces without continuous attacker session state. In single-turn requests, diversion rate equals containment rate.
    - **OBSERVE_ONLY Semantics:** Requests assigned `OBSERVE_ONLY` physically execute against the upstream origin. Any attack receiving `OBSERVE_ONLY` constitutes an **origin leak (False Negative)**.
@@ -58,17 +59,17 @@ This report presents an independent external evaluation of the **AI-Enabled Adap
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **B1: Direct Passthrough** | Reverse Proxy (No Sec) | 0 | 0 | 50 | 50 | 0.0% | 0.0% | 0.000 | 50.0% | 50/50 (100.0%) | 0/50 (0.0%) | 0.2 µs | N/A (passthrough) |
 | **B2: Static Heuristic** | Substring Matching | 3 | 0 | 50 | 47 | 100.0% | 6.0% | 0.113 | 53.0% | 47/50 (94.0%) | 0/50 (0.0%) | 0.4 µs | 0.3 µs |
-| **B3: Rule-Based Adaptive**| Regex Heuristics | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.004 ms | 0.004 ms |
-| **B4: Proposed Gateway** | ML + Heuristics + DSG | **37** | **0** | **50** | **13** | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | **13.584 ms** | **13.583 ms** |
+| **B3: Rule-Based Adaptive**| Regex Heuristics | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | 0.003 ms | 0.003 ms |
+| **B4: Proposed Gateway** | ML + Heuristics + DSG | **37** | **0** | **50** | **13** | **100.0%** | **74.0%** | **0.851** | **87.0%** | **13/50 (26.0%)** | **0/50 (0.0%)** | **13.606 ms** | **13.605 ms** |
 
 ### 3.2 Architectural Ablation Variants
 
 | Configuration | Description | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | Leaks (FNR) | False Pos (FPR) | p50 Gateway Latency |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Variant A (Full Proposed - B4)** | Full ML + Rules + Controller | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.584 ms |
-| **Variant B (No-ML Ablation)** | Rules Only (ML Disabled) | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.017 ms** |
-| **Variant C (No-Adaptation)** | Flat Mock (No Adaptive DSG) | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.531 ms |
-| **Variant D (No-History)** | Stateless Request Evaluation | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.491 ms |
+| **Variant A (Full Proposed - B4)** | Full ML + Rules + Controller | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.606 ms |
+| **Variant B (No-ML Ablation)** | Rules Only (ML Disabled) | 23 | 0 | 50 | 27 | 100.0% | 46.0% | 0.630 | 73.0% | 27/50 (54.0%) | 0/50 (0.0%) | **0.020 ms** |
+| **Variant C (No-Adaptation)** | Flat Mock (No Adaptive DSG) | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.657 ms |
+| **Variant D (No-History)** | Stateless Request Evaluation | 37 | 0 | 50 | 13 | 100.0% | 74.0% | 0.851 | 87.0% | 13/50 (26.0%) | 0/50 (0.0%) | 13.688 ms |
 
 ---
 

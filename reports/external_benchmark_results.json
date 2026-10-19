@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "timestamp": "2026-10-19T12:52:51.748189+00:00",
+    "timestamp": "2026-10-19T12:59:55.038536+00:00",
     "stage": "Stage 11 \u2014 External Benchmark Validation and Routing Semantics Audit",
-    "git_commit": "39bab2cc90011d86d382ae2f4fc9b6ef9a1912a1",
+    "git_commit": "b7c442ead09aae367af8c00f9856d2341ab1a401",
     "environment": {
       "os": "darwin",
       "python_version": "3.14.6",
@@ -20,6 +20,11 @@
     "model": {
       "path": "/Users/rahulseervi/Documents/GitHub/AI-Enabled-Adaptive-Cyber-Deception-Gateway-for-Real-Time-Attacker-Detection/detection/model.joblib",
       "sha256": "4d76bac3bdd82425f8d760aa8437f0eece55c02b82b41614844251292d4fb406"
+    },
+    "provenance": {
+      "metadata_file": "data/scenarios/external_benchmark_v1_provenance.json",
+      "total_scenarios_mapped": 100,
+      "verification_status": "Complete 1-to-1 mapping with verified independent license terms"
     }
   },
   "baseline_results": {
@@ -86,14 +91,14 @@
       },
       "latency_ms": {
         "p50": 0.0002,
-        "p95": 0.0013,
-        "p99": 0.0053,
+        "p95": 0.0014,
+        "p99": 0.0033,
         "mean": 0.0003,
         "min": 0.0001,
-        "max": 0.0053,
+        "max": 0.0033,
         "formatted_p50": "0.2 \u00b5s",
         "formatted_p95": "0.001 ms",
-        "formatted_p99": "0.005 ms"
+        "formatted_p99": "0.003 ms"
       },
       "detection_latency_ms": {
         "p50": null,
@@ -163,22 +168,22 @@
       },
       "latency_ms": {
         "p50": 0.0004,
-        "p95": 0.0007,
-        "p99": 0.0472,
-        "mean": 0.0009,
+        "p95": 0.0006,
+        "p99": 0.0021,
+        "mean": 0.0004,
         "min": 0.0003,
-        "max": 0.0472,
+        "max": 0.0021,
         "formatted_p50": "0.4 \u00b5s",
-        "formatted_p95": "0.7 \u00b5s",
-        "formatted_p99": "0.047 ms"
+        "formatted_p95": "0.6 \u00b5s",
+        "formatted_p99": "0.002 ms"
       },
       "detection_latency_ms": {
         "p50": 0.0003,
         "p95": 0.0005,
-        "p99": 0.002,
-        "mean": 0.0004,
+        "p99": 0.0018,
+        "mean": 0.0003,
         "min": 0.0002,
-        "max": 0.002,
+        "max": 0.0018,
         "formatted_p50": "0.3 \u00b5s",
         "formatted_p95": "0.5 \u00b5s",
         "formatted_p99": "0.002 ms"
@@ -246,26 +251,26 @@
         }
       },
       "latency_ms": {
-        "p50": 0.0036,
-        "p95": 0.027,
-        "p99": 0.1726,
-        "mean": 0.0079,
-        "min": 0.001,
-        "max": 0.1726,
-        "formatted_p50": "0.004 ms",
-        "formatted_p95": "0.027 ms",
-        "formatted_p99": "0.173 ms"
+        "p50": 0.003,
+        "p95": 0.0104,
+        "p99": 0.1686,
+        "mean": 0.0071,
+        "min": 0.0008,
+        "max": 0.1686,
+        "formatted_p50": "0.003 ms",
+        "formatted_p95": "0.010 ms",
+        "formatted_p99": "0.169 ms"
       },
       "detection_latency_ms": {
-        "p50": 0.0035,
-        "p95": 0.0266,
-        "p99": 0.1725,
-        "mean": 0.0078,
-        "min": 0.0009,
-        "max": 0.1725,
-        "formatted_p50": "0.004 ms",
-        "formatted_p95": "0.027 ms",
-        "formatted_p99": "0.172 ms"
+        "p50": 0.0029,
+        "p95": 0.0103,
+        "p99": 0.1685,
+        "mean": 0.007,
+        "min": 0.0008,
+        "max": 0.1685,
+        "formatted_p50": "0.003 ms",
+        "formatted_p95": "0.010 ms",
+        "formatted_p99": "0.169 ms"
       }
     },
     "B4": {
@@ -331,26 +336,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.5838,
-        "p95": 13.7628,
-        "p99": 20.9047,
-        "mean": 13.2217,
-        "min": 11.0504,
-        "max": 20.9047,
-        "formatted_p50": "13.584 ms",
-        "formatted_p95": "13.763 ms",
-        "formatted_p99": "20.905 ms"
+        "p50": 13.6062,
+        "p95": 14.0139,
+        "p99": 19.652,
+        "mean": 13.4325,
+        "min": 11.1192,
+        "max": 19.652,
+        "formatted_p50": "13.606 ms",
+        "formatted_p95": "14.014 ms",
+        "formatted_p99": "19.652 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.5831,
-        "p95": 13.7621,
-        "p99": 20.9038,
-        "mean": 13.221,
-        "min": 11.05,
-        "max": 20.9038,
-        "formatted_p50": "13.583 ms",
-        "formatted_p95": "13.762 ms",
-        "formatted_p99": "20.904 ms"
+        "p50": 13.6055,
+        "p95": 14.0131,
+        "p99": 19.6514,
+        "mean": 13.4317,
+        "min": 11.1186,
+        "max": 19.6514,
+        "formatted_p50": "13.605 ms",
+        "formatted_p95": "14.013 ms",
+        "formatted_p99": "19.651 ms"
       }
     }
   },
@@ -418,26 +423,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.5838,
-        "p95": 13.7628,
-        "p99": 20.9047,
-        "mean": 13.2217,
-        "min": 11.0504,
-        "max": 20.9047,
-        "formatted_p50": "13.584 ms",
-        "formatted_p95": "13.763 ms",
-        "formatted_p99": "20.905 ms"
+        "p50": 13.6062,
+        "p95": 14.0139,
+        "p99": 19.652,
+        "mean": 13.4325,
+        "min": 11.1192,
+        "max": 19.652,
+        "formatted_p50": "13.606 ms",
+        "formatted_p95": "14.014 ms",
+        "formatted_p99": "19.652 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.5831,
-        "p95": 13.7621,
-        "p99": 20.9038,
-        "mean": 13.221,
-        "min": 11.05,
-        "max": 20.9038,
-        "formatted_p50": "13.583 ms",
-        "formatted_p95": "13.762 ms",
-        "formatted_p99": "20.904 ms"
+        "p50": 13.6055,
+        "p95": 14.0131,
+        "p99": 19.6514,
+        "mean": 13.4317,
+        "min": 11.1186,
+        "max": 19.6514,
+        "formatted_p50": "13.605 ms",
+        "formatted_p95": "14.013 ms",
+        "formatted_p99": "19.651 ms"
       }
     },
     "B_NO_ML": {
@@ -503,26 +508,26 @@
         }
       },
       "latency_ms": {
-        "p50": 0.0173,
-        "p95": 0.035,
-        "p99": 0.0563,
-        "mean": 0.02,
-        "min": 0.0103,
-        "max": 0.0563,
-        "formatted_p50": "0.017 ms",
-        "formatted_p95": "0.035 ms",
-        "formatted_p99": "0.056 ms"
+        "p50": 0.0198,
+        "p95": 0.0583,
+        "p99": 0.0862,
+        "mean": 0.0229,
+        "min": 0.0068,
+        "max": 0.0862,
+        "formatted_p50": "0.020 ms",
+        "formatted_p95": "0.058 ms",
+        "formatted_p99": "0.086 ms"
       },
       "detection_latency_ms": {
-        "p50": 0.0171,
-        "p95": 0.0348,
-        "p99": 0.0561,
-        "mean": 0.0197,
-        "min": 0.01,
-        "max": 0.0561,
-        "formatted_p50": "0.017 ms",
-        "formatted_p95": "0.035 ms",
-        "formatted_p99": "0.056 ms"
+        "p50": 0.0196,
+        "p95": 0.0577,
+        "p99": 0.0855,
+        "mean": 0.0226,
+        "min": 0.0066,
+        "max": 0.0855,
+        "formatted_p50": "0.020 ms",
+        "formatted_p95": "0.058 ms",
+        "formatted_p99": "0.085 ms"
       }
     },
     "C_NO_ADAPT": {
@@ -588,26 +593,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.5312,
-        "p95": 13.6756,
-        "p99": 13.8004,
-        "mean": 13.1829,
-        "min": 11.1157,
-        "max": 13.8004,
-        "formatted_p50": "13.531 ms",
-        "formatted_p95": "13.676 ms",
-        "formatted_p99": "13.800 ms"
+        "p50": 13.6575,
+        "p95": 14.0907,
+        "p99": 15.0152,
+        "mean": 13.3499,
+        "min": 11.0489,
+        "max": 15.0152,
+        "formatted_p50": "13.657 ms",
+        "formatted_p95": "14.091 ms",
+        "formatted_p99": "15.015 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.5306,
-        "p95": 13.6747,
-        "p99": 13.7997,
-        "mean": 13.1823,
-        "min": 11.1152,
-        "max": 13.7997,
-        "formatted_p50": "13.531 ms",
-        "formatted_p95": "13.675 ms",
-        "formatted_p99": "13.800 ms"
+        "p50": 13.6566,
+        "p95": 14.0902,
+        "p99": 15.014,
+        "mean": 13.3493,
+        "min": 11.0482,
+        "max": 15.014,
+        "formatted_p50": "13.657 ms",
+        "formatted_p95": "14.090 ms",
+        "formatted_p99": "15.014 ms"
       }
     },
     "D_NO_HISTORY": {
@@ -673,26 +678,26 @@
         }
       },
       "latency_ms": {
-        "p50": 13.4912,
-        "p95": 14.0258,
-        "p99": 14.6317,
-        "mean": 13.2599,
-        "min": 10.9792,
-        "max": 14.6317,
-        "formatted_p50": "13.491 ms",
-        "formatted_p95": "14.026 ms",
-        "formatted_p99": "14.632 ms"
+        "p50": 13.6885,
+        "p95": 13.9098,
+        "p99": 14.6493,
+        "mean": 13.4652,
+        "min": 11.1562,
+        "max": 14.6493,
+        "formatted_p50": "13.688 ms",
+        "formatted_p95": "13.910 ms",
+        "formatted_p99": "14.649 ms"
       },
       "detection_latency_ms": {
-        "p50": 13.4905,
-        "p95": 14.0246,
-        "p99": 14.6304,
-        "mean": 13.2592,
-        "min": 10.9786,
-        "max": 14.6304,
-        "formatted_p50": "13.491 ms",
-        "formatted_p95": "14.025 ms",
-        "formatted_p99": "14.630 ms"
+        "p50": 13.6877,
+        "p95": 13.909,
+        "p99": 14.6476,
+        "mean": 13.4644,
+        "min": 11.1555,
+        "max": 14.6476,
+        "formatted_p50": "13.688 ms",
+        "formatted_p95": "13.909 ms",
+        "formatted_p99": "14.648 ms"
       }
     }
   },

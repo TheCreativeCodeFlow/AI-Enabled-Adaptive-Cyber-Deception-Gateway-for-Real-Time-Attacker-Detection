@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 11.1 — Dataset and Model Provenance Integrity Audit**
+> **Current Status: Stage 11.2 — External Dataset Citation and Usage-Terms Verification**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -377,7 +377,7 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (155 Tests Total)
+### 5.7 Automated Test Suites across All Services (156 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & Stage 11 Routing Tests (70 tests)
 cd gateway && npm test
@@ -388,7 +388,7 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Pytest Suite: Benchmark, Ablation, Routing Semantics & Provenance Integrity Tests (35 tests)
+# 4. Detection Pytest Suite: Benchmark, Ablation, Routing Semantics, Provenance & Terms Tests (36 tests)
 cd detection && .venv/bin/pytest
 
 # 5. Independent Research Benchmark & Ablation Study Runner
@@ -436,6 +436,15 @@ Evaluated against 100 standardized synthetic HTTP requests from the published CS
   - `data/scenarios/external_benchmark_v1.json`: Raw File SHA-256 = `b4dc4cb593b17f940eaa1b274903ec50ccf910b8e4c55a135ec0e2507fbb33bc`, Content SHA-256 = `f11d6894b9b5d486785008f2062d88d19263e2330971dae07bd96813741940c3`.
 - **CSIC 2010 Provenance:** Generated in a controlled testbed against an e-commerce web application ("tienda1") using automated web vulnerability scanners and crawlers. Documented as automated testbed HTTP traffic, not captured real-world production attack traces.
 - **Label Isolation Invariance:** Verified that features and inference results are strictly invariant to ground-truth tampering or removal.
+
+### 5.11 Stage 11.2 External Dataset Citation, Usage-Terms & Provenance Mapping
+- **Verified Sources and Citations:**
+  - **CSIC 2010:** Information Security Institute (ISI), CSIC (Spanish National Research Council). Authors: C. Torrano-Giménez, A. Pérez-Villegas, G. Álvarez Marañón (2010). Canonical URL: `http://www.isi.csic.es/dataset/`. Primary paper: *Journal of Information Assurance and Security*, 5(4), 446–454.
+  - **OWASP CRS:** OWASP ModSecurity Core Rule Set Project (2020–2024). Repository: `https://github.com/coreruleset/coreruleset`. Licensed under Apache 2.0.
+- **Independent Usage Terms & Redistribution Rights:**
+  - **Local Research Evaluation:** Fully authorized for local execution and benchmark replication across both datasets under academic research fair use and Apache 2.0.
+  - **Redistribution Rights:** OWASP CRS permits modification and redistribution with attribution under Apache 2.0. CSIC 2010 was distributed freely for academic research without a formal OSI or Creative Commons license; standalone commercial redistribution or re-licensing carries legal ambiguity and is restricted.
+- **Machine-Readable Metadata:** Complete 1-to-1 scenario mapping for all 100 benchmark items published at `data/scenarios/external_benchmark_v1_provenance.json`.
 
 ---
 

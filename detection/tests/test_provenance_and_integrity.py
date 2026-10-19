@@ -205,3 +205,63 @@ def test_identical_scenarios_and_labels_between_b4_and_variant_b():
     assert metrics_vb["precision"] == 1.0
     assert metrics_vb["recall"] == 0.46
     assert metrics_vb["f1"] == 0.6301
+
+
+def test_provenance_mapping_completeness_and_terms():
+    """
+    Stage 11.2 Tasks 1-5:
+    Verifies that:
+      1. Machine-readable provenance metadata exists and maps all 100 scenarios.
+      2. CSIC 2010 and OWASP CRS citations and independent licenses are verified.
+      3. Scenarios are characterized as synthetic testbeds / regression tests, not captured live traffic.
+      4. Distinction between local research evaluation vs redistribution is explicitly documented.
+    """
+    prov_path = os.path.join(REPO_ROOT, "data", "scenarios", "external_benchmark_v1_provenance.json")
+    assert os.path.exists(prov_path), f"Provenance metadata file missing: {prov_path}"
+
+    with open(prov_path, "r", encoding="utf-8") as f:
+        prov = json.load(f)
+
+    with open(EXTERNAL_DATASET_PATH, "r", encoding="utf-8") as f:
+        bench = json.load(f)
+
+    assert prov["total_scenarios"] == 100
+    assert len(prov["scenario_provenance"]) == 100
+    assert prov["benchmark_file_content_sha256"] == bench["content_sha256"]
+
+    # Verify 1-to-1 mapping
+    bench_scenarios_by_id = {s["scenario_id"]: s for s in bench["scenarios"]}
+    for entry in prov["scenario_provenance"]:
+        sid = entry["scenario_id"]
+        assert sid in bench_scenarios_by_id, f"Missing scenario {sid} in benchmark"
+        orig_s = bench_scenarios_by_id[sid]
+        assert entry["assigned_category"] == orig_s["ground_truth"]["category"]
+        assert entry["request_method"] == orig_s["request"]["method"]
+        assert entry["request_path"] == orig_s["request"]["path"]
+        assert "transformations_applied" in entry
+        assert "source_citation" in entry
+
+    # Verify Sources & Terms
+    sources = {s["source_id"]: s for s in prov["primary_sources"]}
+    assert "CSIC_2010" in sources
+    assert "OWASP_CRS" in sources
+
+    # CSIC 2010 checks
+    csic = sources["CSIC_2010"]
+    assert "Torrano-Giménez" in csic["authors"][0]
+    assert "isi.csic.es" in csic["canonical_url"]
+    assert "NOT captured real-world" in csic["traffic_characterization"]
+    assert csic["permissions"]["local_research_evaluation_permitted"] is True
+    assert csic["permissions"]["commercial_redistribution_permitted"] is False
+
+    # OWASP CRS checks
+    owasp = sources["OWASP_CRS"]
+    assert "Apache License 2.0" in owasp["license_status"]
+    assert owasp["permissions"]["commercial_redistribution_permitted"] is True
+
+    # Usage and redistribution notice
+    notice = prov["usage_terms_and_redistribution_notice"]
+    assert "Fully permitted" in notice["local_evaluation_status"]
+    assert "CONSTRUCTED EVALUATION SUBSET" in notice["benchmark_characterization"]
+    assert "NOT represent captured live-production" in notice["benchmark_characterization"]
+
