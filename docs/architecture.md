@@ -499,11 +499,11 @@ The test suite validates the following security invariants under adversarial str
 
 ## 10. Operational Status & Test Coverage
 
-- **Total Automated Unit & Integration Tests:** **119 passing tests** across 4 microservices + evaluation runner:
+- **Total Automated Unit & Integration Tests:** **132 passing tests** across 4 microservices + evaluation runner:
   - Gateway: 56 tests (`gateway/src/stage8.test.ts`, `index.test.ts`)
   - Backend: 32 tests (`backend/src/stage8.test.ts`, `stage7.test.ts`, `index.test.ts`)
   - Deception Runtime: 18 tests (`deception/src/index.test.ts`)
-  - ML Detection Service: 13 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`)
+  - ML Detection Service: 26 tests (`detection/tests/test_detection.py`, `test_benchmark_audit.py`, `test_robustness_ablation.py`)
   - Reproducible Evaluation Runner: `python3 scripts/evaluation_runner.py` (120 empirical benchmark trials)
 - **Unified Pipeline:** Live security event persistence (`security_events`), queryable and filtered by routing decision with query-credential redaction.
 - **Percentile Observability:** p50/p95 operational latencies tracked continuously for proxy, detector, and deception containers.
@@ -605,12 +605,12 @@ To test the hypothesis that the Stage 9 100% held-out test score represented tru
 
 Four architectural variants were evaluated to determine the exact contribution of each subsystem:
 
-| Variant | ML Anomaly Model | Decision Controller | Adaptive DSG Runtime | Sticky Session Routing | Test Accuracy | Test F1 | Test DES | Robustness Accuracy |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Variant A (Full Proposed - B4)** | Active | Active | Active | Active | **100.0%** | **1.000** | **0.925** | 54.3% |
-| **Variant B (No-ML Ablation)** | Disabled | Active (Rules) | Active | Active | 91.7% | 0.909 | 0.000 (5 leaks) | **71.4%** |
-| **Variant C (No-Adaptation)** | Active | Active | Disabled (Flat) | Active | 100.0% | 1.000 | **0.662** | 54.3% |
-| **Variant D (No-Behavioral-History)**| Active | Active | Active | Disabled (Stateless) | 90.0% | 0.889 | 0.000 (6 leaks) | 55.7% |
+| Variant | ML Anomaly Model | Decision Controller | Adaptive DSG Runtime | Sticky Session Routing | Test Accuracy | Test Recall | Test F1 | Origin Leaks | Test DES | Robustness Accuracy |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Variant A (Full Proposed - B4)** | Active | Active | Active | Active | **100.0%** | **100.0%** | **1.000** | **0 (0.0%)** | **0.925** | 54.3% |
+| **Variant B (No-ML Ablation)** | Disabled | Active (Rules) | Active | Active | 91.7% | 83.3% | 0.909 | 5 (16.7%) | 0.000 | **71.4%** |
+| **Variant C (No-Adaptation)** | Active | Active | Disabled (Flat) | Active | 100.0% | 100.0% | 1.000 | 0 (0.0%) | **0.662** | 54.3% |
+| **Variant D (No-Behavioral-History)**| Active | Active | Active | Disabled (Stateless) | 90.0% | 80.0% | 0.889 | 6 (20.0%) | 0.000 | 55.7% |
 
 #### Key Ablation Takeaways:
 1. **ML vs. Deterministic Latency Trade-Off:** Disabling ML (Variant B) reduces p50 decision latency by **99.9%** (from $15.91\text{ ms}$ to $0.015\text{ ms}$). On adversarial data, Variant B achieved higher accuracy (71.4% vs 54.3%) and far fewer false positives (3 vs 15) than Variant A because it was not misled by benign keywords.
@@ -628,6 +628,54 @@ Microsecond-precision profiling (`time.perf_counter_ns()`) confirms:
 - **Multi-Seed Stability:** 5 runs across seeds `[42, 101, 202, 303, 404]` observed $14.325\text{ ms} \pm 1.136\text{ ms}$.
 
 Machine-readable artifacts: `reports/ablation_and_robustness_results.json` and `reports/robustness_and_ablation_study.md`.
+
+---
+
+## 13. Stage 10.1 — Results Integrity and Metric Reconciliation
+
+### 13.1 Reconciliation of Variant D (Stateless Routing)
+During the Stage 10 audit, an apparent contradiction was resolved between reported **Accuracy = 90.0%**, **F1 = 0.889**, and the narrative indicating **Recall = 80.0% with 6 origin leaks**:
+- **Dataset & Scope:** `data/scenarios/benchmark_scenarios_v1.json` (Held-Out Test Split, $N=60$ total requests: 30 Benign, 30 Attacks).
+- **Observed $2 \times 2$ Confusion Matrix:**
+  $$\begin{pmatrix} TN = 30 & FP = 0 \\ FN = 6 & TP = 24 \end{pmatrix}$$
+- **Exact Metric Derivation:**
+  - $\text{Accuracy} = \frac{TP + TN}{N} = \frac{24 + 30}{60} = \mathbf{90.0\%}$ (Denominator: Total evaluated requests = 60)
+  - $\text{Recall (TPR)} = \frac{TP}{TP + FN} = \frac{24}{24 + 6} = \frac{24}{30} = \mathbf{80.0\%}$ (Denominator: Ground-truth attacks = 30)
+  - $\text{Precision} = \frac{TP}{TP + FP} = \frac{24}{24 + 0} = \mathbf{100.0\%}$ (Denominator: Requests diverted to deception = 24)
+  - $\text{F1 Score} = \frac{2 \cdot 1.0 \cdot 0.8}{1.0 + 0.8} = \frac{1.6}{1.8} = \mathbf{0.8889 \approx 0.889}$
+  - $\text{Origin Leaks} = FN = 6$ out of 30 attacks ($20.0\%$), tripping the zero-leak gate ($\text{DES} = 0.000$).
+- **Scientific Resolution:** Accuracy (90%) and Recall (80%) come from the identical evaluation run. The 30 benign requests ($TN=30, FP=0$) elevate overall accuracy to 90%, whereas attack containment specifically failed on 6 multi-probe requests ($FN=6$) due to lack of session stickiness.
+
+### 13.2 Formal Deception Effectiveness Score (DES) Derivation
+The evidence-based formulation is:
+$$\text{DES} = \mathbb{I}[L_{\text{leak}} = 0] \cdot \left( 0.30 \cdot D_{\text{depth}} + 0.30 \cdot C_{\text{consistency}} + 0.25 \cdot T_{\text{dwell}} + 0.15 \cdot E_{\text{engagement}} \right)$$
+
+1. **Held-Out Test Split ($\text{DES} = 0.925$):**
+   - Origin Leaks: $L = 0 \implies \mathbb{I}[L=0] = 1.0$.
+   - DSG Depth: 3 of 4 unique states visited (`DISCOVERY`, `EXPLOITATION`, `CREDENTIAL_ACCESS`). `RECONNAISSANCE` was unvisited.  
+     $D = 3/4 = 0.750 \implies 0.30 \times 0.750 = \mathbf{0.225}$.
+   - Consistency: 30/30 synthetic responses $\implies C = 1.000 \implies 0.30 \times 1.000 = \mathbf{0.300}$.
+   - Dwell: 30 interactions against target $K=10 \implies T = 1.000 \implies 0.25 \times 1.000 = \mathbf{0.250}$.
+   - Engagement: 20 decoy interactions touched $\implies E = 1.000 \implies 0.15 \times 1.000 = \mathbf{0.150}$.
+   - **Total:** $0.225 + 0.300 + 0.250 + 0.150 = \mathbf{0.925}$.
+2. **Combined Benchmark ($\text{DES} = 1.000$):**
+   - All 4 DSG states visited ($D = 4/4 = 1.000$) $\implies 0.30 \times 1.000 = \mathbf{0.300} \implies \text{Total} = \mathbf{1.000}$.
+3. **Adversarial Robustness Set ($\text{DES} = 0.000$):**
+   - 17 origin leaks ($L = 17$) trip the binary gate $\mathbb{I}[L=0] = 0.0$, collapsing the entire score to $\mathbf{0.000}$.
+4. **Missing Observations Rule:**
+   - When total deception interactions equal 0 (e.g., B1 direct origin forwarding), all components evaluate strictly to 0.0 and are never silently treated as perfect.
+
+### 13.3 Metric Denominator Verification
+- **False Positive Rate (FPR):** $FPR = \frac{FP}{N_{\text{benign}}} = \frac{FP}{FP + TN}$. On adversarial robustness ($N_{\text{benign}} = 37$):
+  - Variant A: $15 / 37 = 40.54\% \approx 40.5\%$.
+  - Variant B: $3 / 37 = 8.11\% \approx 8.1\%$.
+- **False Negative Rate (FNR):** $FNR = \frac{FN}{N_{\text{attack}}} = \frac{FN}{FN + TP}$. On adversarial robustness ($N_{\text{attack}} = 33$):
+  - Variant A: $17 / 33 = 51.52\% \approx 51.5\%$.
+  - Variant B: $17 / 33 = 51.52\% \approx 51.5\%$.
+- **Origin Leakage Verification:** Origin leaks are recorded exclusively from the observed physical routing destination `routed_to_origin` when `ground_truth["is_attack"] == True`. In all baselines and variants, $L_{\text{leak}} \equiv FN$.
+
+Machine-readable artifacts: `reports/evaluation_results.json`, `reports/ablation_and_robustness_results.json`, and `reports/robustness_and_ablation_study.md`.
+
 
 
 

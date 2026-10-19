@@ -1,6 +1,6 @@
 # AI-Enabled Adaptive Cyber Deception Gateway for Real-Time Attacker Detection
 
-> **Current Status: Stage 10 — Adversarial Robustness and Ablation Study**
+> **Current Status: Stage 10.1 — Results Integrity and Metric Reconciliation**
 
 A modular, adaptive cyber deception platform that identifies malicious network traffic using machine learning, diverts adversaries into isolated, high-interaction honeypots in real time, and defends operational infrastructure with multi-tenant isolation, cryptographic DNS TXT verification, role-based access control, zero-leak deception quarantine policies, a unified security event pipeline, an audited research benchmark framework, and rigorous adversarial robustness & architectural ablation validation.
 
@@ -377,7 +377,7 @@ python3 scripts/evaluation_runner.py
 cat reports/evaluation_results.json | jq .
 ```
 
-### 5.7 Automated Test Suites across All Services (119 Tests Total)
+### 5.7 Automated Test Suites across All Services (132 Tests Total)
 ```bash
 # 1. Gateway Unit, Decision Controller, Session Routing, Operator RBAC, Stage 8 Events & E2E Tests (56 tests)
 cd gateway && npm test
@@ -388,7 +388,7 @@ cd backend && npm test
 # 3. Deception Runtime Unit, DSG, Strategy & Isolation Tests (18 tests)
 cd deception && npm test
 
-# 4. Detection Service Pytest Suite & Stage 9/10 Audit & Ablation Tests (20 tests)
+# 4. Detection Service Pytest Suite & Stage 9/10/10.1 Audit, Ablation & Reconciliation Tests (26 tests)
 cd detection && .venv/bin/pytest
 
 # 5. Independent Research Benchmark & Ablation Study Runner
@@ -405,12 +405,12 @@ The evaluation framework evaluates 4 baseline architectures and 4 architectural 
 
 #### Multi-Variant Ablation Comparison (Held-Out Test vs. Adversarial Robustness):
 
-| Variant | Architecture | Test F1 | Test Acc | Test DES | Robustness Acc | Robustness FPR | Robustness FNR | p50 Gateway Latency |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Variant A (B4)** | Full System (ML + Rules + Adaptive DSG + Sticky) | **1.000** | **100.0%** | **0.925** | 54.3% | 40.5% | 51.5% | 15.912 ms |
-| **Variant B** | No-ML Ablation (Rules-Only Policy) | 0.909 | 91.7% | 0.000 | **71.4%** | **8.1%** | 51.5% | **0.015 ms** |
-| **Variant C** | No-Adaptation Ablation (Flat Decoy Mock) | 1.000 | 100.0% | **0.662** | 54.3% | 40.5% | 51.5% | 12.855 ms |
-| **Variant D** | No-Behavioral-History (Stateless Routing) | 0.889 | 90.0% | 0.000 | 55.7% | 37.8% | 51.5% | 12.828 ms |
+| Variant | Architecture | Test F1 | Test Acc | Test Recall | Origin Leaks | Test DES | Robustness Acc | Robustness FPR | Robustness FNR | p50 Gateway Latency |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Variant A (B4)** | Full System (ML + Rules + Adaptive DSG + Sticky) | **1.000** | **100.0%** | **100.0%** | **0 (0.0%)** | **0.925** | 54.3% | 40.5% | 51.5% | 13.580 ms |
+| **Variant B** | No-ML Ablation (Rules-Only Policy) | 0.909 | 91.7% | 83.3% | 5 (16.7%) | 0.000 | **71.4%** | **8.1%** | 51.5% | **0.015 ms** |
+| **Variant C** | No-Adaptation Ablation (Flat Decoy Mock) | 1.000 | 100.0% | 100.0% | 0 (0.0%) | **0.662** | 54.3% | 40.5% | 51.5% | 13.533 ms |
+| **Variant D** | No-Behavioral-History (Stateless Routing) | 0.889 | 90.0% | 80.0% | 6 (20.0%) | 0.000 | 55.7% | 37.8% | 51.5% | 13.614 ms |
 
 *All results generated dynamically by `python3 scripts/evaluation_runner.py` with full reproducibility metadata saved in `reports/evaluation_results.json`, `reports/ablation_and_robustness_results.json`, and documented in `reports/robustness_and_ablation_study.md`.*
 
