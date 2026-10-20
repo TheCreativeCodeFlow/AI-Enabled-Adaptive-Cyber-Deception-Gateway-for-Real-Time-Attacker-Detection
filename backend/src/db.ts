@@ -953,6 +953,79 @@ function executeInMemoryQuery(text: string, params: any[]): { rows: any[]; rowCo
     return { rows: filtered, rowCount: filtered.length };
   }
 
+  // Platform Admin queries (in-memory test support)
+  if (norm.includes('select count(*)') && norm.includes('from organisations')) {
+    return { rows: [{ count: memOrganisations.size }], rowCount: 1 };
+  }
+  if (norm.includes('select count(*)') && norm.includes('from applications')) {
+    if (norm.includes("activation_status = 'active'")) {
+      const activeCount = Array.from(memApplications.values()).filter(a => a.activation_status === 'active').length;
+      return { rows: [{ count: activeCount }], rowCount: 1 };
+    }
+    if (norm.includes("verification_status = 'verified'")) {
+      const verifiedCount = Array.from(memApplications.values()).filter(a => a.verification_status === 'verified').length;
+      return { rows: [{ count: verifiedCount }], rowCount: 1 };
+    }
+    return { rows: [{ count: memApplications.size }], rowCount: 1 };
+  }
+  if (norm.includes('select count(*)') && norm.includes('from operators')) {
+    return { rows: [{ count: memOperators.size }], rowCount: 1 };
+  }
+  if (norm.includes('select count(*)') && norm.includes('from security_events')) {
+    return { rows: [{ count: memSecurityEvents.length }], rowCount: 1 };
+  }
+  if (norm.includes('select') && norm.includes('from organisations') && !norm.includes('where m.operator_id') && !norm.includes('where id = $1')) {
+    const orgs = Array.from(memOrganisations.values()).map(o => {
+      const appCount = Array.from(memApplications.values()).filter(a => a.organisation_id === o.id).length;
+      const memberCount = Array.from(memMemberships.values()).filter(m => m.organisation_id === o.id).length;
+      return { ...o, applications_count: appCount, members_count: memberCount };
+    });
+    return { rows: orgs, rowCount: orgs.length };
+  }
+  if (norm.includes('select') && norm.includes('from applications') && !norm.includes('where organisation_id = $1') && !norm.includes('where id = $1')) {
+    const apps = Array.from(memApplications.values()).map(a => {
+      const org = memOrganisations.get(a.organisation_id);
+      return { ...a, organisation_name: org?.name || 'Unknown' };
+    });
+    return { rows: apps, rowCount: apps.length };
+  }
+  if (norm.includes('select') && norm.includes('from operators') && !norm.includes('where username') && !norm.includes('where id = $1')) {
+    const ops = Array.from(memOperators.values()).map(op => {
+      const orgCount = Array.from(memMemberships.values()).filter(m => m.operator_id === op.id).length;
+      return {
+        id: op.id,
+        username: op.username,
+        email: op.email,
+        role: op.role,
+        is_active: op.is_active,
+        created_at: op.created_at,
+        organisations_count: orgCount,
+      };
+    });
+    return { rows: ops, rowCount: ops.length };
+  }
+  if (norm.includes('update operators set role = $1') && norm.includes('where id = $2')) {
+    const newRole = params[0];
+    const opId = params[1];
+    const op = memOperators.get(opId);
+    if (op) {
+      op.role = newRole;
+      op.updated_at = new Date().toISOString();
+      return {
+        rows: [{
+          id: op.id,
+          username: op.username,
+          email: op.email,
+          role: op.role,
+          is_active: op.is_active,
+          updated_at: op.updated_at,
+        }],
+        rowCount: 1,
+      };
+    }
+    return { rows: [], rowCount: 0 };
+  }
+
   return { rows: [], rowCount: 0 };
 }
 

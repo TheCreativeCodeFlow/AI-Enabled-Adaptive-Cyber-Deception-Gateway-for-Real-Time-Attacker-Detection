@@ -204,3 +204,127 @@ describe('Stage 6: Operator Authentication & RBAC', () => {
   });
 });
 
+describe('Platform Administrator Console & API Access Control', () => {
+  let adminToken: string;
+  let analystToken: string;
+  let testAnalystId: string;
+
+  before(async () => {
+    // Register Admin
+    const adminRes = await request(app).post('/api/auth/register').send({
+      username: 'platform_super_admin',
+      email: 'superadmin@deception.local',
+      password: 'AdminPassword123!',
+      role: 'admin',
+    });
+    if (adminRes.status === 201) {
+      const loginRes = await request(app).post('/api/auth/login').send({
+        username: 'platform_super_admin',
+        password: 'AdminPassword123!',
+      });
+      adminToken = loginRes.body.token;
+    } else {
+      const loginRes = await request(app).post('/api/auth/login').send({
+        username: 'platform_super_admin',
+        password: 'AdminPassword123!',
+      });
+      adminToken = loginRes.body.token;
+    }
+
+    // Register Analyst
+    const analystRes = await request(app).post('/api/auth/register').send({
+      username: 'platform_analyst_test',
+      email: 'analyst_test@deception.local',
+      password: 'AnalystPassword123!',
+      role: 'analyst',
+    });
+    if (analystRes.status === 201) {
+      testAnalystId = analystRes.body.operator.id;
+      const loginRes = await request(app).post('/api/auth/login').send({
+        username: 'platform_analyst_test',
+        password: 'AnalystPassword123!',
+      });
+      analystToken = loginRes.body.token;
+    } else {
+      const loginRes = await request(app).post('/api/auth/login').send({
+        username: 'platform_analyst_test',
+        password: 'AnalystPassword123!',
+      });
+      analystToken = loginRes.body.token;
+      testAnalystId = loginRes.body.user.id;
+    }
+  });
+
+  it('1. Unauthenticated caller is rejected from /api/admin/overview with 401', async () => {
+    const res = await request(app).get('/api/admin/overview');
+    assert.strictEqual(res.status, 401);
+    assert.strictEqual(res.body.error, 'Unauthorized');
+  });
+
+  it('2. Non-admin operator (analyst) is rejected from /api/admin/overview with 403 Forbidden', async () => {
+    const res = await request(app)
+      .get('/api/admin/overview')
+      .set('Authorization', `Bearer ${analystToken}`);
+    assert.strictEqual(res.status, 403);
+    assert.strictEqual(res.body.error, 'Forbidden');
+  });
+
+  it('3. Platform Admin can query /api/admin/overview', async () => {
+    const res = await request(app)
+      .get('/api/admin/overview')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.status, 'success');
+    assert.ok(typeof res.body.platformOverview.totalOrganisations === 'number');
+    assert.ok(typeof res.body.platformOverview.totalApplications === 'number');
+    assert.ok(typeof res.body.platformOverview.totalOperators === 'number');
+  });
+
+  it('4. Platform Admin can list all platform organisations, applications, users and audit', async () => {
+    const orgsRes = await request(app)
+      .get('/api/admin/organisations')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(orgsRes.status, 200);
+    assert.ok(Array.isArray(orgsRes.body.organisations));
+
+    const appsRes = await request(app)
+      .get('/api/admin/applications')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(appsRes.status, 200);
+    assert.ok(Array.isArray(appsRes.body.applications));
+
+    const usersRes = await request(app)
+      .get('/api/admin/users')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(usersRes.status, 200);
+    assert.ok(Array.isArray(usersRes.body.users));
+
+    const auditRes = await request(app)
+      .get('/api/admin/audit')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(auditRes.status, 200);
+    assert.ok(Array.isArray(auditRes.body.logs));
+
+    const healthRes = await request(app)
+      .get('/api/admin/system/health')
+      .set('Authorization', `Bearer ${adminToken}`);
+    assert.strictEqual(healthRes.status, 200);
+    assert.strictEqual(healthRes.body.status, 'healthy');
+  });
+
+  it('5. Admin cannot demote their own account to prevent lockouts', async () => {
+    const meRes = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const myId = meRes.body.operator.id;
+
+    const demoteRes = await request(app)
+      .put(`/api/admin/users/${myId}/role`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ role: 'analyst' });
+    assert.strictEqual(demoteRes.status, 400);
+    assert.strictEqual(demoteRes.body.error, 'Bad Request');
+  });
+});
+
+

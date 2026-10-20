@@ -5,6 +5,7 @@ import { auditRouter } from './routes/auditRoutes';
 import { orgRouter } from './routes/orgRoutes';
 import { appRouter } from './routes/appRoutes';
 import { eventRouter, orgEventRouter } from './routes/eventRoutes';
+import { adminRouter } from './routes/adminRoutes';
 import { initDb } from './db';
 
 export const app = express();
@@ -29,6 +30,7 @@ app.get('/', (_req: Request, res: Response) => {
     stage: 'Stage 8 — End-to-End Security Validation and Evaluation Framework',
     healthCheck: '/health',
     authEndpoints: '/api/auth',
+    adminEndpoints: '/api/admin',
     orgEndpoints: '/api/orgs',
     eventEndpoints: '/api/events',
   });
@@ -47,6 +49,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // Mount authenticated operator and event API routes
 app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/events', eventRouter);
 app.use('/api/orgs/:orgId/events', orgEventRouter);
