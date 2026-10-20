@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import WorkspaceLayout from '../components/dashboard/WorkspaceLayout';
 import MetricCard from '../components/dashboard/MetricCard';
 import ApplicationTable from '../components/dashboard/ApplicationTable';
+import ProtectedApplicationsView from '../components/dashboard/ProtectedApplicationsView';
+import ApplicationDetailDrawer from '../components/dashboard/ApplicationDetailDrawer';
 import TrafficActivityChart from '../components/dashboard/TrafficActivityChart';
 import RecentSecurityEvents from '../components/dashboard/RecentSecurityEvents';
 import GatewayHealthCard from '../components/dashboard/GatewayHealthCard';
@@ -18,8 +20,13 @@ import { api } from '../services/api';
  * Primary workspace for authenticated organization operators.
  * Displays real-time application status, gateway telemetry, threat classifications, and audit events.
  */
-export default function DashboardPage({ operator, onNavigate, onLogout }) {
-  const [currentView, setCurrentView] = useState('overview');
+export default function DashboardPage({ operator, onNavigate, onLogout, initialView }) {
+  const [currentView, setCurrentView] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/app/applications') {
+      return 'applications';
+    }
+    return initialView || 'overview';
+  });
   const [organisations, setOrganisations] = useState([]);
   const [activeOrg, setActiveOrg] = useState(null);
 
@@ -30,6 +37,10 @@ export default function DashboardPage({ operator, onNavigate, onLogout }) {
   const [gatewayHealth, setGatewayHealth] = useState(null);
   const [gatewayMetrics, setGatewayMetrics] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
+
+  // Drawer state for overview quick-actions
+  const [selectedDrawerAppId, setSelectedDrawerAppId] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(true);
@@ -155,6 +166,31 @@ export default function DashboardPage({ operator, onNavigate, onLogout }) {
     };
   }, [loadDashboardData]);
 
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/app/applications') {
+        setCurrentView('applications');
+      } else if (window.location.pathname === '/app') {
+        setCurrentView('overview');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleSelectView = (view) => {
+    setCurrentView(view);
+    if (view === 'applications') {
+      if (window.location.pathname !== '/app/applications') {
+        window.history.pushState(null, '', '/app/applications');
+      }
+    } else if (view === 'overview') {
+      if (window.location.pathname !== '/app') {
+        window.history.pushState(null, '', '/app');
+      }
+    }
+  };
+
   const handleRefresh = () => {
     if (activeOrg) {
       loadDashboardData(activeOrg.id, false);
@@ -162,8 +198,13 @@ export default function DashboardPage({ operator, onNavigate, onLogout }) {
   };
 
   const handleManageApp = (app) => {
-    // If domain is unverified, open onboarding wizard pre-focused
-    onNavigate('/app/onboard');
+    setSelectedDrawerAppId(app.id);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedDrawerAppId(null);
   };
 
   // Derive metric values from real backend numbers
@@ -186,7 +227,7 @@ export default function DashboardPage({ operator, onNavigate, onLogout }) {
   return (
     <WorkspaceLayout
       currentView={currentView}
-      onSelectView={setCurrentView}
+      onSelectView={handleSelectView}
       onNavigate={onNavigate}
       onLogout={onLogout}
       operator={operator}
@@ -422,37 +463,28 @@ export default function DashboardPage({ operator, onNavigate, onLogout }) {
               </div>
             </>
           )}
+
+          {/* Quick-inspection drawer for Overview application list */}
+          <ApplicationDetailDrawer
+            appId={selectedDrawerAppId}
+            orgId={activeOrg?.id}
+            isOpen={isDrawerOpen}
+            onClose={handleCloseDrawer}
+            onAppUpdated={handleRefresh}
+            onAppDeleted={handleRefresh}
+          />
         </div>
       )}
 
       {/* View: Applications Management */}
       {currentView === 'applications' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
-                Protected Applications Directory
-              </h1>
-              <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                Manage domain verifications, origin routings, and gateway interception states.
-              </p>
-            </div>
-            <Button
-              variant="primary"
-              onClick={() => onNavigate('/app/onboard')}
-              icon={<Icon name="plus" size={15} />}
-            >
-              Onboard New Application
-            </Button>
-          </div>
-
-          <ApplicationTable
-            applications={applications}
-            loading={isLoading}
-            onOnboardNew={() => onNavigate('/app/onboard')}
-            onManageApp={handleManageApp}
-          />
-        </div>
+        <ProtectedApplicationsView
+          applications={applications}
+          loading={isLoading}
+          orgId={activeOrg?.id}
+          onOnboardNew={() => onNavigate('/app/onboard')}
+          onRefresh={handleRefresh}
+        />
       )}
 
       {/* View: Traffic & Events Feed */}
