@@ -4,6 +4,7 @@ import MetricCard from '../components/dashboard/MetricCard';
 import ApplicationTable from '../components/dashboard/ApplicationTable';
 import ProtectedApplicationsView from '../components/dashboard/ProtectedApplicationsView';
 import ApplicationDetailDrawer from '../components/dashboard/ApplicationDetailDrawer';
+import TrafficEventsView from '../components/dashboard/TrafficEventsView';
 import TrafficActivityChart from '../components/dashboard/TrafficActivityChart';
 import RecentSecurityEvents from '../components/dashboard/RecentSecurityEvents';
 import GatewayHealthCard from '../components/dashboard/GatewayHealthCard';
@@ -22,8 +23,9 @@ import { api } from '../services/api';
  */
 export default function DashboardPage({ operator, onNavigate, onLogout, initialView }) {
   const [currentView, setCurrentView] = useState(() => {
-    if (typeof window !== 'undefined' && window.location.pathname === '/app/applications') {
-      return 'applications';
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/app/applications') return 'applications';
+      if (window.location.pathname === '/app/events') return 'events';
     }
     return initialView || 'overview';
   });
@@ -170,6 +172,8 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
     const handlePopState = () => {
       if (window.location.pathname === '/app/applications') {
         setCurrentView('applications');
+      } else if (window.location.pathname === '/app/events') {
+        setCurrentView('events');
       } else if (window.location.pathname === '/app') {
         setCurrentView('overview');
       }
@@ -184,11 +188,21 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
       if (window.location.pathname !== '/app/applications') {
         window.history.pushState(null, '', '/app/applications');
       }
+    } else if (view === 'events') {
+      if (window.location.pathname !== '/app/events') {
+        window.history.pushState(null, '', '/app/events');
+      }
     } else if (view === 'overview') {
       if (window.location.pathname !== '/app') {
         window.history.pushState(null, '', '/app');
       }
     }
+  };
+
+  const handleNavigateToAppFromEvent = (appId) => {
+    handleSelectView('applications');
+    setSelectedDrawerAppId(appId);
+    setIsDrawerOpen(true);
   };
 
   const handleRefresh = () => {
@@ -487,30 +501,14 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
         />
       )}
 
-      {/* View: Traffic & Events Feed */}
+      {/* View: Traffic & Events Explorer */}
       {currentView === 'events' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
-              Traffic & Security Events
-            </h1>
-            <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-              Full audit feed of all incoming HTTP requests traversing the cyber deception gateway.
-            </p>
-          </div>
-
-          <TrafficActivityChart
-            summary={eventsSummary}
-            gatewayMetrics={gatewayMetrics}
-            loading={isLoading}
-          />
-
-          <RecentSecurityEvents
-            events={events}
-            loading={isLoading}
-            title="All Recorded Tenant Security Events"
-          />
-        </div>
+        <TrafficEventsView
+          orgId={activeOrg?.id}
+          applications={applications}
+          onNavigateToApp={handleNavigateToAppFromEvent}
+          onNavigate={onNavigate}
+        />
       )}
 
       {/* View: Threat Detections */}

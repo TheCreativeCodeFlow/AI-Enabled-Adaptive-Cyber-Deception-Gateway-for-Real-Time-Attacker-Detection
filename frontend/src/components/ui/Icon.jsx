@@ -273,6 +273,12 @@ export default function Icon({ name, size = 20, className = '', color = 'current
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </>
     ),
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="1.8" />
+        <polyline points="12 6 12 12 16 14" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
   };
 
   return (
