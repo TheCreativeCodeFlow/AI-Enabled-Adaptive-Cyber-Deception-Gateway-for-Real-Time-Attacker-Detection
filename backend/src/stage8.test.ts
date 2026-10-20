@@ -172,6 +172,8 @@ describe('Stage 8: Security Event Pipeline & Tenant Isolation Tests', () => {
           path: '/api/catalog',
           statusCode: 200,
           durationMs: 3.2,
+          detectionScore: 0.05,
+          detectionClassification: 'BENIGN',
           routingDecision: 'ORIGIN',
           routingReason: 'BENIGN',
           routingMode: 'active',
@@ -190,6 +192,7 @@ describe('Stage 8: Security Event Pipeline & Tenant Isolation Tests', () => {
           statusCode: 200,
           durationMs: 2.8,
           detectionScore: 0.95,
+          detectionClassification: 'MALICIOUS',
           routingDecision: 'DECEPTION',
           routingReason: 'MALICIOUS',
           routingMode: 'active',
@@ -251,6 +254,24 @@ describe('Stage 8: Security Event Pipeline & Tenant Isolation Tests', () => {
       assert.strictEqual(filteredRes.body.events[0].routing_decision, 'DECEPTION');
     });
 
+    it('Supports query filtering by classification (Stage 7 Threat Detection)', async () => {
+      const maliciousRes = await request(app)
+        .get(`/api/orgs/${tenantAOrgId}/events?classification=MALICIOUS`)
+        .set('Authorization', `Bearer ${orgOwnerToken}`);
+
+      assert.strictEqual(maliciousRes.status, 200);
+      assert.strictEqual(maliciousRes.body.total, 1);
+      assert.strictEqual(maliciousRes.body.events[0].detection_classification, 'MALICIOUS');
+
+      const benignRes = await request(app)
+        .get(`/api/orgs/${tenantAOrgId}/events?classification=BENIGN`)
+        .set('Authorization', `Bearer ${orgOwnerToken}`);
+
+      assert.strictEqual(benignRes.status, 200);
+      assert.strictEqual(benignRes.body.total, 1);
+      assert.strictEqual(benignRes.body.events[0].detection_classification, 'BENIGN');
+    });
+
     it('GET /api/orgs/:orgId/events/summary accurately aggregates tenant events metrics', async () => {
       const summaryRes = await request(app)
         .get(`/api/orgs/${tenantAOrgId}/events/summary`)
@@ -262,6 +283,8 @@ describe('Stage 8: Security Event Pipeline & Tenant Isolation Tests', () => {
       assert.strictEqual(summary.totalEvents, 2);
       assert.strictEqual(summary.decisions.ORIGIN, 1);
       assert.strictEqual(summary.decisions.DECEPTION, 1);
+      assert.strictEqual(summary.classifications.MALICIOUS, 1);
+      assert.strictEqual(summary.classifications.BENIGN, 1);
       assert.strictEqual(summary.quarantinedCount, 0);
       assert.ok(summary.avgDetectionScore > 0);
       assert.ok(summary.avgDurationMs > 0);

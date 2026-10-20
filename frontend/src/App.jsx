@@ -126,7 +126,7 @@ export default function App() {
     );
   }
 
-  // 5. Tenant Operations Dashboard (/app, /app/applications, /app/events)
+  // 5. Tenant Operations Dashboard (/app, /app/applications, /app/events, /app/detections)
   if (currentPath.startsWith('/app')) {
     if (!token || !operator) {
       navigate('/login');
@@ -137,6 +137,8 @@ export default function App() {
         ? 'applications'
         : currentPath === '/app/events'
         ? 'events'
+        : currentPath === '/app/detections'
+        ? 'detections'
         : 'overview';
     return (
       <DashboardPage

@@ -198,6 +198,7 @@ orgEventRouter.get(
     const offset = Math.max(parseInt((req.query.offset as string) || '0', 10), 0);
     const appId = req.query.applicationId as string;
     const decision = req.query.routingDecision as string;
+    const classification = req.query.classification as string;
 
     try {
       const result = await query(
@@ -211,6 +212,9 @@ orgEventRouter.get(
       }
       if (decision) {
         events = events.filter((e: any) => e.routing_decision === decision);
+      }
+      if (classification) {
+        events = events.filter((e: any) => e.detection_classification === classification);
       }
 
       const total = events.length;
@@ -251,6 +255,9 @@ orgEventRouter.get(
       let deceptionCount = 0;
       let observeCount = 0;
       let quarantinedCount = 0;
+      let maliciousCount = 0;
+      let suspiciousCount = 0;
+      let benignCount = 0;
       let totalScore = 0;
       let scoredCount = 0;
       let totalDuration = 0;
@@ -259,6 +266,10 @@ orgEventRouter.get(
         if (e.routing_decision === 'DECEPTION') deceptionCount++;
         else if (e.routing_decision === 'OBSERVE_ONLY') observeCount++;
         else originCount++;
+
+        if (e.detection_classification === 'MALICIOUS') maliciousCount++;
+        else if (e.detection_classification === 'SUSPICIOUS') suspiciousCount++;
+        else if (e.detection_classification === 'BENIGN') benignCount++;
 
         if (e.failure_quarantined) quarantinedCount++;
         if (typeof e.detection_score === 'number') {
@@ -278,6 +289,11 @@ orgEventRouter.get(
             ORIGIN: originCount,
             DECEPTION: deceptionCount,
             OBSERVE_ONLY: observeCount,
+          },
+          classifications: {
+            MALICIOUS: maliciousCount,
+            SUSPICIOUS: suspiciousCount,
+            BENIGN: benignCount,
           },
           quarantinedCount,
           avgDetectionScore: scoredCount > 0 ? parseFloat((totalScore / scoredCount).toFixed(4)) : 0,

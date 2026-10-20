@@ -5,6 +5,7 @@ import ApplicationTable from '../components/dashboard/ApplicationTable';
 import ProtectedApplicationsView from '../components/dashboard/ProtectedApplicationsView';
 import ApplicationDetailDrawer from '../components/dashboard/ApplicationDetailDrawer';
 import TrafficEventsView from '../components/dashboard/TrafficEventsView';
+import ThreatDetectionCenterView from '../components/dashboard/ThreatDetectionCenterView';
 import TrafficActivityChart from '../components/dashboard/TrafficActivityChart';
 import RecentSecurityEvents from '../components/dashboard/RecentSecurityEvents';
 import GatewayHealthCard from '../components/dashboard/GatewayHealthCard';
@@ -26,6 +27,7 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
     if (typeof window !== 'undefined') {
       if (window.location.pathname === '/app/applications') return 'applications';
       if (window.location.pathname === '/app/events') return 'events';
+      if (window.location.pathname === '/app/detections') return 'detections';
     }
     return initialView || 'overview';
   });
@@ -174,6 +176,8 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
         setCurrentView('applications');
       } else if (window.location.pathname === '/app/events') {
         setCurrentView('events');
+      } else if (window.location.pathname === '/app/detections') {
+        setCurrentView('detections');
       } else if (window.location.pathname === '/app') {
         setCurrentView('overview');
       }
@@ -192,11 +196,19 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
       if (window.location.pathname !== '/app/events') {
         window.history.pushState(null, '', '/app/events');
       }
+    } else if (view === 'detections') {
+      if (window.location.pathname !== '/app/detections') {
+        window.history.pushState(null, '', '/app/detections');
+      }
     } else if (view === 'overview') {
       if (window.location.pathname !== '/app') {
         window.history.pushState(null, '', '/app');
       }
     }
+  };
+
+  const handleViewEventInTraffic = (eventId) => {
+    handleSelectView('events');
   };
 
   const handleNavigateToAppFromEvent = (appId) => {
@@ -511,51 +523,14 @@ export default function DashboardPage({ operator, onNavigate, onLogout, initialV
         />
       )}
 
-      {/* View: Threat Detections */}
+      {/* View: Threat Detections Center */}
       {currentView === 'detections' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
-              AI Threat Detection Pipeline
-            </h1>
-            <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-              Real-time ML anomaly detection telemetry, feature extraction, and classification scores.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-            <MetricCard
-              title="Anomaly Detection Model"
-              value="RandomForest v1"
-              subtext="Trained on sanitized external benchmarks"
-              icon="radar"
-              badgeText="Online"
-              badgeVariant="success"
-            />
-            <MetricCard
-              title="Inference Latency"
-              value={gatewayMetrics?.detection?.latency?.avgMs !== undefined ? `${gatewayMetrics.detection.latency.avgMs} ms` : '18.5 ms'}
-              subtext="Average inference time per request"
-              icon="activity"
-              badgeText="Optimal"
-              badgeVariant="success"
-            />
-            <MetricCard
-              title="Sensitivity Threshold"
-              value="0.70"
-              subtext="Requests ≥ 70% confidence are diverted"
-              icon="sliders"
-              badgeText="Balanced"
-              badgeVariant="eyebrow"
-            />
-          </div>
-
-          <RecentSecurityEvents
-            events={events.filter((e) => e.detectionClassification === 'MALICIOUS' || e.routingDecision === 'DECEPTION')}
-            loading={isLoading}
-            title="Malicious & High-Confidence Threat Probes"
-          />
-        </div>
+        <ThreatDetectionCenterView
+          orgId={activeOrg?.id}
+          applications={applications}
+          onViewEventInTraffic={handleViewEventInTraffic}
+          onNavigateToApp={handleNavigateToAppFromEvent}
+        />
       )}
 
       {/* View: Attacker Sessions / Deception Activity / Audit / Settings Fallback Views */}
