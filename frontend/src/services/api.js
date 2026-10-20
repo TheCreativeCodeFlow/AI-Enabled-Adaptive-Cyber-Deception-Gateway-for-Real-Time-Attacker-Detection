@@ -159,7 +159,7 @@ export const api = {
   },
 
   async getAuditLogs(orgId) {
-    return request(`${BACKEND_URL}/api/audit${orgId ? `?orgId=${orgId}` : ''}`);
+    return request(`${BACKEND_URL}/api/audit/logs`);
   },
 
   // Platform Administration (Cross-tenant)
@@ -204,6 +204,10 @@ export const api = {
 
   async getGatewayMetrics() {
     return request(`${GATEWAY_URL}/api/gateway/metrics`);
+  },
+
+  async getGatewayEvents(limit = 50) {
+    return request(`${GATEWAY_URL}/api/gateway/events?limit=${limit}`);
   },
 };
 

@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OnboardingPage from './pages/OnboardingPage';
+import DashboardPage from './pages/DashboardPage';
 import ProtectedWorkspacePlaceholder from './pages/ProtectedWorkspacePlaceholder';
 import { auth } from './services/auth';
 import { api } from './services/api';
@@ -125,20 +126,17 @@ export default function App() {
     );
   }
 
-  // 5. Protected Organization Workspace (/app)
+  // 5. Tenant Operations Dashboard (/app)
   if (currentPath.startsWith('/app')) {
     if (!token || !operator) {
       navigate('/login');
       return null;
     }
     return (
-      <ProtectedWorkspacePlaceholder
+      <DashboardPage
         operator={operator}
         onNavigate={navigate}
         onLogout={handleLogout}
-        title="Organization Workspace"
-        subtitle="Protected Application Management & Deception Telemetry"
-        isAdminView={false}
       />
     );
   }
