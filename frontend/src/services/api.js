@@ -1,5 +1,5 @@
 /**
- * Cyber Deception Gateway — Preserved API Client
+ * Cyber Deception Gateway — Preserved & Enhanced API Client
  *
  * Centralizes all backend REST and gateway communications.
  * Preserves all routes, types, and integration methods for subsequent stages.
@@ -84,10 +84,38 @@ export const api = {
     return request(`${BACKEND_URL}/api/orgs/${orgId}/apps`);
   },
 
+  async getApplication(orgId, appId) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}`);
+  },
+
   async registerApplication(orgId, payload) {
     return request(`${BACKEND_URL}/api/orgs/${orgId}/apps`, {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  },
+
+  async updateApplication(orgId, appId, payload) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteApplication(orgId, appId) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getVerificationChallenge(orgId, appId) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}/verification-challenges/latest`);
+  },
+
+  async generateVerificationChallenge(orgId, appId, forceRegenerate = false) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}/verification-challenges`, {
+      method: 'POST',
+      body: JSON.stringify({ forceRegenerate }),
     });
   },
 
@@ -101,6 +129,16 @@ export const api = {
     return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}/activate`, {
       method: 'POST',
     });
+  },
+
+  async disableApplication(orgId, appId) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}/disable`, {
+      method: 'POST',
+    });
+  },
+
+  async getProtection(orgId, appId) {
+    return request(`${BACKEND_URL}/api/orgs/${orgId}/apps/${appId}/protection`);
   },
 
   async updateProtection(orgId, appId, settings) {

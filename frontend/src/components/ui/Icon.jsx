@@ -135,6 +135,74 @@ export default function Icon({ name, size = 20, className = '', color = 'current
     zap: (
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     ),
+    copy: (
+      <>
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke={color} strokeWidth="1.8" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    'check-circle': (
+      <>
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="22 4 12 14.01 9 11.01" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    'x-circle': (
+      <>
+        <circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="1.8" />
+        <line x1="15" y1="9" x2="9" y2="15" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="9" y1="9" x2="15" y2="15" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    terminal: (
+      <>
+        <polyline points="4 17 10 11 4 5" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="19" x2="20" y2="19" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+      </>
+    ),
+    'refresh-cw': (
+      <>
+        <polyline points="23 4 23 10 17 10" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="1 20 1 14 7 14" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    'arrow-left': (
+      <>
+        <line x1="19" y1="12" x2="5" y2="12" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="12 19 5 12 12 5" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    globe: (
+      <>
+        <circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="1.8" />
+        <line x1="2" y1="12" x2="22" y2="12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none" stroke={color} strokeWidth="1.8" />
+      </>
+    ),
+    sliders: (
+      <>
+        <line x1="4" y1="21" x2="4" y2="14" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="4" y1="10" x2="4" y2="3" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="21" x2="12" y2="12" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="8" x2="12" y2="3" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="20" y1="21" x2="20" y2="16" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="20" y1="12" x2="20" y2="3" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="1" y1="14" x2="7" y2="14" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="9" y1="8" x2="15" y2="8" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="17" y1="16" x2="23" y2="16" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    info: (
+      <>
+        <circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="1.8" />
+        <line x1="12" y1="16" x2="12" y2="12" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="12" y1="8" x2="12.01" y2="8" stroke={color} strokeWidth="2.4" strokeLinecap="round" />
+      </>
+    ),
+    'chevron-right': (
+      <polyline points="9 18 15 12 9 6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    ),
   };
 
   return (

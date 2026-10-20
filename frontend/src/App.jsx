@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import OnboardingPage from './pages/OnboardingPage';
 import ProtectedWorkspacePlaceholder from './pages/ProtectedWorkspacePlaceholder';
 import { auth } from './services/auth';
 import { api } from './services/api';
@@ -109,7 +110,22 @@ export default function App() {
     );
   }
 
-  // 4. Protected Organization Workspace (/app)
+  // 4. Application Onboarding Wizard (/app/onboard)
+  if (currentPath === '/app/onboard' || currentPath.startsWith('/app/onboard')) {
+    if (!token || !operator) {
+      navigate('/login');
+      return null;
+    }
+    return (
+      <OnboardingPage
+        operator={operator}
+        onNavigate={navigate}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  // 5. Protected Organization Workspace (/app)
   if (currentPath.startsWith('/app')) {
     if (!token || !operator) {
       navigate('/login');

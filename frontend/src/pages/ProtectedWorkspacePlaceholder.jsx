@@ -228,14 +228,22 @@ export default function ProtectedWorkspacePlaceholder({
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
               <Button
+                variant="primary"
+                onClick={() => onNavigate('/app/onboard')}
+                icon={<Icon name="shield" size={16} />}
+              >
+                Onboard New Application
+              </Button>
+              <Button
                 variant="secondary"
                 onClick={() => onNavigate('/')}
               >
                 View Public Landing Page
               </Button>
               <Button
-                variant="primary"
+                variant="subtle"
                 onClick={onLogout}
+                style={{ color: '#F87171' }}
               >
                 Sign Out Session
               </Button>
