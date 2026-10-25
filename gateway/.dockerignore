@@ -1,7 +1,0 @@
-node_modules
-dist
-test-origin
-.DS_Store
-*.log
-.env
-.env.local
